@@ -1,5 +1,5 @@
 export GeneralOrbital, OccupiedOrbital, VirtualOrbital
-export gen, occ, vir
+export gen, occ, vir, isocc, isvir
 
 """
     GeneralOrbital
@@ -35,3 +35,6 @@ end
 
 Base.isdisjoint(::MOIndex{S1}, ::MOIndex{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital} = typeintersect(S1, S2) == Union{}
+
+isocc(::MOIndex{S}) where {S<:GeneralOrbital} = S <: OccupiedOrbital
+isvir(::MOIndex{S}) where {S<:GeneralOrbital} = S <: VirtualOrbital

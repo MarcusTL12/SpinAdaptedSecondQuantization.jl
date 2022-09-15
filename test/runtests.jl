@@ -18,4 +18,9 @@ using SpinAdaptedSecondQuantization
 
     @test isdisjoint(p, i) == false
     @test isdisjoint(a, i) == true
+
+    @test isocc(i) == true
+    @test isvir(i) == false
+    @test isocc(a) == false
+    @test isvir(a) == true
 end
