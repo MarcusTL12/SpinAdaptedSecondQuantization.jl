@@ -1,5 +1,5 @@
 module SpinAdaptedSecondQuantization
 
-greet() = println("Hello World!")
+include("orbital_indices.jl")
 
 end # module SpinAdaptedSecondQuantization
