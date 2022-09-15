@@ -14,7 +14,7 @@ using SpinAdaptedSecondQuantization
     @test (space(p) <: OccupiedOrbital) == false
     @test (space(i) <: GeneralOrbital) == true
     @test (space(i) <: OccupiedOrbital) == true
-    
+
     @test (space(i) == GeneralOrbital) == false
     @test (space(i) == OccupiedOrbital) == true
 
@@ -41,6 +41,10 @@ end
     dip = SpinAdaptedSecondQuantization.KroeneckerDelta(i, p)
 
     @show dpa dia dip
-    
+
+    @test dpa != 0
+    @test dia == 0
+    @test dip != 0
+
     println()
 end
