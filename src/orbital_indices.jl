@@ -36,5 +36,7 @@ end
 Base.isdisjoint(::MOIndex{S1}, ::MOIndex{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital} = typeintersect(S1, S2) == Union{}
 
-isocc(::MOIndex{S}) where {S<:GeneralOrbital} = S <: OccupiedOrbital
-isvir(::MOIndex{S}) where {S<:GeneralOrbital} = S <: VirtualOrbital
+isocc(::MOIndex{S}) where {S<:GeneralOrbital} =
+    (S <: OccupiedOrbital) && !(S <: VirtualOrbital)
+isvir(::MOIndex{S}) where {S<:GeneralOrbital} =
+    (S <: VirtualOrbital) && !(S <: OccupiedOrbital)
