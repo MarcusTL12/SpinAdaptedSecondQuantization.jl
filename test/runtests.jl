@@ -29,16 +29,16 @@ using SpinAdaptedSecondQuantization
     println()
 end
 
-@testset "kroenecker delta" begin
+@testset "kronecker delta" begin
     println()
 
     p = gen("p")
     i = occ("i")
     a = vir("a")
 
-    dpa = SpinAdaptedSecondQuantization.KroeneckerDelta(p, a)
-    dia = SpinAdaptedSecondQuantization.KroeneckerDelta(i, a)
-    dip = SpinAdaptedSecondQuantization.KroeneckerDelta(i, p)
+    dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
+    dia = SpinAdaptedSecondQuantization.KroneckerDelta(i, a)
+    dip = SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
 
     @show dpa dia dip
 
