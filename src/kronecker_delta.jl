@@ -1,9 +1,9 @@
 
-struct KroeneckerDelta
+struct kroneckerDelta
     p::MOIndex
     q::MOIndex
 
-    function KroeneckerDelta(p::MOIndex, q::MOIndex)
+    function kroneckerDelta(p::MOIndex, q::MOIndex)
         if isdisjoint(p, q)
             0
         elseif p < q
@@ -14,6 +14,6 @@ struct KroeneckerDelta
     end
 end
 
-function Base.show(io::IO, d::KroeneckerDelta)
+function Base.show(io::IO, d::kroneckerDelta)
     print(io, "δ_", d.p, d.q)
 end
