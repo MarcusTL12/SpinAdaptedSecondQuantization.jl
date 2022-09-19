@@ -48,9 +48,9 @@ function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
     throw("getname not implemented for space $S")
 end
 
-getnames(::Type{GeneralOrbital}) = "pqrs"
-getnames(::Type{OccupiedOrbital}) = "ijkl"
-getnames(::Type{VirtualOrbital}) = "abcd"
+getnames(::Type{GeneralOrbital}) = "pqrstuv"
+getnames(::Type{OccupiedOrbital}) = "ijklmno"
+getnames(::Type{VirtualOrbital}) = "abcdefg"
 
 subscript(i) = join(Char(0x2080 + d) for d in reverse!(digits(i)))
 
