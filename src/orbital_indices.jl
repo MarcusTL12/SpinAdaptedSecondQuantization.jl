@@ -28,20 +28,21 @@ abstract type VirtualOrbital <: GeneralOrbital end
 
 # A space is not less than itself
 Base.isless(::Type{S}, ::Type{S}) where {S<:GeneralOrbital} = false
+Base.isless(::Type{S1}, ::Type{S2}) where
+{S1<:GeneralOrbital, S2<:GeneralOrbital} = !(S2 < S1)
 
 # A subspace of a space is considered "greater" than the parent space
 # making it come later when sorting
 Base.isless(::Type{S1}, ::Type{S2}) where {S2<:GeneralOrbital,S1<:S2} = false
-Base.isless(::Type{S1}, ::Type{S2}) where {S1<:GeneralOrbital,S2<:S1} = true
+# Base.isless(::Type{S1}, ::Type{S2}) where {S1<:GeneralOrbital,S2<:S1} = true
 
 # Defining occupied orbitals to come before virtuals.
 # This is up for debate
 Base.isless(::Type{OccupiedOrbital}, ::Type{OccupiedOrbital}) = false
-Base.isless(::Type{VirtualOrbital}, ::Type{VirtualOrbital}) = false
+# Base.isless(::Type{VirtualOrbital}, ::Type{VirtualOrbital}) = false
 
 Base.isless(::Type{VirtualOrbital}, ::Type{OccupiedOrbital}) = false
-Base.isless(::Type{OccupiedOrbital}, ::Type{VirtualOrbital}) = true
-
+# Base.isless(::Type{OccupiedOrbital}, ::Type{VirtualOrbital}) = true
 
 """
     MOIndex

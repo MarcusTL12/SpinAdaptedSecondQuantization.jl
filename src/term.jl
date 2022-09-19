@@ -1,7 +1,7 @@
 
 struct Term{T<:Number}
     scalar::T
-    deltas::Vector{KroeneckerDelta}
+    deltas::Vector{KroneckerDelta}
     tensors::Vector{Tensor}
     operators::Vector{Operator}
 end
