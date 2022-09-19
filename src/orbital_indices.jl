@@ -1,5 +1,5 @@
 export GeneralOrbital, OccupiedOrbital, VirtualOrbital
-export gen, occ, vir, isocc, isvir, space
+export general, occupied, virtual, isoccupied, isvirtual, space
 
 # Note: perhaps redefine this as Union{OccupiedOrbital,VirtualOrbital}
 """
@@ -83,9 +83,9 @@ function getname(i::MOIndex{S}) where {S<:GeneralOrbital}
     getname(S, i.index)
 end
 
-gen(index) = MOIndex(index, GeneralOrbital)
-occ(index) = MOIndex(index, OccupiedOrbital)
-vir(index) = MOIndex(index, VirtualOrbital)
+general(index) = MOIndex(index, GeneralOrbital)
+occupied(index) = MOIndex(index, OccupiedOrbital)
+virtual(index) = MOIndex(index, VirtualOrbital)
 
 function Base.show(io::IO, i::MOIndex{GeneralOrbital})
     print(io, getname(i))
@@ -102,8 +102,8 @@ end
 Base.isdisjoint(::MOIndex{S1}, ::MOIndex{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital} = typeintersect(S1, S2) == Union{}
 
-isocc(::MOIndex{S}) where {S<:GeneralOrbital} = S <: OccupiedOrbital
-isvir(::MOIndex{S}) where {S<:GeneralOrbital} = S <: VirtualOrbital
+isoccupied(::MOIndex{S}) where {S<:GeneralOrbital} = S <: OccupiedOrbital
+isvirtual(::MOIndex{S}) where {S<:GeneralOrbital} = S <: VirtualOrbital
 
 function Base.isless(p::MOIndex{S1}, q::MOIndex{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital}

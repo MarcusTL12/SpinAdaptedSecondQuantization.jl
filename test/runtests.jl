@@ -5,10 +5,10 @@ using SpinAdaptedSecondQuantization
 @testset "indices" begin
     println()
 
-    p = gen(1)
-    i = occ(1)
-    a = vir(1)
-    p1 = gen(5)
+    p = general(1)
+    i = occupied(1)
+    a = virtual(1)
+    p1 = general(5)
     @show p i a p1
 
     @test (space(p) <: GeneralOrbital) == true
@@ -22,10 +22,10 @@ using SpinAdaptedSecondQuantization
     @test isdisjoint(p, i) == false
     @test isdisjoint(a, i) == true
 
-    @test isocc(i) == true
-    @test isvir(i) == false
-    @test isocc(a) == false
-    @test isvir(a) == true
+    @test isoccupied(i) == true
+    @test isvirtual(i) == false
+    @test isoccupied(a) == false
+    @test isvirtual(a) == true
 
     println()
 end
@@ -33,9 +33,9 @@ end
 @testset "kronecker delta" begin
     println()
 
-    p = gen(1)
-    i = occ(1)
-    a = vir(1)
+    p = general(1)
+    i = occupied(1)
+    a = virtual(1)
 
     dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
     dia = SpinAdaptedSecondQuantization.KroneckerDelta(i, a)
