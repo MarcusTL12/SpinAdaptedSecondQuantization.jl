@@ -8,7 +8,7 @@ using SpinAdaptedSecondQuantization
     p = general(1)
     i = occupied(1)
     a = virtual(1)
-    p1 = general(5)
+    p1 = general(8)
     @show p i a p1
 
     @test (space(p) <: GeneralOrbital) == true
@@ -26,6 +26,9 @@ using SpinAdaptedSecondQuantization
     @test isvirtual(i) == false
     @test isoccupied(a) == false
     @test isvirtual(a) == true
+
+    @test string(p) == "p"
+    @test string(p1) == "p₁"
 
     println()
 end
