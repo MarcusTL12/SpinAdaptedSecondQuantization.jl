@@ -5,10 +5,11 @@ using SpinAdaptedSecondQuantization
 @testset "indices" begin
     println()
 
-    p = gen("p")
-    i = occ("i")
-    a = vir("a")
-    @show p i a
+    p = gen(1)
+    i = occ(1)
+    a = vir(1)
+    p1 = gen(5)
+    @show p i a p1
 
     @test (space(p) <: GeneralOrbital) == true
     @test (space(p) <: OccupiedOrbital) == false
@@ -32,9 +33,9 @@ end
 @testset "kronecker delta" begin
     println()
 
-    p = gen("p")
-    i = occ("i")
-    a = vir("a")
+    p = gen(1)
+    i = occ(1)
+    a = vir(1)
 
     dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
     dia = SpinAdaptedSecondQuantization.KroneckerDelta(i, a)
