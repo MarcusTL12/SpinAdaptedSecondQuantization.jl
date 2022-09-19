@@ -30,6 +30,8 @@ using SpinAdaptedSecondQuantization
     @test string(p) == "p"
     @test string(p1) == "p₁"
 
+    @test string(a) != "a"
+
     println()
 end
 
