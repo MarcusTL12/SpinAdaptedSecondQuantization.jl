@@ -54,3 +54,37 @@ end
 
     println()
 end
+
+@testset "singlet excitation operator" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    i = occupied(1)
+    a = virtual(1)
+
+    Epq = SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)
+    Eai = SpinAdaptedSecondQuantization.SingletExcitationOperator(a, i)
+    Eip = SpinAdaptedSecondQuantization.SingletExcitationOperator(i, p)
+
+    @show Epq Eai Eip
+
+    @test string(Epq) == "E_pq"
+
+    println()
+end
+
+@testset "real tensor" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+
+    hpq = SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
+
+    @show hpq
+
+    @test string(hpq) == "h_pq"
+
+    println()
+end

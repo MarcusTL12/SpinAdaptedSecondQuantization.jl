@@ -8,3 +8,7 @@ struct SingletExcitationOperator <: Operator
     p::MOIndex
     q::MOIndex
 end
+
+function Base.show(io::IO, e::SingletExcitationOperator)
+    print(io, "E_", e.p, e.q)
+end
