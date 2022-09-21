@@ -88,3 +88,22 @@ end
 
     println()
 end
+
+@testset "term" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    i = occupied(1)
+    a = virtual(1)
+
+    Epq = E(p, q)
+    dpi = δ(p, i)
+    hai = real_tensor("h", a, i)
+
+    @show Epq dpi hai
+
+    @test string(Epq) == "E_pq"
+
+    println()
+end

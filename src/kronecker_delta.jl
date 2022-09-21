@@ -1,3 +1,4 @@
+export delta, δ
 
 struct KroneckerDelta
     p :: MOIndex
@@ -17,3 +18,15 @@ end
 function Base.show(io::IO, d::KroneckerDelta)
     print(io, "δ_", d.p, d.q)
 end
+
+# Externally visible constructor
+delta(p, q) = Term(
+    1,
+    MOIndex[],
+    [KroneckerDelta(p, q)],
+    Tensor[],
+    Operator[]
+)
+
+# Simple unicode alias
+δ(p, q) = delta(p, q)

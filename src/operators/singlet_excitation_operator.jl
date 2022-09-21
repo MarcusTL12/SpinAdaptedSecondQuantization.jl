@@ -1,3 +1,4 @@
+export E
 
 """
     SingletExcitationOperator
@@ -12,3 +13,12 @@ end
 function Base.show(io::IO, e::SingletExcitationOperator)
     print(io, "E_", e.p, e.q)
 end
+
+# Externally visible constructor
+E(p, q) = Term(
+    1,
+    MOIndex[],
+    KroneckerDelta[],
+    Tensor[],
+    Operator[SingletExcitationOperator(p, q)]
+)
