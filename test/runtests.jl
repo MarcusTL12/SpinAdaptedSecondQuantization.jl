@@ -99,9 +99,10 @@ end
 
     Epq = E(p, q)
     dpi = δ(p, i)
+    dai = δ(a, i)
     hai = real_tensor("h", a, i)
 
-    @show Epq dpi hai
+    @show Epq dpi dai hai
 
     @test string(Epq) == "E_pq"
 

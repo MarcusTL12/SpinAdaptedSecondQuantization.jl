@@ -1,8 +1,8 @@
 export delta, δ
 
 struct KroneckerDelta
-    p :: MOIndex
-    q :: MOIndex
+    p::MOIndex
+    q::MOIndex
 
     function KroneckerDelta(p::MOIndex, q::MOIndex)
         if isdisjoint(p, q)
@@ -20,13 +20,21 @@ function Base.show(io::IO, d::KroneckerDelta)
 end
 
 # Externally visible constructor
-delta(p, q) = Term(
-    1,
-    MOIndex[],
-    [KroneckerDelta(p, q)],
-    Tensor[],
-    Operator[]
-)
+function delta(p, q)
+    d = KroneckerDelta(p, q)
+
+    if d == 0
+        zero(Term)
+    else
+        Term(
+            1,
+            MOIndex[],
+            [d],
+            Tensor[],
+            Operator[]
+        )
+    end
+end
 
 # Simple unicode alias
 δ(p, q) = delta(p, q)

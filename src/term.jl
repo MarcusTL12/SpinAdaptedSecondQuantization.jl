@@ -16,6 +16,10 @@ struct Term{T<:Number}
     end
 end
 
+function Base.zero(::Type{Term})
+    Term(0, MOIndex[], KroneckerDelta[], Tensor[], Operator[])
+end
+
 function printscalar(io::IO, s::T) where {T<:Number}
     print(io, s)
 end
