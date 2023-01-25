@@ -10,7 +10,7 @@ macro testmacro(code)
     push!(tasks, @spawn begin
         tmppath, io = mktemp()
         redirect_stdout(io) do
-            eval(code)
+            @time eval(code)
         end
         close(io)
         read(tmppath, String)
