@@ -1,110 +1,153 @@
 using Test
 
+using Base.Threads: @spawn
+
 using SpinAdaptedSecondQuantization
 
-@testset "indices" begin
-    println()
+tasks = Task[]
 
-    p = general(1)
-    i = occupied(1)
-    a = virtual(1)
-    p1 = general(8)
-    @show p i a p1
+push!(tasks, @spawn begin
+    tmppath, io = mktemp()
+    redirect_stdout(io) do
+        @testset "indices" begin
+            println()
 
-    @test (space(p) <: GeneralOrbital) == true
-    @test (space(p) <: OccupiedOrbital) == false
-    @test (space(i) <: GeneralOrbital) == true
-    @test (space(i) <: OccupiedOrbital) == true
+            p = general(1)
+            i = occupied(1)
+            a = virtual(1)
+            p1 = general(8)
+            @show p i a p1
 
-    @test (space(i) == GeneralOrbital) == false
-    @test (space(i) == OccupiedOrbital) == true
+            @test (space(p) <: GeneralOrbital) == true
+            @test (space(p) <: OccupiedOrbital) == false
+            @test (space(i) <: GeneralOrbital) == true
+            @test (space(i) <: OccupiedOrbital) == true
 
-    @test isdisjoint(p, i) == false
-    @test isdisjoint(a, i) == true
+            @test (space(i) == GeneralOrbital) == false
+            @test (space(i) == OccupiedOrbital) == true
 
-    @test isoccupied(i) == true
-    @test isvirtual(i) == false
-    @test isoccupied(a) == false
-    @test isvirtual(a) == true
+            @test isdisjoint(p, i) == false
+            @test isdisjoint(a, i) == true
 
-    @test string(p) == "p"
-    @test string(p1) == "p₁"
+            @test isoccupied(i) == true
+            @test isvirtual(i) == false
+            @test isoccupied(a) == false
+            @test isvirtual(a) == true
 
-    @test string(a) != "a"
+            @test string(p) == "p"
+            @test string(p1) == "p₁"
 
-    println()
-end
+            @test string(a) != "a"
 
-@testset "kronecker delta" begin
-    println()
+            println()
+        end
+    end
+    close(io)
+    read(tmppath, String)
+end)
 
-    p = general(1)
-    i = occupied(1)
-    a = virtual(1)
+push!(tasks, @spawn begin
+    tmppath, io = mktemp()
+    redirect_stdout(io) do
+        @testset "kronecker delta" begin
+            println()
 
-    dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
-    dia = SpinAdaptedSecondQuantization.KroneckerDelta(i, a)
-    dip = SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
+            p = general(1)
+            i = occupied(1)
+            a = virtual(1)
 
-    @show dpa dia dip
+            dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
+            dia = SpinAdaptedSecondQuantization.KroneckerDelta(i, a)
+            dip = SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
 
-    @test dpa != 0
-    @test dia == 0
-    @test dip != 0
+            @show dpa dia dip
 
-    println()
-end
+            @test dpa != 0
+            @test dia == 0
+            @test dip != 0
 
-@testset "singlet excitation operator" begin
-    println()
+            println()
+        end
+    end
+    close(io)
+    read(tmppath, String)
+end)
 
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    a = virtual(1)
+push!(tasks, @spawn begin
+    tmppath, io = mktemp()
+    redirect_stdout(io) do
+        @testset "singlet excitation operator" begin
+            println()
+        
+            p = general(1)
+            q = general(2)
+            i = occupied(1)
+            a = virtual(1)
+        
+            Epq = SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)
+            Eai = SpinAdaptedSecondQuantization.SingletExcitationOperator(a, i)
+            Eip = SpinAdaptedSecondQuantization.SingletExcitationOperator(i, p)
+        
+            @show Epq Eai Eip
+        
+            @test string(Epq) == "E_pq"
+        
+            println()
+        end
+    end
+    close(io)
+    read(tmppath, String)
+end)
 
-    Epq = SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)
-    Eai = SpinAdaptedSecondQuantization.SingletExcitationOperator(a, i)
-    Eip = SpinAdaptedSecondQuantization.SingletExcitationOperator(i, p)
+push!(tasks, @spawn begin
+    tmppath, io = mktemp()
+    redirect_stdout(io) do
+        @testset "real tensor" begin
+            println()
+        
+            p = general(1)
+            q = general(2)
+        
+            hpq = SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
+        
+            @show hpq
+        
+            @test string(hpq) == "h_pq"
+        
+            println()
+        end
+    end
+    close(io)
+    read(tmppath, String)
+end)
 
-    @show Epq Eai Eip
+push!(tasks, @spawn begin
+    tmppath, io = mktemp()
+    redirect_stdout(io) do
+        @testset "term" begin
+            println()
+        
+            p = general(1)
+            q = general(2)
+            i = occupied(1)
+            a = virtual(1)
+        
+            Epq = E(p, q)
+            dpi = δ(p, i)
+            dai = δ(a, i)
+            hai = real_tensor("h", a, i)
+        
+            @show Epq dpi dai hai
+        
+            @test string(Epq) == "E_pq"
+        
+            println()
+        end
+    end
+    close(io)
+    read(tmppath, String)
+end)
 
-    @test string(Epq) == "E_pq"
-
-    println()
-end
-
-@testset "real tensor" begin
-    println()
-
-    p = general(1)
-    q = general(2)
-
-    hpq = SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
-
-    @show hpq
-
-    @test string(hpq) == "h_pq"
-
-    println()
-end
-
-@testset "term" begin
-    println()
-
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    a = virtual(1)
-
-    Epq = E(p, q)
-    dpi = δ(p, i)
-    dai = δ(a, i)
-    hai = real_tensor("h", a, i)
-
-    @show Epq dpi dai hai
-
-    @test string(Epq) == "E_pq"
-
-    println()
+for t in tasks
+    println(fetch(t))
 end
