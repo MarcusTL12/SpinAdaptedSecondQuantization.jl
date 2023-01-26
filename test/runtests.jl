@@ -1,23 +1,8 @@
 using Test
 
-using Base.Threads: @spawn
-
 using SpinAdaptedSecondQuantization
 
-tasks = Task[]
-
-macro testmacro(code)
-    push!(tasks, @spawn begin
-        tmppath, io = mktemp()
-        redirect_stdout(io) do
-            @time eval(code)
-        end
-        close(io)
-        read(tmppath, String)
-    end)
-end
-
-@testmacro @testset "indices" begin
+@testset "indices" begin
     println()
 
     p = general(1)
@@ -50,7 +35,7 @@ end
     println()
 end
 
-@testmacro @testset "kronecker delta" begin
+@testset "kronecker delta" begin
     println()
 
     p = general(1)
@@ -70,7 +55,7 @@ end
     println()
 end
 
-@testmacro @testset "singlet excitation operator" begin
+@testset "singlet excitation operator" begin
     println()
 
     p = general(1)
@@ -89,7 +74,7 @@ end
     println()
 end
 
-@testmacro @testset "real tensor" begin
+@testset "real tensor" begin
     println()
 
     p = general(1)
@@ -104,7 +89,7 @@ end
     println()
 end
 
-@testmacro @testset "term" begin
+@testset "term" begin
     println()
 
     p = general(1)
@@ -122,8 +107,4 @@ end
     @test string(Epq) == "E_pq"
 
     println()
-end
-
-for t in tasks
-    println(fetch(t))
 end
