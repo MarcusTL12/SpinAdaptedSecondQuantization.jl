@@ -45,7 +45,7 @@ Base.isless(::Type{VirtualOrbital}, ::Type{OccupiedOrbital}) = false
 # Base.isless(::Type{OccupiedOrbital}, ::Type{VirtualOrbital}) = true
 
 function getnames(::Type{S}) where {S<:GeneralOrbital}
-    throw("getname not implemented for space $S")
+    throw("getnames not implemented for space $S")
 end
 
 getnames(::Type{GeneralOrbital}) = "pqrstuv"
@@ -117,4 +117,21 @@ function exchange_index(p::MOIndex, mapping)
         end
     end
     p
+end
+
+# indices must be sorted
+function next_free_index(indices, ::Type{S}) where {S<:GeneralOrbital}
+    i = 1
+    for p in indices
+        if space(p) == S
+            if p.index == i
+                i += 1
+            end
+        end
+    end
+    MOIndex(i, S)
+end
+
+function next_free_index(indices, ::MOIndex{S}) where {S<:GeneralOrbital}
+    next_free_index(indices, S)
 end

@@ -59,3 +59,5 @@ Expression(o::Operator) = Expression([Term(
     Tensor[],
     Operator[o]
 )])
+
+# TODO: implement addition/multiplication

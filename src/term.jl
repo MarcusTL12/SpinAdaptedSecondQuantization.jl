@@ -130,3 +130,46 @@ function exchange_indices(t::Term{T}, mapping) where {T<:Number}
 
     t
 end
+
+function get_all_indices(t::Term)
+    indices = copy(t.sum_indices)
+
+    function add_index(i::MOIndex)
+        if i ∉ indices
+            push!(indices, i)
+        end
+    end
+
+    for d in t.deltas
+        add_index(d.p)
+        add_index(d.q)
+    end
+
+    for tensor in t.tensors
+        for i in get_indices(tensor)
+            add_index(i)
+        end
+    end
+
+    for o in t.operators
+        for i in get_all_indices(o)
+            add_index(i)
+        end
+    end
+
+    sort!(indices)
+end
+
+function make_space_for_index(t::Term, new_index::MOIndex)
+    if new_index ∈ t.sum_indices
+        mapping = [new_index => next_free_index(get_all_indices(t), new_index)]
+
+        exchange_indices(t, mapping)
+    else
+        t
+    end
+end
+
+# function summation(t::Term, sum_index)
+    
+# end

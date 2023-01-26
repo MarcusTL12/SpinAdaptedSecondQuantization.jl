@@ -103,12 +103,13 @@ end
         [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
         [
             SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
-            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
+            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, i])
         ],
         [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
     )
 
     @show t
+    @show SpinAdaptedSecondQuantization.get_all_indices(t)
 
     println()
 end
@@ -157,15 +158,18 @@ end
 
     @show t
 
-    t = SpinAdaptedSecondQuantization.exchange_indices(
+    t2 = SpinAdaptedSecondQuantization.exchange_indices(
         t,
         [p => q, q => p, a => b, i => j]
     )
 
-    @test string(t) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_q\e[36mb\e[39m \
+    @test string(t2) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_q\e[36mb\e[39m \
 g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
 
-    @show t
+    @show t2
+
+    t3 = SpinAdaptedSecondQuantization.make_space_for_index(t, i)
+    @show t3
 
     println()
 end

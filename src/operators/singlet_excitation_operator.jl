@@ -21,5 +21,9 @@ function exchange_indices(e::SingletExcitationOperator, mapping)
     )
 end
 
+function get_all_indices(e::SingletExcitationOperator)
+    [e.p, e.q]
+end
+
 # Externally visible constructor
 E(p, q) = Expression(SingletExcitationOperator(p, q))
