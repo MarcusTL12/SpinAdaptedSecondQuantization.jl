@@ -100,6 +100,10 @@ function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
 end
 
 function exchange_indices(t::Term{T}, mapping) where {T<:Number}
+    if isempty(mapping)
+        return t
+    end
+
     t = copy(t)
 
     for (i, old_ind) in enumerate(t.sum_indices)
@@ -170,6 +174,21 @@ function make_space_for_index(t::Term, new_index::MOIndex)
     end
 end
 
+function make_space_for_indices(t::Term, new_indices)
+    indices = get_all_indices(t)
+    mapping = Pair{MOIndex,MOIndex}[]
+
+    for new_index in new_indices
+        if new_index ∈ t.sum_indices
+            unique_index = next_free_index(indices, new_index)
+            push!(indices, unique_index)
+            push!(mapping, new_index => unique_index)
+        end
+    end
+
+    exchange_indices(t, mapping)
+end
+
 # function summation(t::Term, sum_index)
-    
+
 # end

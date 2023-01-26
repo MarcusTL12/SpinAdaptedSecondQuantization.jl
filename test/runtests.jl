@@ -171,5 +171,8 @@ g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
     t3 = SpinAdaptedSecondQuantization.make_space_for_index(t, i)
     @show t3
 
+    t4 = SpinAdaptedSecondQuantization.make_space_for_indices(t, [i, j, a])
+    @show t4
+
     println()
 end
