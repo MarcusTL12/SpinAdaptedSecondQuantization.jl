@@ -44,7 +44,7 @@ Base.isless(::Type{OccupiedOrbital}, ::Type{OccupiedOrbital}) = false
 Base.isless(::Type{VirtualOrbital}, ::Type{OccupiedOrbital}) = false
 # Base.isless(::Type{OccupiedOrbital}, ::Type{VirtualOrbital}) = true
 
-function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
+function getnames(::Type{S}) where {S<:GeneralOrbital}
     throw("getname not implemented for space $S")
 end
 

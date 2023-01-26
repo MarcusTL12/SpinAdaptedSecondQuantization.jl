@@ -105,6 +105,7 @@ end
     @show Epq dpi dai hai
 
     @test string(Epq) == "E_pq"
+    @test string(dai) == "0"
 
     println()
 end
