@@ -85,3 +85,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
         print(io, ')')
     end
 end
+
+function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
+    Term(scalar, t.sum_indices, t.deltas, t.tensors, t.operators)
+end
