@@ -109,3 +109,12 @@ function Base.isless(p::MOIndex{S1}, q::MOIndex{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital}
     (S1, p.index) < (S2, q.index)
 end
+
+function exchange_index(p::MOIndex, mapping)
+    for (old, new) in mapping
+        if p == old
+            return new
+        end
+    end
+    p
+end

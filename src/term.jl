@@ -16,6 +16,14 @@ struct Term{T<:Number}
     end
 end
 
+Base.copy(t::Term) = Term(
+    copy(t.scalar),
+    copy(t.sum_indices),
+    copy(t.deltas),
+    copy(t.tensors),
+    copy(t.operators)
+)
+
 function Base.zero(::Type{Term})
     Term(0, MOIndex[], KroneckerDelta[], Tensor[], Operator[])
 end
@@ -86,6 +94,39 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
     end
 end
 
+# utility function to "copy" a term but replace the scalar with a new one
 function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
     Term(scalar, t.sum_indices, t.deltas, t.tensors, t.operators)
+end
+
+function exchange_indices(t::Term{T}, mapping) where {T<:Number}
+    t = copy(t)
+
+    for (i, old_ind) in enumerate(t.sum_indices)
+        t.sum_indices[i] = exchange_index(old_ind, mapping)
+    end
+
+    for (i, old_delta) in enumerate(t.deltas)
+        new_delta = KroneckerDelta(
+            exchange_index(old_delta.p, mapping),
+            exchange_index(old_delta.q, mapping)
+        )
+
+        if new_delta isa KroneckerDelta
+            t.deltas[i] = new_delta
+        else
+            @warn "Index exchange lead to delta producing zero!"
+            return Expression(zero(T))
+        end
+    end
+
+    for (i, tensor) in enumerate(t.tensors)
+        t.tensors[i] = exchange_indices(tensor, mapping)
+    end
+
+    for (i, operator) in enumerate(t.operators)
+        t.operators[i] = exchange_indices(operator, mapping)
+    end
+
+    t
 end

@@ -30,7 +30,7 @@ using SpinAdaptedSecondQuantization
     @test string(p) == "p"
     @test string(p1) == "p₁"
 
-    @test string(a) != "a"
+    @test string(a) == "\e[36ma\e[39m"
 
     println()
 end
@@ -130,6 +130,42 @@ end
 
     @test string(Epq) == "E_pq"
     @test string(dai) == "0"
+
+    println()
+end
+
+@testset "term exchange_indices" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    i = occupied(1)
+    j = occupied(2)
+    a = virtual(1)
+    b = virtual(2)
+
+    t = SpinAdaptedSecondQuantization.Term(
+        3 // 5,
+        [i, a],
+        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
+        [
+            SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
+            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
+        ],
+        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
+    )
+
+    @show t
+
+    t = SpinAdaptedSecondQuantization.exchange_indices(
+        t,
+        [p => q, q => p, a => b, i => j]
+    )
+
+    @test string(t) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_q\e[36mb\e[39m \
+g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
+
+    @show t
 
     println()
 end
