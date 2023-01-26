@@ -176,3 +176,30 @@ g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
 
     println()
 end
+
+@testset "term summation" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    i = occupied(1)
+    j = occupied(2)
+    a = virtual(1)
+    b = virtual(2)
+
+    t = SpinAdaptedSecondQuantization.Term(
+        1,
+        SpinAdaptedSecondQuantization.MOIndex[],
+        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
+        [SpinAdaptedSecondQuantization.RealTensor("h", [p, q])],
+        SpinAdaptedSecondQuantization.Operator[],
+    )
+
+    @show t
+
+    t = SpinAdaptedSecondQuantization.summation(t, p)
+
+    @show t
+
+    println()
+end

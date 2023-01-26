@@ -164,6 +164,8 @@ function get_all_indices(t::Term)
     sort!(indices)
 end
 
+# These two functions rename summing indices such that there are no
+# summing indices that collide with the new indices
 function make_space_for_index(t::Term, new_index::MOIndex)
     if new_index ∈ t.sum_indices
         mapping = [new_index => next_free_index(get_all_indices(t), new_index)]
@@ -189,6 +191,13 @@ function make_space_for_indices(t::Term, new_indices)
     exchange_indices(t, mapping)
 end
 
-# function summation(t::Term, sum_index)
-
-# end
+function summation(t::Term, sum_index)
+    t = make_space_for_index(t, sum_index)
+    Term(
+        t.scalar,
+        MOIndex[t.sum_indices; sum_index],
+        t.deltas,
+        t.tensors,
+        t.operators
+    )
+end
