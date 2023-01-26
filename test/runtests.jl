@@ -80,7 +80,7 @@ end
     p = general(1)
     q = general(2)
 
-    hpq = SpinAdaptedSecondQuantization.RealTensor("h", p, q)
+    hpq = SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
 
     @show hpq
 
@@ -102,8 +102,8 @@ end
         [i, a],
         [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
         [
-            SpinAdaptedSecondQuantization.RealTensor("h", p, a),
-            SpinAdaptedSecondQuantization.RealTensor("g", i, a, i, q)
+            SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
+            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
         ],
         [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
     )
@@ -113,23 +113,23 @@ end
     println()
 end
 
-# @testset "term" begin
-#     println()
+@testset "expression constructors" begin
+    println()
 
-#     p = general(1)
-#     q = general(2)
-#     i = occupied(1)
-#     a = virtual(1)
+    p = general(1)
+    q = general(2)
+    i = occupied(1)
+    a = virtual(1)
 
-#     Epq = E(p, q)
-#     dpi = δ(p, i)
-#     dai = δ(a, i)
-#     hai = real_tensor("h", a, i)
+    Epq = E(p, q)
+    dpi = δ(p, i)
+    dai = δ(a, i)
+    hai = real_tensor("h", a, i)
 
-#     @show Epq dpi dai hai
+    @show Epq dpi dai hai
 
-#     @test string(Epq) == "E_pq"
-#     @test string(dai) == "0"
+    @test string(Epq) == "E_pq"
+    @test string(dai) == "0"
 
-#     println()
-# end
+    println()
+end

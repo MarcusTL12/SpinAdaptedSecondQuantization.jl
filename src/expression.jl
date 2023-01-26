@@ -24,18 +24,24 @@ function Base.zero(::Type{Expression})
     Expression([zero(Term)])
 end
 
+function Expression(s::T) where {T<:Number}
+    Expression([Term(
+        s,
+        MOIndex[],
+        KroneckerDelta[],
+        Tensor[],
+        Operator[]
+    )])
+end
+
 function Expression(d::KroneckerDelta)
-    if d == 0
-        zero(Expression)
-    else
-        Expression([Term(
-            1,
-            MOIndex[],
-            [d],
-            Tensor[],
-            Operator[]
-        )])
-    end
+    Expression([Term(
+        1,
+        MOIndex[],
+        [d],
+        Tensor[],
+        Operator[]
+    )])
 end
 
 Expression(t::Tensor) = Expression([Term(
