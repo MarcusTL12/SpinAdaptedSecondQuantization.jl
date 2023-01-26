@@ -19,3 +19,37 @@ but rather include a single zero term")
         end
     end
 end
+
+function Base.zero(::Type{Expression})
+    Expression([zero(Term)])
+end
+
+function Expression(d::KroneckerDelta)
+    if d == 0
+        zero(Expression)
+    else
+        Expression([Term(
+            1,
+            MOIndex[],
+            [d],
+            Tensor[],
+            Operator[]
+        )])
+    end
+end
+
+Expression(t::Tensor) = Expression([Term(
+    1,
+    MOIndex[],
+    KroneckerDelta[],
+    Tensor[t],
+    Operator[]
+)])
+
+Expression(o::Operator) = Expression([Term(
+    1,
+    MOIndex[],
+    KroneckerDelta[],
+    Tensor[],
+    Operator[o]
+)])

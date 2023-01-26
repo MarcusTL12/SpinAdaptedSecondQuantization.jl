@@ -15,10 +15,4 @@ function Base.show(io::IO, e::SingletExcitationOperator)
 end
 
 # Externally visible constructor
-E(p, q) = Term(
-    1,
-    MOIndex[],
-    KroneckerDelta[],
-    Tensor[],
-    Operator[SingletExcitationOperator(p, q)]
-)
+E(p, q) = Expression(SingletExcitationOperator(p, q))

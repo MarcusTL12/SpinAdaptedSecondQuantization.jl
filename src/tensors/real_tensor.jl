@@ -9,10 +9,5 @@ end
 get_symbol(t::RealTensor) = t.symbol
 get_indices(t::RealTensor) = t.indices
 
-real_tensor(symbol, indices...) = Term(
-    1,
-    MOIndex[],
-    KroneckerDelta[],
-    Tensor[RealTensor(symbol, collect(indices))],
-    Operator[]
-)
+real_tensor(symbol, indices...) =
+    Expression(RealTensor(symbol, collect(indices)))

@@ -20,21 +20,7 @@ function Base.show(io::IO, d::KroneckerDelta)
 end
 
 # Externally visible constructor
-function delta(p, q)
-    d = KroneckerDelta(p, q)
-
-    if d == 0
-        zero(Term)
-    else
-        Term(
-            1,
-            MOIndex[],
-            [d],
-            Tensor[],
-            Operator[]
-        )
-    end
-end
+delta(p, q) = Expression(KroneckerDelta(p, q))
 
 # Simple unicode alias
 δ(p, q) = delta(p, q)

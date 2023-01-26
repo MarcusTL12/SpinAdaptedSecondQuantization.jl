@@ -80,7 +80,7 @@ end
     p = general(1)
     q = general(2)
 
-    hpq = SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
+    hpq = SpinAdaptedSecondQuantization.RealTensor("h", p, q)
 
     @show hpq
 
@@ -102,8 +102,8 @@ end
         [i, a],
         [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
         [
-            SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
-            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
+            SpinAdaptedSecondQuantization.RealTensor("h", p, a),
+            SpinAdaptedSecondQuantization.RealTensor("g", i, a, i, q)
         ],
         [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
     )
