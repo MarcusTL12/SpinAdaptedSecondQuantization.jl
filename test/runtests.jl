@@ -168,7 +168,7 @@ g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
 
     @show t2
 
-    t3 = SpinAdaptedSecondQuantization.make_space_for_index(t, i)
+    t3 = SpinAdaptedSecondQuantization.make_space_for_indices(t, i)
     @show t3
 
     t4 = SpinAdaptedSecondQuantization.make_space_for_indices(t, [i, j, a])
@@ -197,7 +197,7 @@ end
 
     @show t
 
-    t = SpinAdaptedSecondQuantization.summation(t, p)
+    t = ∑(t, [p, q])
 
     @show t
 
