@@ -63,7 +63,7 @@ Expression(o::Operator) = Expression([Term(
 export summation, ∑
 
 function summation(e::Expression, sum_indices)
-    [summation(t, sum_indices) for t in e.terms]
+    Expression([summation(t, sum_indices) for t in e.terms])
 end
 
 ∑(e, s) = summation(e, s)

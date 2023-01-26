@@ -132,6 +132,10 @@ function exchange_indices(t::Term{T}, mapping) where {T<:Number}
         t.operators[i] = exchange_indices(operator, mapping)
     end
 
+    sort!(t.sum_indices)
+    sort!(t.deltas)
+    sort!(t.tensors)
+
     t
 end
 
@@ -162,6 +166,42 @@ function get_all_indices(t::Term)
     end
 
     sort!(indices)
+end
+
+# This returns the sum indices of a term
+# in the order they show up inside the sum
+# The ones that do not show up will come last
+function get_sum_indices_ordered(t::Term)
+    indices = MOIndex[]
+
+    function add_index(i::MOIndex)
+        if i ∉ indices && i ∈ t.sum_indices
+            push!(indices, i)
+        end
+    end
+
+    for d in t.deltas
+        add_index(d.p)
+        add_index(d.q)
+    end
+
+    for tensor in t.tensors
+        for i in get_indices(tensor)
+            add_index(i)
+        end
+    end
+
+    for o in t.operators
+        for i in get_all_indices(o)
+            add_index(i)
+        end
+    end
+
+    for i in t.sum_indices
+        add_index(i)
+    end
+
+    indices
 end
 
 # These two functions rename summing indices such that there are no
@@ -200,4 +240,37 @@ function summation(t::Term, sum_indices)
         t.tensors,
         t.operators
     )
+end
+
+function sort_summation_indices(t::Term)
+    if isempty(t.sum_indices)
+        return t
+    end
+
+    space_mapping = Dict()
+    by_space = Vector{MOIndex}[]
+
+    for i in get_sum_indices_ordered(t)
+        s = space(i)
+        space_ind = if haskey(space_mapping, s)
+            space_mapping[s]
+        else
+            push!(by_space, MOIndex[])
+            space_mapping[s] = length(by_space)
+        end
+
+        push!(by_space[space_ind], i)
+    end
+
+    mapping = Pair{MOIndex,MOIndex}[]
+
+    for order in by_space
+        for (pos, ind) in enumerate(sort(order))
+            if ind != order[pos]
+                push!(mapping, ind => order[pos])
+            end
+        end
+    end
+
+    exchange_indices(t, mapping)
 end

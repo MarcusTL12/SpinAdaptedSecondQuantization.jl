@@ -203,3 +203,26 @@ end
 
     println()
 end
+
+@testset "term summation simplify" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    i = occupied(1)
+    j = occupied(2)
+    a = virtual(1)
+    b = virtual(2)
+
+    t = real_tensor("g", b, i, a, j)
+
+    @show t
+
+    t = ∑(t, [a, b, i, j])
+
+    @show t
+
+    @show SpinAdaptedSecondQuantization.sort_summation_indices(t.terms[1])
+
+    println()
+end
