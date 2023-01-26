@@ -242,6 +242,10 @@ function summation(t::Term, sum_indices)
     )
 end
 
+# This function reorders the summation indices such that they show up
+# in a sorted manner within the sum.
+# For example, it will do the conversion:
+# ∑_ijab(g_biaj) -> ∑_ijab(g_aibj)
 function sort_summation_indices(t::Term)
     if isempty(t.sum_indices)
         return t
@@ -269,6 +273,26 @@ function sort_summation_indices(t::Term)
             if ind != order[pos]
                 push!(mapping, ind => order[pos])
             end
+        end
+    end
+
+    exchange_indices(t, mapping)
+end
+
+# This function reduces the summation indices to be as small as possible
+# when used right before sort_summation_indices it will do the following:
+# ∑_ijbd(g_bidj) -> ∑_ijab(g_biaj) -> ∑_ijab(g_aibj)
+function lower_summation_indices(t::Term)
+    indices = get_all_indices(t)
+
+    mapping = Pair{MOIndex,MOIndex}[]
+
+    for i in reverse(t.sum_indices)
+        free_index = next_free_index(indices, i)
+
+        if free_index < i
+            push!(mapping, i => free_index)
+            push!(indices, free_index)
         end
     end
 

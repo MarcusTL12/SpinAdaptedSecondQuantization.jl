@@ -211,18 +211,24 @@ end
     q = general(2)
     i = occupied(1)
     j = occupied(2)
-    a = virtual(1)
     b = virtual(2)
+    d = virtual(4)
 
-    t = real_tensor("g", b, i, a, j)
-
-    @show t
-
-    t = ∑(t, [a, b, i, j])
+    t = real_tensor("g", b, i, d, j)
 
     @show t
 
-    @show SpinAdaptedSecondQuantization.sort_summation_indices(t.terms[1])
+    t = ∑(t, [b, d, i, j])
+
+    @show t
+
+    t = SpinAdaptedSecondQuantization.lower_summation_indices(t.terms[1])
+
+    @show t
+
+    t = SpinAdaptedSecondQuantization.sort_summation_indices(t)
+
+    @show t
 
     println()
 end
