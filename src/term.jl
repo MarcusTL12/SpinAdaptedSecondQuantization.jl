@@ -1,3 +1,6 @@
+using DataStructures: SortedDict
+
+const Constraints = SortedDict{MOIndex,Type}
 
 struct Term{T<:Number}
     scalar::T
@@ -6,13 +9,28 @@ struct Term{T<:Number}
     tensors::Vector{Tensor}
     operators::Vector{Operator}
 
+    # Dict which holds information about which externally visible
+    # indices are constrained to a lower space than itself.
+    # Should not contain any indices that do not otherwise show up in the term.
+    constraints::Constraints
+
     function Term(scalar::T, sum_indices, deltas, tensors, operators) where
     {T<:Number}
         sort!(sum_indices)
         sort!(deltas)
         sort!(tensors)
 
-        new{T}(scalar, sum_indices, deltas, tensors, operators)
+        new{T}(scalar, sum_indices, deltas, tensors, operators, Constraints())
+    end
+
+    function Term(scalar::T, sum_indices, deltas, tensors, operators,
+        constraints) where
+    {T<:Number}
+        sort!(sum_indices)
+        sort!(deltas)
+        sort!(tensors)
+
+        new{T}(scalar, sum_indices, deltas, tensors, operators, constraints)
     end
 end
 
@@ -90,6 +108,24 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
     end
 
     if !isempty(t.sum_indices)
+        print(io, ')')
+    end
+
+    if !isempty(t.constraints)
+        printsep()
+
+        print(io, "C(")
+
+        isfirst = true
+
+        for (i, s) in t.constraints
+            if !isfirst
+                print(io, ", ")
+            end
+            print(io, i, "∈", getshortname(s))
+            isfirst = false
+        end
+
         print(io, ')')
     end
 end
