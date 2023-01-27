@@ -203,6 +203,8 @@ function exchange_indices(t::Term{T}, mapping) where
         end
     end
 
+    # TODO: remove constraints that are no stricter then the constrained index
+
     t
 end
 
