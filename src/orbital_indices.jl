@@ -52,6 +52,10 @@ getnames(::Type{GeneralOrbital}) = "pqrstuv"
 getnames(::Type{OccupiedOrbital}) = "ijklmno"
 getnames(::Type{VirtualOrbital}) = "abcdefg"
 
+getshortname(::Type{GeneralOrbital}) = "G"
+getshortname(::Type{OccupiedOrbital}) = "O"
+getshortname(::Type{VirtualOrbital}) = "V"
+
 subscript(i) = join(Char(0x2080 + d) for d in reverse!(digits(i)))
 
 function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
