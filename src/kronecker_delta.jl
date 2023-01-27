@@ -7,6 +7,8 @@ struct KroneckerDelta
     function KroneckerDelta(p::MOIndex, q::MOIndex)
         if isdisjoint(p, q)
             0
+        elseif p == q
+            1
         elseif p < q
             new(p, q)
         else
@@ -24,3 +26,7 @@ delta(p, q) = Expression(KroneckerDelta(p, q))
 
 # Simple unicode alias
 δ(p, q) = delta(p, q)
+
+function Base.isless(d1::KroneckerDelta, d2::KroneckerDelta)
+    (d1.p, d1.q) < (d2.p, d2.q)
+end
