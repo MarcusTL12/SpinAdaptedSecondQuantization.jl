@@ -44,6 +44,11 @@ Base.isless(::Type{OccupiedOrbital}, ::Type{OccupiedOrbital}) = false
 Base.isless(::Type{VirtualOrbital}, ::Type{OccupiedOrbital}) = false
 # Base.isless(::Type{OccupiedOrbital}, ::Type{VirtualOrbital}) = true
 
+function is_strict_subspace(::Type{S1}, ::Type{S2}) where
+{S1<:GeneralOrbital,S2<:GeneralOrbital}
+    S1 != S2 && S1 <: S2
+end
+
 function getnames(::Type{S}) where {S<:GeneralOrbital}
     throw("getnames not implemented for space $S")
 end

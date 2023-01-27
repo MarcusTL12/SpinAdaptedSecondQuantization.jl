@@ -39,7 +39,8 @@ Base.copy(t::Term) = Term(
     copy(t.sum_indices),
     copy(t.deltas),
     copy(t.tensors),
-    copy(t.operators)
+    copy(t.operators),
+    copy(t.constraints)
 )
 
 function Base.zero(::Type{Term})
@@ -132,10 +133,11 @@ end
 
 # utility function to "copy" a term but replace the scalar with a new one
 function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
-    Term(scalar, t.sum_indices, t.deltas, t.tensors, t.operators)
+    Term(scalar, t.sum_indices, t.deltas, t.tensors, t.operators, t.constraints)
 end
 
-function exchange_indices(t::Term{T}, mapping) where {T<:Number}
+function exchange_indices(t::Term{T}, mapping) where
+{T<:Number}
     if isempty(mapping)
         return t
     end
@@ -179,6 +181,28 @@ function exchange_indices(t::Term{T}, mapping) where {T<:Number}
     sort!(t.deltas)
     sort!(t.tensors)
 
+    for (from, to) in mapping
+        if haskey(t.constraints, from)
+            s = pop!(t.constraints, from)
+            if haskey(t.constraints, to)
+                t.constraints[to] = typeintersect(t.constraints[to], s)
+            else
+                t.constraints[to] = s
+            end
+        end
+
+        # When increasing the space of an index we need to store the previous
+        # space as a constraint
+        if is_strict_subspace(space(from), space(to))
+            if haskey(t.constraints, to)
+                t.constraints[to] =
+                    typeintersect(t.constraints[to], space(from))
+            else
+                t.constraints[to] = space(from)
+            end
+        end
+    end
+
     t
 end
 
@@ -206,6 +230,10 @@ function get_all_indices(t::Term)
         for i in get_all_indices(o)
             add_index(i)
         end
+    end
+
+    for (i, _) in t.constraints
+        add_index(i)
     end
 
     sort!(indices)
@@ -365,3 +393,7 @@ function get_delta_equal(t::Term, p::MOIndex)
 
     sort!(indices)
 end
+
+# function ()
+
+# end

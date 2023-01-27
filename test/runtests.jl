@@ -259,3 +259,37 @@ end
 
     println()
 end
+
+@testset "term exchange_indices constraints" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+    i = occupied(1)
+    j = occupied(2)
+    a = virtual(1)
+    b = virtual(2)
+
+    t = SpinAdaptedSecondQuantization.Term(
+        3 // 5,
+        SpinAdaptedSecondQuantization.MOIndex[],
+        SpinAdaptedSecondQuantization.KroneckerDelta[],
+        [
+            SpinAdaptedSecondQuantization.RealTensor("h", [a, b]),
+        ],
+        [SpinAdaptedSecondQuantization.SingletExcitationOperator(i, j)],
+    )
+
+    @show t
+
+    t2 = SpinAdaptedSecondQuantization.exchange_indices(
+        t,
+        [a => p, b => q, i => r, j => s]
+    )
+
+    @show t2
+
+    println()
+end
