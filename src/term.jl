@@ -146,6 +146,7 @@ function exchange_indices(t::Term{T}, mapping) where {T<:Number}
         t.sum_indices[i] = exchange_index(old_ind, mapping)
     end
 
+    delete_deltas = Int[]
     for (i, old_delta) in enumerate(t.deltas)
         new_delta = KroneckerDelta(
             exchange_index(old_delta.p, mapping),
@@ -154,10 +155,16 @@ function exchange_indices(t::Term{T}, mapping) where {T<:Number}
 
         if new_delta isa KroneckerDelta
             t.deltas[i] = new_delta
-        else
+        elseif new_delta == 1
+            push!(delete_deltas, i)
+        elseif new_delta == 0
             @warn "Index exchange lead to delta producing zero!"
             return Expression(zero(T))
         end
+    end
+
+    for i in reverse!(delete_deltas)
+        deleteat!(t.deltas, i)
     end
 
     for (i, tensor) in enumerate(t.tensors)
@@ -333,4 +340,28 @@ function lower_summation_indices(t::Term)
     end
 
     exchange_indices(t, mapping)
+end
+
+# This function returns a sorted array of the indices that are directly
+# connected by KroneckerDeltas. For example, running with index p on the term
+# δ_pq δ_ap δ_qr
+# would return the list [q, a]
+# Note that it does not include the index r as this is not direclty in the
+# same delta as p
+function get_delta_equal(t::Term, p::MOIndex)
+    indices = MOIndex[]
+
+    for d in t.deltas
+        other = if p == d.p
+            d.q
+        elseif p == d.q
+            d.p
+        end
+
+        if !isnothing(other) && other ∉ indices
+            push!(indices, other)
+        end
+    end
+
+    sort!(indices)
 end

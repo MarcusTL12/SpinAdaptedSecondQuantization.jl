@@ -232,3 +232,30 @@ end
 
     println()
 end
+
+@testset "get_delta_equal" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    a = virtual(1)
+
+    t = SpinAdaptedSecondQuantization.Term(
+        1,
+        SpinAdaptedSecondQuantization.MOIndex[],
+        [
+            SpinAdaptedSecondQuantization.KroneckerDelta(q, r),
+            SpinAdaptedSecondQuantization.KroneckerDelta(a, p),
+            SpinAdaptedSecondQuantization.KroneckerDelta(p, q),
+        ],
+        SpinAdaptedSecondQuantization.Tensor[],
+        SpinAdaptedSecondQuantization.Operator[],
+    )
+
+    @show t
+
+    @show SpinAdaptedSecondQuantization.get_delta_equal(t, p)
+
+    println()
+end
