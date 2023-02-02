@@ -203,7 +203,16 @@ function exchange_indices(t::Term{T}, mapping) where
         end
     end
 
-    # TODO: remove constraints that are no stricter then the constrained index
+    delete_contraints = MOIndex[]
+    for (p, s) in t.constraints
+        if !is_strict_subspace(s, space(p))
+            push!(delete_contraints, p)
+        end
+    end
+
+    for p in delete_contraints
+        delete!(t.constraints, p)
+    end
 
     t
 end

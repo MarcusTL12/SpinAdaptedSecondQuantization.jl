@@ -291,5 +291,12 @@ end
 
     @show t2
 
+    t3 = SpinAdaptedSecondQuantization.exchange_indices(
+        t2,
+        [p => b]
+    )
+
+    @show t3
+
     println()
 end
