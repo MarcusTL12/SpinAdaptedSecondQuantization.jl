@@ -301,16 +301,24 @@ end
 function summation(t::Term, sum_indices)
     t = make_space_for_indices(t, sum_indices)
 
-    # TODO: remove potential constraint of sum indices
+    mapping = Pair{MOIndex,MOIndex}[]
+    all_indices = get_all_indices(t)
+    for p in sum_indices
+        if haskey(t.constraints, p)
+            new_ind = next_free_index(all_indices, t.constraints[p])
+            push!(all_indices, new_ind)
+            push!(mapping, p => new_ind)
+        end
+    end
 
-    Term(
-        t.scalar,
-        MOIndex[t.sum_indices; sum_indices],
-        t.deltas,
-        t.tensors,
-        t.operators,
-        t.constraints
-    )
+    exchange_indices(Term(
+            t.scalar,
+            MOIndex[t.sum_indices; sum_indices],
+            t.deltas,
+            t.tensors,
+            t.operators,
+            t.constraints
+        ), mapping)
 end
 
 # This function reorders the summation indices such that they show up
@@ -390,30 +398,6 @@ function lower_delta_indices(t::Term)
 
     Term(t.scalar, t.sum_indices, t.deltas, new_tensors, new_ops, t.constraints)
 end
-
-# This function returns a sorted array of the indices that are directly
-# connected by KroneckerDeltas. For example, running with index p on the term
-# δ_pq δ_ap δ_qr
-# would return the list [q, a]
-# Note that it does not include the index r as this is not direclty in the
-# same delta as p
-# function get_delta_equal(t::Term, p::MOIndex)
-#     indices = MOIndex[]
-
-#     for d in t.deltas
-#         other = if p == d.p
-#             d.q
-#         elseif p == d.q
-#             d.p
-#         end
-
-#         if !isnothing(other) && other ∉ indices
-#             push!(indices, other)
-#         end
-#     end
-
-#     sort!(indices)
-# end
 
 # This function removes summation indices that show up in kronecker deltas,
 # replacing them with the index they would be equal to instead.
