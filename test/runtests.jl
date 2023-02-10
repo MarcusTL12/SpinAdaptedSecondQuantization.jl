@@ -39,18 +39,23 @@ end
     println()
 
     p = general(1)
+    q = general(2)
     i = occupied(1)
     a = virtual(1)
 
     dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
     dia = SpinAdaptedSecondQuantization.KroneckerDelta(i, a)
     dip = SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
+    dpp = SpinAdaptedSecondQuantization.KroneckerDelta(p, p)
+    dpqi = SpinAdaptedSecondQuantization.KroneckerDelta(p, q, i)
 
-    @show dpa dia dip
+    @show dpa dia dip dpp dpqi
 
     @test dpa != 0
     @test dia == 0
     @test dip != 0
+    @test dpp == 1
+    @test dpqi != 0
 
     println()
 end
@@ -100,7 +105,7 @@ end
     t = SpinAdaptedSecondQuantization.Term(
         3 // 5,
         [i, a],
-        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
+        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a, q)],
         [
             SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
             SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, i])
@@ -255,7 +260,7 @@ end
 
     @show t
 
-    @show SpinAdaptedSecondQuantization.get_delta_equal(t, p)
+    # @show SpinAdaptedSecondQuantization.get_delta_equal(t, p)
 
     println()
 end

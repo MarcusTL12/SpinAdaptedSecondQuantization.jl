@@ -150,10 +150,7 @@ function exchange_indices(t::Term{T}, mapping) where
 
     delete_deltas = Int[]
     for (i, old_delta) in enumerate(t.deltas)
-        new_delta = KroneckerDelta(
-            exchange_index(old_delta.p, mapping),
-            exchange_index(old_delta.q, mapping)
-        )
+        new_delta = exchange_indices(old_delta, mapping)
 
         if new_delta isa KroneckerDelta
             t.deltas[i] = new_delta
@@ -220,34 +217,28 @@ end
 function get_all_indices(t::Term)
     indices = copy(t.sum_indices)
 
-    function add_index(i::MOIndex)
-        if i ∉ indices
-            push!(indices, i)
-        end
-    end
-
     for d in t.deltas
-        add_index(d.p)
-        add_index(d.q)
+        append!(indices, d.indices)
     end
 
     for tensor in t.tensors
         for i in get_indices(tensor)
-            add_index(i)
+            push!(indices, i)
         end
     end
 
     for o in t.operators
         for i in get_all_indices(o)
-            add_index(i)
+            push!(indices, i)
         end
     end
 
     for (i, _) in t.constraints
-        add_index(i)
+        push!(indices, i)
     end
 
     sort!(indices)
+    unique!(indices)
 end
 
 # This returns the sum indices of a term
@@ -391,23 +382,23 @@ end
 # would return the list [q, a]
 # Note that it does not include the index r as this is not direclty in the
 # same delta as p
-function get_delta_equal(t::Term, p::MOIndex)
-    indices = MOIndex[]
+# function get_delta_equal(t::Term, p::MOIndex)
+#     indices = MOIndex[]
 
-    for d in t.deltas
-        other = if p == d.p
-            d.q
-        elseif p == d.q
-            d.p
-        end
+#     for d in t.deltas
+#         other = if p == d.p
+#             d.q
+#         elseif p == d.q
+#             d.p
+#         end
 
-        if !isnothing(other) && other ∉ indices
-            push!(indices, other)
-        end
-    end
+#         if !isnothing(other) && other ∉ indices
+#             push!(indices, other)
+#         end
+#     end
 
-    sort!(indices)
-end
+#     sort!(indices)
+# end
 
 # This function removes summation indices that show up in kronecker deltas,
 # replacing them with the index they would be equal to instead.

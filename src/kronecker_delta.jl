@@ -1,32 +1,47 @@
 export delta, δ
 
 struct KroneckerDelta
-    p::MOIndex
-    q::MOIndex
+    indices::Vector{MOIndex}
 
-    function KroneckerDelta(p::MOIndex, q::MOIndex)
-        if isdisjoint(p, q)
-            0
-        elseif p == q
+    function KroneckerDelta(indices)
+        indices = unique!(sort(indices))
+
+        if length(indices) <= 1
             1
-        elseif p < q
-            new(p, q)
         else
-            new(q, p)
+            for i in eachindex(indices), j in (i+1):length(indices)
+                if isdisjoint(indices[i], indices[j])
+                    return 0
+                end
+            end
+
+            new(indices)
         end
     end
 end
 
+function KroneckerDelta(indices...)
+    KroneckerDelta(collect(indices))
+end
+
 function Base.show(io::IO, d::KroneckerDelta)
-    print(io, "δ_", d.p, d.q)
+    print(io, "δ_")
+
+    for p in d.indices
+        print(io, p)
+    end
 end
 
 # Externally visible constructor
-delta(p, q) = Expression(KroneckerDelta(p, q))
+delta(indices...) = Expression(KroneckerDelta(indices...))
 
 # Simple unicode alias
-δ(p, q) = delta(p, q)
+δ(indices...) = delta(indices...)
 
 function Base.isless(d1::KroneckerDelta, d2::KroneckerDelta)
-    (d1.p, d1.q) < (d2.p, d2.q)
+    d1.indices < d2.indices
+end
+
+function exchange_indices(d::KroneckerDelta, mapping)
+    KroneckerDelta([exchange_index(p, mapping) for p in d.indices])
 end
