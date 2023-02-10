@@ -185,6 +185,7 @@ end
 
     p = general(1)
     q = general(2)
+    r = general(3)
     i = occupied(1)
     j = occupied(2)
     a = virtual(1)
@@ -219,6 +220,42 @@ g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
     t4 = SpinAdaptedSecondQuantization.make_space_for_indices(t, [i, j, a])
     @show t4
 
+    t = SpinAdaptedSecondQuantization.Term(
+        3 // 7,
+        SpinAdaptedSecondQuantization.MOIndex[],
+        [SpinAdaptedSecondQuantization.KroneckerDelta(p, q, r)],
+        [
+            SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
+            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
+        ],
+        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
+    )
+
+    println()
+
+    @show t
+
+    t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
+
+    @show t
+
+    t2 = SpinAdaptedSecondQuantization.exchange_indices(t, [p => q])
+
+    @show t2
+
+    t3 = SpinAdaptedSecondQuantization.exchange_indices(t2, [q => r])
+
+    @show t3
+
+    t4 = SpinAdaptedSecondQuantization.exchange_indices(t, [q => p])
+
+    println()
+    @show t4
+
+    t5 = SpinAdaptedSecondQuantization.exchange_indices(t4, [r => p])
+
+    @show t5
+
     println()
 end
 
@@ -236,13 +273,21 @@ end
         1,
         SpinAdaptedSecondQuantization.MOIndex[],
         [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
-        [SpinAdaptedSecondQuantization.RealTensor("h", [p, q])],
+        [SpinAdaptedSecondQuantization.RealTensor("h", [a, q])],
         SpinAdaptedSecondQuantization.Operator[],
     )
 
     @show t
 
-    t = ∑(t, [p, q])
+    t = ∑(t, [a, q])
+
+    @show t
+
+    t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
+
+    @show t
+
+    t = SpinAdaptedSecondQuantization.simplify_summation_deltas(t)
 
     @show t
 

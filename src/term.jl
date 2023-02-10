@@ -401,19 +401,31 @@ end
 
 # This function removes summation indices that show up in kronecker deltas,
 # replacing them with the index they would be equal to instead.
-# function simplify_summation_deltas(t::Term)
-#     done = false
+# This should be run after `lower_delta_indices`
+function simplify_summation_deltas(t::Term)
+    done = false
 
-#     while !done
-#         done = true
-#         for p in t.sum_indices
-#             delta_equals = get_delta_equal(t, p)
+    while !done
+        done = true
+        for p in t.sum_indices
+            for d in t.deltas
+                i = findfirst(==(p), d.indices)
+                if !isnothing(i)
+                    if i == 1
+                        # If the summation index shows up as the first index
+                        # of the delta, then we need to rename all the
+                        # occurrences of that index with the next one
+                        # in the delta. Example:
+                        # ∑_i(δ_ijk h_ip E_iq) -> δ_jk h_jp E_jq
 
-#             if !isempty(delta_equals)
-#                 done = false
+                        
+                    else
+                        # Otherwise, it does not show up anywhere else in the
+                        # term, so we only need to remove it from the delta
 
-
-#             end
-#         end
-#     end
-# end
+                    end
+                end
+            end
+        end
+    end
+end
