@@ -12,24 +12,20 @@ struct Term{T<:Number}
     # Should not contain any indices that do not otherwise show up in the term.
     constraints::Constraints
 
-    function Term(scalar::T, sum_indices, deltas, tensors, operators) where
-    {T<:Number}
-        sort!(sum_indices)
-        sort!(deltas)
-        sort!(tensors)
-
-        new{T}(scalar, sum_indices, deltas, tensors, operators, Constraints())
-    end
-
     function Term(scalar::T, sum_indices, deltas, tensors, operators,
         constraints) where
     {T<:Number}
         sort!(sum_indices)
-        sort!(deltas)
         sort!(tensors)
 
-        new{T}(scalar, sum_indices, deltas, tensors, operators, constraints)
+        new{T}(scalar, sum_indices, compact_deltas(deltas), tensors,
+            operators, constraints)
     end
+end
+
+function Term(scalar::T, sum_indices, deltas, tensors, operators) where
+{T<:Number}
+    Term(scalar, sum_indices, deltas, tensors, operators, Constraints())
 end
 
 Base.copy(t::Term) = Term(
@@ -372,6 +368,27 @@ function lower_summation_indices(t::Term)
     end
 
     exchange_indices(t, mapping)
+end
+
+# This function will look for indices in the tensors and operators
+# that show up in Kronecker deltas and exchange them for the
+# first index that shows up in that delta.
+# Example: δ_pi h_pi E_ip -> δ_pi h_pp E_pp
+function lower_delta_indices(t::Term)
+    mapping = Pair{MOIndex,MOIndex}[]
+
+    for d in t.deltas
+        r, rest = Iterators.peel(d.indices)
+
+        for p in rest
+            push!(mapping, p => r)
+        end
+    end
+
+    new_tensors = [exchange_indices(tensor, mapping) for tensor in t.tensors]
+    new_ops = [exchange_indices(o, mapping) for o in t.operators]
+
+    Term(t.scalar, t.sum_indices, t.deltas, new_tensors, new_ops, t.constraints)
 end
 
 # This function returns a sorted array of the indices that are directly

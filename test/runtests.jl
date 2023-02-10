@@ -140,7 +140,8 @@ end
     t = SpinAdaptedSecondQuantization.Term(
         3 // 5,
         [i, a],
-        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a, q)],
+        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a),
+            SpinAdaptedSecondQuantization.KroneckerDelta(a, q)],
         [
             SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
             SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, i])
@@ -150,6 +151,10 @@ end
 
     @show t
     @show SpinAdaptedSecondQuantization.get_all_indices(t)
+
+    t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
+
+    @show t
 
     println()
 end
