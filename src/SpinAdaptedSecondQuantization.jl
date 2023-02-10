@@ -1,5 +1,7 @@
 module SpinAdaptedSecondQuantization
 
+using DataStructures
+
 include("orbital_indices.jl")
 include("kronecker_delta.jl")
 include("operator.jl")

@@ -1,5 +1,3 @@
-using DataStructures: SortedDict
-
 const Constraints = SortedDict{MOIndex,Type}
 
 struct Term{T<:Number}

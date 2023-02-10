@@ -45,3 +45,56 @@ end
 function exchange_indices(d::KroneckerDelta, mapping)
     KroneckerDelta([exchange_index(p, mapping) for p in d.indices])
 end
+
+function compact_deltas(deltas::Vector{KroneckerDelta})
+    forest = DisjointSets{MOIndex}()
+
+    function add_index(i)
+        if !haskey(forest.intmap, i)
+            push!(forest, i)
+        end
+    end
+
+    function add_index(r, i)
+        if !haskey(forest.intmap, i)
+            push!(forest, i)
+        end
+
+        union!(forest, r, i)
+    end
+
+    for d in deltas
+        r, rest = Iterators.peel(d.indices)
+        add_index(r)
+
+        for i in rest
+            add_index(r, i)
+        end
+    end
+
+    group_dict = Dict{MOIndex,Vector{MOIndex}}()
+
+    for i in collect(forest)
+        r = find_root!(forest, i)
+        if haskey(group_dict, r)
+            push!(group_dict[r], i)
+        else
+            group_dict[r] = [i]
+        end
+    end
+
+    new_deltas = KroneckerDelta[]
+
+    for v in values(group_dict)
+        d = KroneckerDelta(v)
+        if d == 0
+            return 0
+        elseif d == 1
+            @warn "Fusing deltas should not be able to produce 1!"
+        else
+            push!(new_deltas, d)
+        end
+    end
+
+    sort!(new_deltas)
+end

@@ -60,6 +60,41 @@ end
     println()
 end
 
+@testset "kronecker delta compact" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    i = occupied(1)
+    a = virtual(1)
+
+    dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
+    dri = SpinAdaptedSecondQuantization.KroneckerDelta(r, i)
+    dpq = SpinAdaptedSecondQuantization.KroneckerDelta(p, q)
+    dqr = SpinAdaptedSecondQuantization.KroneckerDelta(q, r)
+
+    v = [dpa, dpq, dri]
+
+    @show v
+
+    v = SpinAdaptedSecondQuantization.compact_deltas(v)
+
+    @show v
+    @test v != 0
+
+    v = [dpa, dpq, dri, dqr]
+
+    @show v
+
+    v = SpinAdaptedSecondQuantization.compact_deltas(v)
+
+    @show v
+    @test v == 0
+
+    println()
+end
+
 @testset "singlet excitation operator" begin
     println()
 
