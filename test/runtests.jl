@@ -105,7 +105,7 @@ end
             SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
             SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, i])
         ],
-        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
+        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)]
     )
 
     @show t
@@ -297,6 +297,10 @@ end
     )
 
     @show t3
+
+    t4 = ∑(t3, [s])
+
+    @show t4
 
     println()
 end

@@ -66,6 +66,7 @@ function summation(e::Expression, sum_indices)
     Expression([summation(t, sum_indices) for t in e.terms])
 end
 
+# Unicode alias
 ∑(e, s) = summation(e, s)
 
 # TODO: implement addition/multiplication

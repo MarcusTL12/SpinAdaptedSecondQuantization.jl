@@ -315,12 +315,16 @@ end
 
 function summation(t::Term, sum_indices)
     t = make_space_for_indices(t, sum_indices)
+
+    # TODO: remove potential constraint of sum indices
+
     Term(
         t.scalar,
         MOIndex[t.sum_indices; sum_indices],
         t.deltas,
         t.tensors,
-        t.operators
+        t.operators,
+        t.constraints
     )
 end
 
@@ -405,6 +409,21 @@ function get_delta_equal(t::Term, p::MOIndex)
     sort!(indices)
 end
 
-# function ()
+# This function removes summation indices that show up in kronecker deltas,
+# replacing them with the index they would be equal to instead.
+# function simplify_summation_deltas(t::Term)
+#     done = false
 
+#     while !done
+#         done = true
+#         for p in t.sum_indices
+#             delta_equals = get_delta_equal(t, p)
+
+#             if !isempty(delta_equals)
+#                 done = false
+
+
+#             end
+#         end
+#     end
 # end
