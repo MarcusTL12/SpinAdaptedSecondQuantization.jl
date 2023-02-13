@@ -18,8 +18,14 @@ struct Term{T<:Number}
         sort!(sum_indices)
         sort!(tensors)
 
-        new{T}(scalar, sum_indices, compact_deltas(deltas), tensors,
-            operators, constraints)
+        deltas = compact_deltas(deltas)
+
+        if deltas == 0
+            0
+        else
+            new{T}(scalar, sum_indices, deltas, tensors,
+                operators, constraints)
+        end
     end
 end
 
@@ -273,7 +279,7 @@ end
 
 # These two functions rename summing indices such that there are no
 # summing indices that collide with the new indices
-function make_space_for_indices(t::Term, new_index::MOIndex)
+function make_space_for_index(t::Term, new_index::MOIndex)
     if new_index ∈ t.sum_indices
         mapping = [new_index => next_free_index(get_all_indices(t), new_index)]
 
@@ -456,4 +462,42 @@ function simplify(t::Term)
     simplify_summation_deltas |>
     lower_delta_indices |>
     sort_summation_indices
+end
+
+# Some operator overloading (Not ment for external use):
+
+function Base.:*(a::A, b::Term{B}) where {A<:Number,B<:Number}
+    new_scalar(b, a * b.scalar)
+end
+
+# We are assuming commutative scalar multiplication
+function Base.:*(a::Term{A}, b::B) where {A<:Number,B<:Number}
+    b * a
+end
+
+function Base.:*(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
+    b = make_space_for_indices(b, get_all_indices(a))
+    a = make_space_for_indices(a, get_all_indices(b))
+    scalar = a.scalar * b.scalar
+
+    sum_indices = [a.sum_indices; b.sum_indices]
+    deltas = [a.deltas; b.deltas]
+    tensors = Tensor[a.tensors; b.tensors]
+    operators = Operator[a.operators; b.operators]
+
+    constraints = copy(a.constraints)
+
+    for (p, s) in b.constraints
+        if haskey(constraints, p)
+            if isdisjoint(constraints[p], s)
+                return 0
+            else
+                constraints[p] = typeintersect(constraints[p], s)
+            end
+        else
+            constraints[p] = s
+        end
+    end
+
+    Term(scalar, sum_indices, deltas, tensors, operators, constraints)
 end

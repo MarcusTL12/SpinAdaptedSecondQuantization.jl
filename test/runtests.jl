@@ -214,7 +214,7 @@ g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
 
     @show t2
 
-    t3 = SpinAdaptedSecondQuantization.make_space_for_indices(t, i)
+    t3 = SpinAdaptedSecondQuantization.make_space_for_index(t, i)
     @show t3
 
     t4 = SpinAdaptedSecondQuantization.make_space_for_indices(t, [i, j, a])
@@ -380,6 +380,35 @@ end
     t4 = ∑(t3, [s])
 
     @show t4
+
+    println()
+end
+
+@testset "term multiplication" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+    i = occupied(1)
+    j = occupied(2)
+    a = virtual(1)
+    b = virtual(2)
+
+    t1 = SpinAdaptedSecondQuantization.Term(
+        3 // 5,
+        SpinAdaptedSecondQuantization.MOIndex[i, j],
+        SpinAdaptedSecondQuantization.KroneckerDelta[],
+        SpinAdaptedSecondQuantization.Tensor[],
+        [SpinAdaptedSecondQuantization.SingletExcitationOperator(i, j)],
+    )
+
+    @show t1
+
+    t2 = t1 * t1
+
+    @show t2
 
     println()
 end
