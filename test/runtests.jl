@@ -272,14 +272,12 @@ end
     t = SpinAdaptedSecondQuantization.Term(
         1,
         SpinAdaptedSecondQuantization.MOIndex[],
-        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
-        [SpinAdaptedSecondQuantization.RealTensor("h", [a, q])],
-        SpinAdaptedSecondQuantization.Operator[],
+        [SpinAdaptedSecondQuantization.KroneckerDelta(a, p)],
+        [SpinAdaptedSecondQuantization.RealTensor("h", [a, i])],
+        SpinAdaptedSecondQuantization.Operator[
+            SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)
+        ],
     )
-
-    @show t
-
-    t = ∑(t, [a, q])
 
     @show t
 
@@ -287,9 +285,27 @@ end
 
     @show t
 
-    t = SpinAdaptedSecondQuantization.simplify_summation_deltas(t)
+    println("\np -> a:")
+    t1 = ∑(t, [p])
+    @show t1
+    t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
+    @show t1
+    t2 = ∑(t1, [a])
+    @show t2
 
-    @show t
+    println("\na -> p:")
+    t1 = ∑(t, [a])
+    @show t1
+    t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
+    @show t1
+    t2 = ∑(t1, [p])
+    @show t2
+
+    println("\nap:")
+    t1 = ∑(t, [a, p])
+    @show t1
+    t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
+    @show t1
 
     println()
 end
