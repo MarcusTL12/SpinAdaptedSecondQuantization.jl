@@ -21,7 +21,7 @@ struct Term{T<:Number}
         deltas = compact_deltas(deltas)
 
         if deltas == 0
-            0
+            zero(Term)
         else
             new{T}(scalar, sum_indices, deltas, tensors,
                 operators, constraints)
@@ -45,6 +45,10 @@ Base.copy(t::Term) = Term(
 
 function Base.zero(::Type{Term})
     Term(0, MOIndex[], KroneckerDelta[], Tensor[], Operator[])
+end
+
+function Base.iszero(t::Term)
+    iszero(t.scalar)
 end
 
 function printscalar(io::IO, s::T) where {T<:Number}
@@ -490,7 +494,7 @@ function Base.:*(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     for (p, s) in b.constraints
         if haskey(constraints, p)
             if isdisjoint(constraints[p], s)
-                return 0
+                return zero(Term)
             else
                 constraints[p] = typeintersect(constraints[p], s)
             end
