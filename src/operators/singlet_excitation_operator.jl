@@ -27,3 +27,14 @@ end
 
 # Externally visible constructor
 E(p, q) = Expression(SingletExcitationOperator(p, q))
+
+# Commutation relations:
+
+function commutator(a::SingletExcitationOperator, b::SingletExcitationOperator)
+    p = a.p
+    q = a.q
+    r = b.p
+    s = b.q
+
+    δ(q, r) * E(p, s) - δ(p, s) * E(r, q)
+end

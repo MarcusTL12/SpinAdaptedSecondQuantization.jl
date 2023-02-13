@@ -165,3 +165,17 @@ export simplify
 function simplify(e::Expression)
     Expression([simplify(t) for t in e.terms])
 end
+
+# Commutator:
+
+export commutator
+function commutator(a::Expression{A}, b::Expression{B}) where
+{A<:Number,B<:Number}
+    terms = Term{promote_type(A, B)}[]
+
+    for t1 in a.terms, t2 in b.terms
+        append!(terms, commutator(t1, t2).terms)
+    end
+
+    Expression(terms)
+end

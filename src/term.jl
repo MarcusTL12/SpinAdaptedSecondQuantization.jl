@@ -487,7 +487,7 @@ function simplify(t::Term)
     t |>
     lower_delta_indices |>
     simplify_summation_deltas |>
-    lower_delta_indices |>
+    lower_summation_indices |>
     sort_summation_indices
 end
 
@@ -502,6 +502,28 @@ function Base.:*(a::Term{A}, b::B) where {A<:Number,B<:Number}
     b * a
 end
 
+function fuse_constraints!(a::Constraints, b::Constraints)
+    for (p, s) in b
+        if haskey(a, p)
+            if isdisjoint(a[p], s)
+                return zero(Term)
+            else
+                a[p] = typeintersect(a[p], s)
+            end
+        else
+            a[p] = s
+        end
+    end
+
+    a
+end
+
+# Multiplying two terms makes sure to rename summation indices such that
+# even though they might have some overlap between summation indices, then
+# will not be treated as the "same" index.
+# Examples:
+# ∑_ij(h_ij E_ij) * E_ij = ∑_kl(h_kl E_kl E_ij)
+# ∑_i(h_ij) * ∑_i(h_ij) = ∑_ik(h_ij h_kj)
 function Base.:*(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     b = make_space_for_indices(b, get_all_indices(a))
     a = make_space_for_indices(a, get_all_indices(b))
@@ -513,18 +535,42 @@ function Base.:*(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     operators = Operator[a.operators; b.operators]
 
     constraints = copy(a.constraints)
+    fuse_constraints!(constraints, b.constraints)
 
-    for (p, s) in b.constraints
-        if haskey(constraints, p)
-            if isdisjoint(constraints[p], s)
-                return zero(Term)
-            else
-                constraints[p] = typeintersect(constraints[p], s)
-            end
-        else
-            constraints[p] = s
+    Term(scalar, sum_indices, deltas, tensors, operators, constraints)
+end
+
+# Commutator:
+
+function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
+    b = make_space_for_indices(b, get_all_indices(a))
+    a = make_space_for_indices(a, get_all_indices(b))
+
+    terms = Term{promote_type(A, B)}[]
+
+    for i in eachindex(a.operators), j in eachindex(b.operators)
+        e = commutator(a.operators[i], b.operators[j])
+
+        lhs = Operator[a.operators[1:i-1]; b.operators[1:j-1]]
+        rhs = Operator[b.operators[j+1:end]; a.operators[i+1:end]]
+
+        for t in e.terms
+            constraints = copy(a.constraints)
+            fuse_constraints!(constraints, t.constraints)
+            fuse_constraints!(constraints, b.constraints)
+
+            fused = Term(
+                a.scalar * t.scalar * b.scalar,
+                MOIndex[a.sum_indices; t.sum_indices; b.sum_indices],
+                KroneckerDelta[a.deltas; t.deltas; b.deltas],
+                Tensor[a.tensors; t.tensors; b.tensors],
+                Operator[lhs; t.operators; rhs],
+                constraints
+            )
+
+            push!(terms, fused)
         end
     end
 
-    Term(scalar, sum_indices, deltas, tensors, operators, constraints)
+    Expression(terms)
 end
