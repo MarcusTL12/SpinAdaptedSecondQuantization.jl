@@ -428,6 +428,7 @@ function simplify_summation_deltas(t::Term)
                     else
                         # Otherwise, it does not show up anywhere else in the
                         # term, so we only need to remove it from the delta
+
                         t = exchange_indices(t, [p => first(d.indices)])
                     end
 
