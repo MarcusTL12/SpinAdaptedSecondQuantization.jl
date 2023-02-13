@@ -20,8 +20,9 @@ struct Term{T<:Number}
 
         deltas = compact_deltas(deltas)
 
-        if deltas == 0
-            zero(Term)
+        if deltas == 0 || iszero(scalar)
+            new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
+                Operator[], Constraints())
         else
             new{T}(scalar, sum_indices, deltas, tensors,
                 operators, constraints)
@@ -138,6 +139,24 @@ end
 # utility function to "copy" a term but replace the scalar with a new one
 function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
     Term(scalar, t.sum_indices, t.deltas, t.tensors, t.operators, t.constraints)
+end
+
+function promote_scalar(::Type{T}, t::Term) where {T<:Number}
+    new_scalar(t, promote(zero(T), t.scalar)[2])
+end
+
+function equal_nonscalar(a::Term, b::Term)
+    a.sum_indices == b.sum_indices &&
+        a.deltas == b.deltas &&
+        a.tensors == b.tensors &&
+        a.operators == b.operators &&
+        a.constraints == b.constraints
+end
+
+# Exactly how to sort terms is up for debate, but it should be consistent
+function Base.isless(a::Term, b::Term)
+    (a.operators, a.tensors, a.deltas, a.sum_indices, a.constraints, b.scalar) <
+    (b.operators, b.tensors, b.deltas, b.sum_indices, b.constraints, a.scalar)
 end
 
 function exchange_indices(t::Term{T}, mapping) where

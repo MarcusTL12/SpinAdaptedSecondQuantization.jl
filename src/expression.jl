@@ -1,6 +1,10 @@
 
 struct Expression{T<:Number}
     terms::Vector{Term{T}}
+
+    function Expression(terms::Vector{Term{T}}) where {T<:Number}
+        new{T}(sort(terms))
+    end
 end
 
 function Base.show(io::IO, ex::Expression)
@@ -69,4 +73,17 @@ end
 # Unicode alias
 ∑(e, s) = summation(e, s)
 
-# TODO: implement addition/multiplication
+function promote_scalar(::Type{T}, e::Expression) where {T<:Number}
+    Expression([promote_scalar(T, t) for t in e.terms])
+end
+
+function Base.promote(a::Expression{A}, b::Expression{B}) where
+{A<:Number,B<:Number}
+    (promote_scalar(B, a), promote_scalar(A, b))
+end
+
+function Base.:+(a::Expression, b::Expression)
+    a, b = promote(a, b)
+
+    Expression([a.terms; b.terms])
+end
