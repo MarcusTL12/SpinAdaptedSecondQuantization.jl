@@ -90,12 +90,20 @@ function Base.:+(a::Expression, b::Expression)
     Expression([a.terms; b.terms])
 end
 
-function Base.:+(a::A, b::Expression) where A <: Number
+function Base.:+(a::A, b::Expression) where {A<:Number}
     Expression(a) + b
 end
 
-function Base.:+(a::Expression, b::B) where B <: Number
+function Base.:+(a::Expression, b::B) where {B<:Number}
     a + Expression(b)
 end
 
+# Subtraction:
 
+function Base.:-(e::Expression)
+    Expression([-t for t in e.terms])
+end
+
+function Base.:-(a::Expression, b)
+    a + -b
+end

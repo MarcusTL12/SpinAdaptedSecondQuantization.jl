@@ -141,6 +141,10 @@ function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
     Term(scalar, t.sum_indices, t.deltas, t.tensors, t.operators, t.constraints)
 end
 
+function Base.:-(t::Term)
+    new_scalar(-t.scalar, t)
+end
+
 function promote_scalar(::Type{T}, t::Term) where {T<:Number}
     new_scalar(t, promote(zero(T), t.scalar)[2])
 end

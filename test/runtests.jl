@@ -454,7 +454,7 @@ end
     e1 = δ(a, b)
     e2 = real_tensor("h", i, j)
 
-    @show e1 e2 e1 + e2 e2 + e1
+    @show e1 e2 e1 + e2 e2 + e1 - 5
 
     println()
 end
