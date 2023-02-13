@@ -82,8 +82,20 @@ function Base.promote(a::Expression{A}, b::Expression{B}) where
     (promote_scalar(B, a), promote_scalar(A, b))
 end
 
+# Addition:
+
 function Base.:+(a::Expression, b::Expression)
     a, b = promote(a, b)
 
     Expression([a.terms; b.terms])
 end
+
+function Base.:+(a::A, b::Expression) where A <: Number
+    Expression(a) + b
+end
+
+function Base.:+(a::Expression, b::B) where B <: Number
+    a + Expression(b)
+end
+
+
