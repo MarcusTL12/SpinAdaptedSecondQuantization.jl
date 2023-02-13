@@ -411,4 +411,30 @@ end
     @show t2
 
     println()
+
+    t1 = SpinAdaptedSecondQuantization.Term(
+        3 // 5,
+        SpinAdaptedSecondQuantization.MOIndex[],
+        [
+            SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
+        ],
+        SpinAdaptedSecondQuantization.Tensor[],
+        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
+    )
+
+    t2 = SpinAdaptedSecondQuantization.Term(
+        3 // 5,
+        SpinAdaptedSecondQuantization.MOIndex[],
+        [
+            SpinAdaptedSecondQuantization.KroneckerDelta(a, p)
+        ],
+        SpinAdaptedSecondQuantization.Tensor[
+            SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
+        ],
+        SpinAdaptedSecondQuantization.Operator[],
+    )
+
+    @show t1 t2 t1 * t2
+
+    println()
 end
