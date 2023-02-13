@@ -458,3 +458,23 @@ end
 
     println()
 end
+
+@testset "expression multiplication" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+    i = occupied(1)
+    j = occupied(2)
+    a = virtual(1)
+    b = virtual(2)
+
+    e1 = δ(a, b)
+    e2 = real_tensor("h", i, j)
+
+    @show e1 e2 ((e1 + e2) * 3) // 5
+
+    println()
+end

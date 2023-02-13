@@ -107,3 +107,21 @@ end
 function Base.:-(a::Expression, b)
     a + -b
 end
+
+# Multiplication:
+
+function Base.:*(a::Expression, b::B) where {B<:Number}
+    Expression([t * b for t in a.terms])
+end
+
+function Base.:*(a::A, b::Expression) where {A<:Number}
+    b * a
+end
+
+function Base.:/(a::Expression, b::B) where {B<:Number}
+    a * inv(b)
+end
+
+function Base.://(a::Expression, b::B) where {B<:Number}
+    a * (1//b)
+end
