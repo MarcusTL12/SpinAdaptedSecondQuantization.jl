@@ -142,7 +142,7 @@ function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
 end
 
 function Base.:-(t::Term)
-    new_scalar(-t.scalar, t)
+    new_scalar(t, -t.scalar)
 end
 
 function promote_scalar(::Type{T}, t::Term) where {T<:Number}

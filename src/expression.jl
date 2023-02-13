@@ -3,7 +3,36 @@ struct Expression{T<:Number}
     terms::Vector{Term{T}}
 
     function Expression(terms::Vector{Term{T}}) where {T<:Number}
-        new{T}(sort(terms))
+        terms = sort(terms)
+
+        # Collect equal terms
+
+        first_term, rest = Iterators.peel(terms)
+        terms = Term{T}[first_term]
+
+        for t in rest
+            if equal_nonscalar(last(terms), t)
+                terms[end] = new_scalar(
+                    terms[end], terms[end].scalar + t.scalar
+                )
+            else
+                push!(terms, t)
+            end
+        end
+
+        filter!(!iszero, terms)
+
+        if isempty(terms)
+            new{T}([Term(
+                zero(T),
+                MOIndex[],
+                KroneckerDelta[],
+                Tensor[],
+                Operator[]
+            )])
+        else
+            new{T}(terms)
+        end
     end
 end
 
@@ -123,9 +152,16 @@ function Base.:/(a::Expression, b::B) where {B<:Number}
 end
 
 function Base.://(a::Expression, b::B) where {B<:Number}
-    a * (1//b)
+    a * (1 // b)
 end
 
 function Base.:*(a::Expression, b::Expression)
     Expression([t1 * t2 for t1 in a.terms for t2 in b.terms])
+end
+
+# Simplification:
+
+export simplify
+function simplify(e::Expression)
+    Expression([simplify(t) for t in e.terms])
 end

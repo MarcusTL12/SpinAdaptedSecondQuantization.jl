@@ -480,11 +480,25 @@ end
 
     println()
 
-    e1 = ∑(real_tensor("h", i, j) * E(i, j), [i, j])
-    e2 = ∑(real_tensor("g", i, j, k, l) * E(i, j) * E(k, l), [i, j, k, l])
-    e3 = e1 + e2
+    h = ∑(real_tensor("h", i, j) * E(i, j), [i, j])
+    g = ∑(real_tensor("g", i, j, k, l) * E(i, j) * E(k, l), [i, j, k, l])
 
-    @show e1 e2 e3 e1 * e2 e3 * e3
+    @show g * h
+    println()
+    @show simplify(g * h)
+    println()
+
+    @show h + h h - h
+
+    println()
+
+    H = h + g
+
+    @show H
+    println()
+    @show H * H
+    println()
+    @show simplify(H * H)
 
     println()
 end
