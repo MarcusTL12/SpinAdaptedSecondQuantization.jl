@@ -259,7 +259,7 @@ g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
     println()
 end
 
-@testset "term summation" begin
+@testset "term summation delta" begin
     println()
 
     p = general(1)
