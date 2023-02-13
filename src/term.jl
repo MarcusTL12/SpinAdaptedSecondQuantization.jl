@@ -159,8 +159,8 @@ end
 
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    (a.operators, a.tensors, a.deltas, a.sum_indices, a.constraints, b.scalar) <
-    (b.operators, b.tensors, b.deltas, b.sum_indices, b.constraints, a.scalar)
+    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) <
+    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
 end
 
 function exchange_indices(t::Term{T}, mapping) where

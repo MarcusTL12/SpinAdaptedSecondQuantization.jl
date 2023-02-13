@@ -1,4 +1,4 @@
-export E
+export E, e
 
 """
     SingletExcitationOperator
@@ -27,6 +27,8 @@ end
 
 # Externally visible constructor
 E(p, q) = Expression(SingletExcitationOperator(p, q))
+
+e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)
 
 # Commutation relations:
 

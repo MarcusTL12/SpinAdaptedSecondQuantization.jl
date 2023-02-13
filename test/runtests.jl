@@ -518,6 +518,20 @@ end
     b = virtual(2)
 
     @show commutator(E(p, q), E(r, s)) commutator(E(i, j), E(a, k))
+    @show commutator(E(i, a), E(a, i))
+
+    h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
+    g = ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s]) // 2
+
+    H = simplify(h + g)
+
+    @show H
+
+    println()
+
+    ex = simplify(commutator(H, E(a, i)))
+
+    @show ex
 
     println()
 end
