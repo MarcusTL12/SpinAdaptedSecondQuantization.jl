@@ -403,14 +403,20 @@ end
 # replacing them with the index they would be equal to instead.
 # This should be run after `lower_delta_indices`
 function simplify_summation_deltas(t::Term)
+    t = copy(t)
+
     done = false
 
     while !done
         done = true
-        for p in t.sum_indices
+        for (j, p) in enumerate(t.sum_indices)
             for d in t.deltas
                 i = findfirst(==(p), d.indices)
                 if !isnothing(i)
+
+                    done = false
+                    deleteat!(t.sum_indices, j)
+
                     if i == 1
                         # If the summation index shows up as the first index
                         # of the delta, then we need to rename all the
@@ -418,14 +424,22 @@ function simplify_summation_deltas(t::Term)
                         # in the delta. Example:
                         # ∑_i(δ_ijk h_ip E_iq) -> δ_jk h_jp E_jq
 
-                        
+                        t = exchange_indices(t, [p => d.indices[2]])
                     else
                         # Otherwise, it does not show up anywhere else in the
                         # term, so we only need to remove it from the delta
-
+                        t = exchange_indices(t, [p => first(d.indices)])
                     end
+
+                    break
                 end
+            end
+
+            if done == false
+                break
             end
         end
     end
+
+    t
 end
