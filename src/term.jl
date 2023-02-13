@@ -444,3 +444,16 @@ function simplify_summation_deltas(t::Term)
 
     t
 end
+
+# This function is just a composition of other simplification functions
+# in the recomended order to obtain a deterministic simplification of
+# the term.
+# TODO: This requires extensive testing of determinism and correctness.
+# The specific steps and the order of them might need to be adjusted.
+function simplify(t::Term)
+    t |>
+    lower_delta_indices |>
+    simplify_summation_deltas |>
+    lower_delta_indices |>
+    sort_summation_indices
+end
