@@ -125,3 +125,7 @@ end
 function Base.://(a::Expression, b::B) where {B<:Number}
     a * (1//b)
 end
+
+function Base.:*(a::Expression, b::Expression)
+    Expression([t1 * t2 for t1 in a.terms for t2 in b.terms])
+end

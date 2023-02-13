@@ -468,13 +468,23 @@ end
     s = general(4)
     i = occupied(1)
     j = occupied(2)
+    k = occupied(3)
+    l = occupied(4)
     a = virtual(1)
     b = virtual(2)
 
     e1 = δ(a, b)
     e2 = real_tensor("h", i, j)
 
-    @show e1 e2 ((e1 + e2) * 3) // 5
+    @show e1 e2 ((e1 + e2) * 3) // 5 * e2
+
+    println()
+
+    e1 = ∑(real_tensor("h", i, j) * E(i, j), [i, j])
+    e2 = ∑(real_tensor("g", i, j, k, l) * E(i, j) * E(k, l), [i, j, k, l])
+    e3 = e1 + e2
+
+    @show e1 e2 e3 e1 * e2 e3 * e3
 
     println()
 end
