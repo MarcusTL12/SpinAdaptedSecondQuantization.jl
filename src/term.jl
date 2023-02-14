@@ -163,6 +163,11 @@ function Base.isless(a::Term, b::Term)
     (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
 end
 
+function Base.:(==)(a::Term, b::Term)
+    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) ==
+    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
+end
+
 function exchange_indices(t::Term{T}, mapping) where
 {T<:Number}
     if isempty(mapping)
