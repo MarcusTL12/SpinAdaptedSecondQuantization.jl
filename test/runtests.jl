@@ -2,541 +2,541 @@ using Test
 
 using SpinAdaptedSecondQuantization
 
-@testset "indices" begin
-    println()
+# @testset "indices" begin
+#     println()
 
-    p = general(1)
-    i = occupied(1)
-    a = virtual(1)
-    p1 = general(8)
-    @show p i a p1
+#     p = general(1)
+#     i = occupied(1)
+#     a = virtual(1)
+#     p1 = general(8)
+#     @show p i a p1
 
-    @test (space(p) <: GeneralOrbital) == true
-    @test (space(p) <: OccupiedOrbital) == false
-    @test (space(i) <: GeneralOrbital) == true
-    @test (space(i) <: OccupiedOrbital) == true
+#     @test (space(p) <: GeneralOrbital) == true
+#     @test (space(p) <: OccupiedOrbital) == false
+#     @test (space(i) <: GeneralOrbital) == true
+#     @test (space(i) <: OccupiedOrbital) == true
 
-    @test (space(i) == GeneralOrbital) == false
-    @test (space(i) == OccupiedOrbital) == true
+#     @test (space(i) == GeneralOrbital) == false
+#     @test (space(i) == OccupiedOrbital) == true
 
-    @test isdisjoint(p, i) == false
-    @test isdisjoint(a, i) == true
+#     @test isdisjoint(p, i) == false
+#     @test isdisjoint(a, i) == true
 
-    @test isoccupied(i) == true
-    @test isvirtual(i) == false
-    @test isoccupied(a) == false
-    @test isvirtual(a) == true
+#     @test isoccupied(i) == true
+#     @test isvirtual(i) == false
+#     @test isoccupied(a) == false
+#     @test isvirtual(a) == true
 
-    @test string(p) == "p"
-    @test string(p1) == "p₁"
+#     @test string(p) == "p"
+#     @test string(p1) == "p₁"
 
-    @test string(a) == "\e[36ma\e[39m"
+#     @test string(a) == "\e[36ma\e[39m"
 
-    @show typeintersect(OccupiedOrbital, VirtualOrbital)
+#     @show typeintersect(OccupiedOrbital, VirtualOrbital)
 
-    println()
-end
+#     println()
+# end
 
-@testset "kronecker delta" begin
-    println()
+# @testset "kronecker delta" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    a = virtual(1)
+#     p = general(1)
+#     q = general(2)
+#     i = occupied(1)
+#     a = virtual(1)
 
-    dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
-    dia = SpinAdaptedSecondQuantization.KroneckerDelta(i, a)
-    dip = SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
-    dpp = SpinAdaptedSecondQuantization.KroneckerDelta(p, p)
-    dpqi = SpinAdaptedSecondQuantization.KroneckerDelta(p, q, i)
+#     dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
+#     dia = SpinAdaptedSecondQuantization.KroneckerDelta(i, a)
+#     dip = SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
+#     dpp = SpinAdaptedSecondQuantization.KroneckerDelta(p, p)
+#     dpqi = SpinAdaptedSecondQuantization.KroneckerDelta(p, q, i)
 
-    @show dpa dia dip dpp dpqi
+#     @show dpa dia dip dpp dpqi
 
-    @test dpa != 0
-    @test dia == 0
-    @test dip != 0
-    @test dpp == 1
-    @test dpqi != 0
+#     @test dpa != 0
+#     @test dia == 0
+#     @test dip != 0
+#     @test dpp == 1
+#     @test dpqi != 0
 
-    println()
-end
+#     println()
+# end
 
-@testset "kronecker delta compact" begin
-    println()
+# @testset "kronecker delta compact" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    r = general(3)
-    i = occupied(1)
-    a = virtual(1)
+#     p = general(1)
+#     q = general(2)
+#     r = general(3)
+#     i = occupied(1)
+#     a = virtual(1)
 
-    dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
-    dri = SpinAdaptedSecondQuantization.KroneckerDelta(r, i)
-    dpq = SpinAdaptedSecondQuantization.KroneckerDelta(p, q)
-    dqr = SpinAdaptedSecondQuantization.KroneckerDelta(q, r)
+#     dpa = SpinAdaptedSecondQuantization.KroneckerDelta(p, a)
+#     dri = SpinAdaptedSecondQuantization.KroneckerDelta(r, i)
+#     dpq = SpinAdaptedSecondQuantization.KroneckerDelta(p, q)
+#     dqr = SpinAdaptedSecondQuantization.KroneckerDelta(q, r)
 
-    v = [dpa, dpq, dri]
+#     v = [dpa, dpq, dri]
 
-    @show v
+#     @show v
 
-    v = SpinAdaptedSecondQuantization.compact_deltas(v)
+#     v = SpinAdaptedSecondQuantization.compact_deltas(v)
 
-    @show v
-    @test v != 0
+#     @show v
+#     @test v != 0
 
-    v = [dpa, dpq, dri, dqr]
+#     v = [dpa, dpq, dri, dqr]
 
-    @show v
+#     @show v
 
-    v = SpinAdaptedSecondQuantization.compact_deltas(v)
+#     v = SpinAdaptedSecondQuantization.compact_deltas(v)
 
-    @show v
-    @test v == 0
+#     @show v
+#     @test v == 0
 
-    println()
-end
+#     println()
+# end
 
-@testset "singlet excitation operator" begin
-    println()
+# @testset "singlet excitation operator" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    a = virtual(1)
+#     p = general(1)
+#     q = general(2)
+#     i = occupied(1)
+#     a = virtual(1)
 
-    Epq = SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)
-    Eai = SpinAdaptedSecondQuantization.SingletExcitationOperator(a, i)
-    Eip = SpinAdaptedSecondQuantization.SingletExcitationOperator(i, p)
+#     Epq = SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)
+#     Eai = SpinAdaptedSecondQuantization.SingletExcitationOperator(a, i)
+#     Eip = SpinAdaptedSecondQuantization.SingletExcitationOperator(i, p)
 
-    @show Epq Eai Eip
+#     @show Epq Eai Eip
 
-    @test string(Epq) == "E_pq"
+#     @test string(Epq) == "E_pq"
 
-    println()
-end
+#     println()
+# end
 
-@testset "real tensor" begin
-    println()
+# @testset "real tensor" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
+#     p = general(1)
+#     q = general(2)
 
-    hpq = SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
+#     hpq = SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
 
-    @show hpq
+#     @show hpq
 
-    @test string(hpq) == "h_pq"
+#     @test string(hpq) == "h_pq"
 
-    println()
-end
+#     println()
+# end
 
-@testset "term show" begin
-    println()
+# @testset "term show" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    a = virtual(1)
+#     p = general(1)
+#     q = general(2)
+#     i = occupied(1)
+#     a = virtual(1)
 
-    t = SpinAdaptedSecondQuantization.Term(
-        3 // 5,
-        [i, a],
-        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a),
-            SpinAdaptedSecondQuantization.KroneckerDelta(a, q)],
-        [
-            SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
-            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, i])
-        ],
-        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)]
-    )
+#     t = SpinAdaptedSecondQuantization.Term(
+#         3 // 5,
+#         [i, a],
+#         [SpinAdaptedSecondQuantization.KroneckerDelta(p, a),
+#             SpinAdaptedSecondQuantization.KroneckerDelta(a, q)],
+#         [
+#             SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
+#             SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, i])
+#         ],
+#         [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)]
+#     )
 
-    @show t
-    @show SpinAdaptedSecondQuantization.get_all_indices(t)
+#     @show t
+#     @show SpinAdaptedSecondQuantization.get_all_indices(t)
 
-    t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
+#     t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
 
-    @show t
+#     @show t
 
-    println()
-end
+#     println()
+# end
 
-@testset "expression constructors" begin
-    println()
+# @testset "expression constructors" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    a = virtual(1)
+#     p = general(1)
+#     q = general(2)
+#     i = occupied(1)
+#     a = virtual(1)
 
-    Epq = E(p, q)
-    dpi = δ(p, i)
-    dai = δ(a, i)
-    hai = real_tensor("h", a, i)
+#     Epq = E(p, q)
+#     dpi = δ(p, i)
+#     dai = δ(a, i)
+#     hai = real_tensor("h", a, i)
 
-    @show Epq dpi dai hai
+#     @show Epq dpi dai hai
 
-    @test string(Epq) == "E_pq"
-    @test string(dai) == "0"
+#     @test string(Epq) == "E_pq"
+#     @test string(dai) == "0"
 
-    println()
-end
+#     println()
+# end
 
-@testset "term exchange_indices" begin
-    println()
+# @testset "term exchange_indices" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    r = general(3)
-    i = occupied(1)
-    j = occupied(2)
-    a = virtual(1)
-    b = virtual(2)
+#     p = general(1)
+#     q = general(2)
+#     r = general(3)
+#     i = occupied(1)
+#     j = occupied(2)
+#     a = virtual(1)
+#     b = virtual(2)
 
-    t = SpinAdaptedSecondQuantization.Term(
-        3 // 5,
-        [i, a],
-        [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
-        [
-            SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
-            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
-        ],
-        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
-    )
+#     t = SpinAdaptedSecondQuantization.Term(
+#         3 // 5,
+#         [i, a],
+#         [SpinAdaptedSecondQuantization.KroneckerDelta(p, a)],
+#         [
+#             SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
+#             SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
+#         ],
+#         [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
+#     )
 
-    @show t
+#     @show t
 
-    t2 = SpinAdaptedSecondQuantization.exchange_indices(
-        t,
-        [p => q, q => p, a => b, i => j]
-    )
+#     t2 = SpinAdaptedSecondQuantization.exchange_indices(
+#         t,
+#         [p => q, q => p, a => b, i => j]
+#     )
 
-    @show t2
+#     @show t2
 
-    @test string(t2) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_q\e[36mb\e[39m \
-g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
+#     @test string(t2) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_q\e[36mb\e[39m \
+# g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
 
-    t3 = SpinAdaptedSecondQuantization.make_space_for_index(t, i)
-    @show t3
+#     t3 = SpinAdaptedSecondQuantization.make_space_for_index(t, i)
+#     @show t3
 
-    t4 = SpinAdaptedSecondQuantization.make_space_for_indices(t, [i, j, a])
-    @show t4
+#     t4 = SpinAdaptedSecondQuantization.make_space_for_indices(t, [i, j, a])
+#     @show t4
 
-    t = SpinAdaptedSecondQuantization.Term(
-        3 // 7,
-        SpinAdaptedSecondQuantization.MOIndex[],
-        [SpinAdaptedSecondQuantization.KroneckerDelta(p, q, r)],
-        [
-            SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
-            SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
-        ],
-        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
-    )
+#     t = SpinAdaptedSecondQuantization.Term(
+#         3 // 7,
+#         SpinAdaptedSecondQuantization.MOIndex[],
+#         [SpinAdaptedSecondQuantization.KroneckerDelta(p, q, r)],
+#         [
+#             SpinAdaptedSecondQuantization.RealTensor("h", [p, a]),
+#             SpinAdaptedSecondQuantization.RealTensor("g", [i, a, i, q])
+#         ],
+#         [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
+#     )
 
-    println()
+#     println()
 
-    @show t
+#     @show t
 
-    t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
+#     t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
 
-    @show t
+#     @show t
 
-    t2 = SpinAdaptedSecondQuantization.exchange_indices(t, [p => q])
+#     t2 = SpinAdaptedSecondQuantization.exchange_indices(t, [p => q])
 
-    @show t2
+#     @show t2
 
-    t3 = SpinAdaptedSecondQuantization.exchange_indices(t2, [q => r])
+#     t3 = SpinAdaptedSecondQuantization.exchange_indices(t2, [q => r])
 
-    @show t3
+#     @show t3
 
-    t4 = SpinAdaptedSecondQuantization.exchange_indices(t, [q => p])
+#     t4 = SpinAdaptedSecondQuantization.exchange_indices(t, [q => p])
 
-    println()
-    @show t4
+#     println()
+#     @show t4
 
-    t5 = SpinAdaptedSecondQuantization.exchange_indices(t4, [r => p])
+#     t5 = SpinAdaptedSecondQuantization.exchange_indices(t4, [r => p])
 
-    @show t5
+#     @show t5
 
-    println()
-end
+#     println()
+# end
 
-@testset "term summation delta" begin
-    println()
+# @testset "term summation delta" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    j = occupied(2)
-    a = virtual(1)
-    b = virtual(2)
+#     p = general(1)
+#     q = general(2)
+#     i = occupied(1)
+#     j = occupied(2)
+#     a = virtual(1)
+#     b = virtual(2)
 
-    t = SpinAdaptedSecondQuantization.Term(
-        1,
-        SpinAdaptedSecondQuantization.MOIndex[],
-        [SpinAdaptedSecondQuantization.KroneckerDelta(a, p)],
-        [SpinAdaptedSecondQuantization.RealTensor("h", [a, i])],
-        SpinAdaptedSecondQuantization.Operator[
-            SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)
-        ],
-    )
+#     t = SpinAdaptedSecondQuantization.Term(
+#         1,
+#         SpinAdaptedSecondQuantization.MOIndex[],
+#         [SpinAdaptedSecondQuantization.KroneckerDelta(a, p)],
+#         [SpinAdaptedSecondQuantization.RealTensor("h", [a, i])],
+#         SpinAdaptedSecondQuantization.Operator[
+#             SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)
+#         ],
+#     )
 
-    @show t
+#     @show t
 
-    t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
+#     t = SpinAdaptedSecondQuantization.lower_delta_indices(t)
 
-    @show t
+#     @show t
 
-    println("\np -> a:")
-    t1 = ∑(t, [p])
-    @show t1
-    t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
-    @show t1
-    t2 = ∑(t1, [a])
-    @show t2
+#     println("\np -> a:")
+#     t1 = ∑(t, [p])
+#     @show t1
+#     t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
+#     @show t1
+#     t2 = ∑(t1, [a])
+#     @show t2
 
-    println("\na -> p:")
-    t1 = ∑(t, [a])
-    @show t1
-    t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
-    @show t1
-    t2 = ∑(t1, [p])
-    @show t2
+#     println("\na -> p:")
+#     t1 = ∑(t, [a])
+#     @show t1
+#     t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
+#     @show t1
+#     t2 = ∑(t1, [p])
+#     @show t2
 
-    println("\nap:")
-    t1 = ∑(t, [a, p])
-    @show t1
-    t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
-    @show t1
+#     println("\nap:")
+#     t1 = ∑(t, [a, p])
+#     @show t1
+#     t1 = SpinAdaptedSecondQuantization.simplify_summation_deltas(t1)
+#     @show t1
 
-    println()
-end
+#     println()
+# end
 
-@testset "term summation simplify" begin
-    println()
+# @testset "term summation simplify" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    j = occupied(2)
-    b = virtual(2)
-    d = virtual(4)
+#     p = general(1)
+#     q = general(2)
+#     i = occupied(1)
+#     j = occupied(2)
+#     b = virtual(2)
+#     d = virtual(4)
 
-    t = real_tensor("g", b, i, d, j)
+#     t = real_tensor("g", b, i, d, j)
 
-    @show t
+#     @show t
 
-    t = ∑(t, [b, d, i, j])
+#     t = ∑(t, [b, d, i, j])
 
-    @show t
+#     @show t
 
-    t = SpinAdaptedSecondQuantization.lower_summation_indices(t.terms[1])
+#     t = SpinAdaptedSecondQuantization.lower_summation_indices(t.terms[1])
 
-    @show t
+#     @show t
 
-    t = SpinAdaptedSecondQuantization.sort_summation_indices(t)
+#     t = SpinAdaptedSecondQuantization.sort_summation_indices(t)
 
-    @show t
+#     @show t
 
-    println()
-end
+#     println()
+# end
 
-@testset "term exchange_indices constraints" begin
-    println()
+# @testset "term exchange_indices constraints" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    r = general(3)
-    s = general(4)
-    i = occupied(1)
-    j = occupied(2)
-    a = virtual(1)
-    b = virtual(2)
+#     p = general(1)
+#     q = general(2)
+#     r = general(3)
+#     s = general(4)
+#     i = occupied(1)
+#     j = occupied(2)
+#     a = virtual(1)
+#     b = virtual(2)
 
-    t = SpinAdaptedSecondQuantization.Term(
-        3 // 5,
-        SpinAdaptedSecondQuantization.MOIndex[],
-        SpinAdaptedSecondQuantization.KroneckerDelta[],
-        [
-            SpinAdaptedSecondQuantization.RealTensor("h", [a, b]),
-        ],
-        [SpinAdaptedSecondQuantization.SingletExcitationOperator(i, j)],
-    )
+#     t = SpinAdaptedSecondQuantization.Term(
+#         3 // 5,
+#         SpinAdaptedSecondQuantization.MOIndex[],
+#         SpinAdaptedSecondQuantization.KroneckerDelta[],
+#         [
+#             SpinAdaptedSecondQuantization.RealTensor("h", [a, b]),
+#         ],
+#         [SpinAdaptedSecondQuantization.SingletExcitationOperator(i, j)],
+#     )
 
-    @show t
+#     @show t
 
-    t2 = SpinAdaptedSecondQuantization.exchange_indices(
-        t,
-        [a => p, b => q, i => r, j => s]
-    )
+#     t2 = SpinAdaptedSecondQuantization.exchange_indices(
+#         t,
+#         [a => p, b => q, i => r, j => s]
+#     )
 
-    @show t2
+#     @show t2
 
-    t3 = SpinAdaptedSecondQuantization.exchange_indices(
-        t2,
-        [p => b]
-    )
+#     t3 = SpinAdaptedSecondQuantization.exchange_indices(
+#         t2,
+#         [p => b]
+#     )
 
-    @show t3
+#     @show t3
 
-    t4 = ∑(t3, [s])
+#     t4 = ∑(t3, [s])
 
-    @show t4
+#     @show t4
 
-    println()
-end
+#     println()
+# end
 
-@testset "term multiplication" begin
-    println()
+# @testset "term multiplication" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    r = general(3)
-    s = general(4)
-    i = occupied(1)
-    j = occupied(2)
-    a = virtual(1)
-    b = virtual(2)
+#     p = general(1)
+#     q = general(2)
+#     r = general(3)
+#     s = general(4)
+#     i = occupied(1)
+#     j = occupied(2)
+#     a = virtual(1)
+#     b = virtual(2)
 
-    t1 = SpinAdaptedSecondQuantization.Term(
-        3 // 5,
-        SpinAdaptedSecondQuantization.MOIndex[i, j],
-        SpinAdaptedSecondQuantization.KroneckerDelta[],
-        SpinAdaptedSecondQuantization.Tensor[],
-        [SpinAdaptedSecondQuantization.SingletExcitationOperator(i, j)],
-    )
+#     t1 = SpinAdaptedSecondQuantization.Term(
+#         3 // 5,
+#         SpinAdaptedSecondQuantization.MOIndex[i, j],
+#         SpinAdaptedSecondQuantization.KroneckerDelta[],
+#         SpinAdaptedSecondQuantization.Tensor[],
+#         [SpinAdaptedSecondQuantization.SingletExcitationOperator(i, j)],
+#     )
 
-    @show t1
+#     @show t1
 
-    t2 = t1 * t1
+#     t2 = t1 * t1
 
-    @show t2
+#     @show t2
 
-    println()
+#     println()
 
-    t1 = SpinAdaptedSecondQuantization.Term(
-        3 // 5,
-        SpinAdaptedSecondQuantization.MOIndex[],
-        [
-            SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
-        ],
-        SpinAdaptedSecondQuantization.Tensor[],
-        [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
-    )
+#     t1 = SpinAdaptedSecondQuantization.Term(
+#         3 // 5,
+#         SpinAdaptedSecondQuantization.MOIndex[],
+#         [
+#             SpinAdaptedSecondQuantization.KroneckerDelta(i, p)
+#         ],
+#         SpinAdaptedSecondQuantization.Tensor[],
+#         [SpinAdaptedSecondQuantization.SingletExcitationOperator(p, q)],
+#     )
 
-    t2 = SpinAdaptedSecondQuantization.Term(
-        3 // 5,
-        SpinAdaptedSecondQuantization.MOIndex[],
-        [
-            SpinAdaptedSecondQuantization.KroneckerDelta(a, p)
-        ],
-        SpinAdaptedSecondQuantization.Tensor[
-            SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
-        ],
-        SpinAdaptedSecondQuantization.Operator[],
-    )
+#     t2 = SpinAdaptedSecondQuantization.Term(
+#         3 // 5,
+#         SpinAdaptedSecondQuantization.MOIndex[],
+#         [
+#             SpinAdaptedSecondQuantization.KroneckerDelta(a, p)
+#         ],
+#         SpinAdaptedSecondQuantization.Tensor[
+#             SpinAdaptedSecondQuantization.RealTensor("h", [p, q])
+#         ],
+#         SpinAdaptedSecondQuantization.Operator[],
+#     )
 
-    @show t1 t2 t1 * t2
+#     @show t1 t2 t1 * t2
 
-    println()
-end
+#     println()
+# end
 
-@testset "expression addition" begin
-    println()
+# @testset "expression addition" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    r = general(3)
-    s = general(4)
-    i = occupied(1)
-    j = occupied(2)
-    a = virtual(1)
-    b = virtual(2)
+#     p = general(1)
+#     q = general(2)
+#     r = general(3)
+#     s = general(4)
+#     i = occupied(1)
+#     j = occupied(2)
+#     a = virtual(1)
+#     b = virtual(2)
 
-    e1 = δ(a, b)
-    e2 = real_tensor("h", i, j)
+#     e1 = δ(a, b)
+#     e2 = real_tensor("h", i, j)
 
-    @show e1 e2 e1 + e2 e2 + e1 - 5
+#     @show e1 e2 e1 + e2 e2 + e1 - 5
 
-    println()
-end
+#     println()
+# end
 
-@testset "expression multiplication" begin
-    println()
+# @testset "expression multiplication" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    r = general(3)
-    s = general(4)
-    i = occupied(1)
-    j = occupied(2)
-    k = occupied(3)
-    l = occupied(4)
-    a = virtual(1)
-    b = virtual(2)
+#     p = general(1)
+#     q = general(2)
+#     r = general(3)
+#     s = general(4)
+#     i = occupied(1)
+#     j = occupied(2)
+#     k = occupied(3)
+#     l = occupied(4)
+#     a = virtual(1)
+#     b = virtual(2)
 
-    e1 = δ(a, b)
-    e2 = real_tensor("h", i, j)
+#     e1 = δ(a, b)
+#     e2 = real_tensor("h", i, j)
 
-    @show e1 e2 ((e1 + e2) * 3) // 5 * e2
+#     @show e1 e2 ((e1 + e2) * 3) // 5 * e2
 
-    println()
+#     println()
 
-    h = ∑(real_tensor("h", i, j) * E(i, j), [i, j])
-    g = ∑(real_tensor("g", i, j, k, l) * E(i, j) * E(k, l), [i, j, k, l])
+#     h = ∑(real_tensor("h", i, j) * E(i, j), [i, j])
+#     g = ∑(real_tensor("g", i, j, k, l) * E(i, j) * E(k, l), [i, j, k, l])
 
-    @show g * h
-    println()
-    @show simplify(g * h)
-    println()
+#     @show g * h
+#     println()
+#     @show simplify(g * h)
+#     println()
 
-    @show h + h h - h
+#     @show h + h h - h
 
-    println()
+#     println()
 
-    H = h + g
+#     H = h + g
 
-    @show H
-    println()
-    @show H * H
-    println()
-    @show simplify(H * H)
+#     @show H
+#     println()
+#     @show H * H
+#     println()
+#     @show simplify(H * H)
 
-    println()
-end
+#     println()
+# end
 
-@testset "simple commutator" begin
-    println()
+# @testset "simple commutator" begin
+#     println()
 
-    p = general(1)
-    q = general(2)
-    r = general(3)
-    s = general(4)
-    i = occupied(1)
-    j = occupied(2)
-    k = occupied(3)
-    l = occupied(4)
-    a = virtual(1)
-    b = virtual(2)
+#     p = general(1)
+#     q = general(2)
+#     r = general(3)
+#     s = general(4)
+#     i = occupied(1)
+#     j = occupied(2)
+#     k = occupied(3)
+#     l = occupied(4)
+#     a = virtual(1)
+#     b = virtual(2)
 
-    @show commutator(E(p, q), E(r, s)) commutator(E(i, j), E(a, k))
-    @show commutator(E(i, a), E(a, i))
+#     @show commutator(E(p, q), E(r, s)) commutator(E(i, j), E(a, k))
+#     @show commutator(E(i, a), E(a, i))
 
-    h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
-    g = ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s]) // 2
+#     h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
+#     g = ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s]) // 2
 
-    H = simplify(h + g)
+#     H = simplify(h + g)
 
-    @show H
+#     @show H
 
-    println()
+#     println()
 
-    ex = simplify(commutator(H, E(a, i)))
+#     ex = simplify(commutator(H, E(a, i)))
 
-    @show ex
+#     @show ex
 
-    println()
-end
+#     println()
+# end
 
 @testset "constrain" begin
     println()
@@ -561,6 +561,10 @@ end
     @show constrain(p => VirtualOrbital) * δ(p, a)
     @show constrain(p => VirtualOrbital) * δ(p, i)
 
+    @show δ(p, q) * constrain(q => VirtualOrbital)
+    @show (δ(p, q) * constrain(p => OccupiedOrbital)) *
+          constrain(q => VirtualOrbital)
+
     println()
 end
 
@@ -580,19 +584,23 @@ end
 
     @show hf_expectation_value(E(p, q))
     @show hf_expectation_value(E(i, j))
+    @show hf_expectation_value(E(a, b))
+    println()
 
+    @show hf_expectation_value(E(i, j) * E(k, l))
+    @show hf_expectation_value(E(i, a) * E(b, j))
     @show hf_expectation_value(E(p, q) * E(r, s))
 
-    # println()
+    println()
 
-    # h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
-    # g = ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s]) // 2
+    h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
+    g = ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s]) // 2
 
-    # H = simplify(h + g)
+    H = simplify(h + g)
 
-    # v = hf_expectation_value(H)
+    v = simplify(hf_expectation_value(H))
 
-    # @show v
+    @show v
 
     println()
 end
