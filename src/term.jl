@@ -21,12 +21,50 @@ struct Term{T<:Number}
         deltas = compact_deltas(deltas)
 
         if deltas == 0 || iszero(scalar)
-            new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
+            return new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
                 Operator[], Constraints())
-        else
-            new{T}(scalar, sum_indices, deltas, tensors,
-                operators, constraints)
         end
+
+        delta_constraints = Constraints()
+        nonfirst_delta_indices = Set{MOIndex}()
+
+        for d in deltas
+            s = space(d)
+            for (i, p) in enumerate(d.indices)
+                if i > 1
+                    push!(nonfirst_delta_indices, p)
+                end
+                if is_strict_subspace(s, space(p))
+                    delta_constraints[p] = s
+                end
+            end
+        end
+
+        constraints = copy(constraints)
+        if fuse_constraints!(constraints, delta_constraints) == 0
+            return new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
+                Operator[], Constraints())
+        end
+
+        # constraints now contains an exhaustive list of constraints,
+        # which is overkill, so now remove those that are captured by
+        # kronecker deltas. ex: δ_pa C(p∈V) -> δ_pa
+        # Also remove useless constraints for good measure. ex: C(p∈G) -> 1
+        # Also remove any constraints on indices that do show up as the
+        # non-first element of a kronecker delta
+
+        reduced_constraints = Constraints()
+        for (p, s) in constraints
+            if is_strict_subspace(s, space(p)) && p ∉ nonfirst_delta_indices
+                if !haskey(delta_constraints, p) ||
+                   is_strict_subspace(s, delta_constraints[p])
+                    reduced_constraints[p] = s
+                end
+            end
+        end
+
+        new{T}(scalar, sum_indices, deltas, tensors,
+            operators, reduced_constraints)
     end
 end
 
@@ -43,6 +81,17 @@ Base.copy(t::Term) = Term(
     copy(t.operators),
     copy(t.constraints)
 )
+
+function noop_part(t::Term)
+    Term(
+        t.scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        Operator[],
+        t.constraints
+    )
+end
 
 function Base.zero(::Type{Term})
     Term(0, MOIndex[], KroneckerDelta[], Tensor[], Operator[])
@@ -511,7 +560,7 @@ function fuse_constraints!(a::Constraints, b::Constraints)
     for (p, s) in b
         if haskey(a, p)
             if isdisjoint(a[p], s)
-                return zero(Term)
+                return 0
             else
                 a[p] = typeintersect(a[p], s)
             end
@@ -520,7 +569,7 @@ function fuse_constraints!(a::Constraints, b::Constraints)
         end
     end
 
-    a
+    1
 end
 
 # Multiplying two terms makes sure to rename summation indices such that
@@ -540,9 +589,28 @@ function Base.:*(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     operators = Operator[a.operators; b.operators]
 
     constraints = copy(a.constraints)
-    fuse_constraints!(constraints, b.constraints)
+    if fuse_constraints!(constraints, b.constraints) == 0
+        return zero(Term)
+    end
 
     Term(scalar, sum_indices, deltas, tensors, operators, constraints)
+end
+
+# Like multiplication, but does not make space for summation indices.
+function fuse(a::Term, b::Term)
+    constraints = copy(a.constraints)
+    if fuse_constraints!(constraints, b.constraints) == 0
+        return zero(Term)
+    end
+
+    Term(
+        a.scalar * b.scalar,
+        [a.sum_indices; b.sum_indices],
+        [a.deltas; b.deltas],
+        [a.tensors; b.tensors],
+        [a.operators; b.operators],
+        constraints
+    )
 end
 
 # Commutator:

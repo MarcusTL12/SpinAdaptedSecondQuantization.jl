@@ -1,6 +1,7 @@
 using Test
 
 using SpinAdaptedSecondQuantization
+using SpinAdaptedSecondQuantization: KroneckerDelta
 
 @testset "indices" begin
     p = general(1)
@@ -29,6 +30,10 @@ using SpinAdaptedSecondQuantization
 
     @test string(a) == "\e[36ma\e[39m"
     @test string(i) == "\e[92mi\e[39m"
+
+    @test typeintersect(OccupiedOrbital, VirtualOrbital) == Union{}
+
+    println()
 end
 
 @testset "kronecker delta" begin
@@ -183,10 +188,10 @@ end
         [p => q, q => p, a => b, i => j]
     )
 
+    @show t2
+
     @test string(t2) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_q\e[36mb\e[39m \
 g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
-
-    @show t2
 
     t3 = SpinAdaptedSecondQuantization.make_space_for_index(t, i)
     @show t3
@@ -480,4 +485,63 @@ end
     hcomm = simplify(commutator(h, E(p, q)))
     @test hcomm == summation(- real_tensor("h", q, r) * E(p, r) + real_tensor("h", r, p) * E(r, q), [r])
     @test hcomm * E(r, r) == summation(- real_tensor("h", q, s) * E(p, s) * E(r, r) + real_tensor("h", s, p) * E(s, q) * E(r, r), [s])
+end
+
+@testset "constrain" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+    i = occupied(1)
+    j = occupied(2)
+    k = occupied(3)
+    l = occupied(4)
+    a = virtual(1)
+    b = virtual(2)
+
+    @show constrain(p => GeneralOrbital)
+    @show constrain(p => OccupiedOrbital)
+    @show constrain(p => VirtualOrbital)
+
+    @show constrain(p => OccupiedOrbital) * constrain(p => VirtualOrbital)
+
+    @show constrain(p => VirtualOrbital) * δ(p, a)
+    @show constrain(p => VirtualOrbital) * δ(p, i)
+
+    println()
+end
+
+@testset "hf_expectation_value" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+    i = occupied(1)
+    j = occupied(2)
+    k = occupied(3)
+    l = occupied(4)
+    a = virtual(1)
+    b = virtual(2)
+
+    @show hf_expectation_value(E(p, q))
+    @show hf_expectation_value(E(i, j))
+
+    # @show hf_expectation_value(E(p, q) * E(r, s))
+
+    # println()
+
+    # h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
+    # g = ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s]) // 2
+
+    # H = simplify(h + g)
+
+    # v = hf_expectation_value(H)
+
+    # @show v
+
+    println()
 end
