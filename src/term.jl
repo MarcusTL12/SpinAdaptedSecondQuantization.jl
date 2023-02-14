@@ -517,7 +517,7 @@ function fuse_constraints!(a::Constraints, b::Constraints)
     for (p, s) in b
         if haskey(a, p)
             if isdisjoint(a[p], s)
-                return zero(Term)
+                return 0
             else
                 a[p] = typeintersect(a[p], s)
             end
@@ -526,7 +526,7 @@ function fuse_constraints!(a::Constraints, b::Constraints)
         end
     end
 
-    a
+    1
 end
 
 # Multiplying two terms makes sure to rename summation indices such that
@@ -546,7 +546,9 @@ function Base.:*(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     operators = Operator[a.operators; b.operators]
 
     constraints = copy(a.constraints)
-    fuse_constraints!(constraints, b.constraints)
+    if fuse_constraints!(constraints, b.constraints) == 0
+        return zero(Term)
+    end
 
     Term(scalar, sum_indices, deltas, tensors, operators, constraints)
 end
@@ -554,7 +556,9 @@ end
 # Like multiplication, but does not make space for summation indices.
 function fuse(a::Term, b::Term)
     constraints = copy(a.constraints)
-    fuse_constraints!(constraints, b.constraints)
+    if fuse_constraints!(constraints, b.constraints) == 0
+        return zero(Term)
+    end
 
     Term(
         a.scalar * b.scalar,
