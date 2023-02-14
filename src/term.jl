@@ -21,12 +21,50 @@ struct Term{T<:Number}
         deltas = compact_deltas(deltas)
 
         if deltas == 0 || iszero(scalar)
-            new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
+            return new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
                 Operator[], Constraints())
-        else
-            new{T}(scalar, sum_indices, deltas, tensors,
-                operators, constraints)
         end
+
+        delta_constraints = Constraints()
+        nonfirst_delta_indices = Set{MOIndex}()
+
+        for d in deltas
+            s = space(d)
+            for (i, p) in enumerate(d.indices)
+                if i > 1
+                    push!(nonfirst_delta_indices, p)
+                end
+                if is_strict_subspace(s, space(p))
+                    delta_constraints[p] = s
+                end
+            end
+        end
+
+        constraints = copy(constraints)
+        if fuse_constraints!(constraints, delta_constraints) == 0
+            return new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
+                Operator[], Constraints())
+        end
+
+        # constraints now contains an exhaustive list of constraints,
+        # which is overkill, so now remove those that are captured by
+        # kronecker deltas. ex: δ_pa C(p∈V) -> δ_pa
+        # Also remove useless constraints for good measure. ex: C(p∈G) -> 1
+        # Also remove any constraints on indices that do show up as the
+        # non-first element of a kronecker delta
+
+        reduced_constraints = Constraints()
+        for (p, s) in constraints
+            if is_strict_subspace(s, space(p)) && p ∉ nonfirst_delta_indices
+                if !haskey(delta_constraints, p) ||
+                   is_strict_subspace(s, delta_constraints[p])
+                    reduced_constraints[p] = s
+                end
+            end
+        end
+
+        new{T}(scalar, sum_indices, deltas, tensors,
+            operators, reduced_constraints)
     end
 end
 

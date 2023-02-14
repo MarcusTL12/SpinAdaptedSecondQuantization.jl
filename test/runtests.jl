@@ -211,10 +211,10 @@ end
         [p => q, q => p, a => b, i => j]
     )
 
+    @show t2
+
     @test string(t2) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_q\e[36mb\e[39m \
 g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
-
-    @show t2
 
     t3 = SpinAdaptedSecondQuantization.make_space_for_index(t, i)
     @show t3
@@ -552,7 +552,14 @@ end
     a = virtual(1)
     b = virtual(2)
 
+    @show constrain(p => GeneralOrbital)
+    @show constrain(p => OccupiedOrbital)
+    @show constrain(p => VirtualOrbital)
+
     @show constrain(p => OccupiedOrbital) * constrain(p => VirtualOrbital)
+
+    @show constrain(p => VirtualOrbital) * δ(p, a)
+    @show constrain(p => VirtualOrbital) * δ(p, i)
 
     println()
 end
