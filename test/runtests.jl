@@ -32,6 +32,8 @@ using SpinAdaptedSecondQuantization
 
     @test string(a) == "\e[36ma\e[39m"
 
+    @show typeintersect(OccupiedOrbital, VirtualOrbital)
+
     println()
 end
 
@@ -532,6 +534,58 @@ end
     ex = simplify(commutator(H, E(a, i)))
 
     @show ex
+
+    println()
+end
+
+@testset "constrain" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+    i = occupied(1)
+    j = occupied(2)
+    k = occupied(3)
+    l = occupied(4)
+    a = virtual(1)
+    b = virtual(2)
+
+    @show constrain(p => OccupiedOrbital) * constrain(p => VirtualOrbital)
+
+    println()
+end
+
+@testset "hf_expectation_value" begin
+    println()
+
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+    i = occupied(1)
+    j = occupied(2)
+    k = occupied(3)
+    l = occupied(4)
+    a = virtual(1)
+    b = virtual(2)
+
+    @show hf_expectation_value(E(p, q))
+    @show hf_expectation_value(E(i, j))
+
+    @show hf_expectation_value(E(p, q) * E(r, s))
+
+    # println()
+
+    # h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
+    # g = ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s]) // 2
+
+    # H = simplify(h + g)
+
+    # v = hf_expectation_value(H)
+
+    # @show v
 
     println()
 end

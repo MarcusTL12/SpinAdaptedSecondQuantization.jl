@@ -44,6 +44,17 @@ Base.copy(t::Term) = Term(
     copy(t.constraints)
 )
 
+function noop_part(t::Term)
+    Term(
+        t.scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        Operator[],
+        t.constraints
+    )
+end
+
 function Base.zero(::Type{Term})
     Term(0, MOIndex[], KroneckerDelta[], Tensor[], Operator[])
 end
@@ -538,6 +549,21 @@ function Base.:*(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     fuse_constraints!(constraints, b.constraints)
 
     Term(scalar, sum_indices, deltas, tensors, operators, constraints)
+end
+
+# Like multiplication, but does not make space for summation indices.
+function fuse(a::Term, b::Term)
+    constraints = copy(a.constraints)
+    fuse_constraints!(constraints, b.constraints)
+
+    Term(
+        a.scalar * b.scalar,
+        [a.sum_indices; b.sum_indices],
+        [a.deltas; b.deltas],
+        [a.tensors; b.tensors],
+        [a.operators; b.operators],
+        constraints
+    )
 end
 
 # Commutator:

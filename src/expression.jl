@@ -93,6 +93,27 @@ Expression(o::Operator) = Expression([Term(
     Operator[o]
 )])
 
+Expression(ops::Vector{Operator}) = Expression([Term(
+    1,
+    MOIndex[],
+    KroneckerDelta[],
+    Tensor[],
+    ops
+)])
+
+export constrain
+
+function constrain(constraints...)
+    Expression([Term(
+        1,
+        MOIndex[],
+        KroneckerDelta[],
+        Tensor[],
+        Operator[],
+        Constraints(constraints...)
+    )])
+end
+
 export summation, ∑
 
 function summation(e::Expression, sum_indices)

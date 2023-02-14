@@ -108,8 +108,11 @@ function Base.show(io::IO, i::MOIndex{VirtualOrbital})
     print(io, "\x1b[36m", getname(i), "\x1b[39m")
 end
 
-Base.isdisjoint(::MOIndex{S1}, ::MOIndex{S2}) where
+Base.isdisjoint(::Type{S1}, ::Type{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital} = typeintersect(S1, S2) == Union{}
+
+Base.isdisjoint(::MOIndex{S1}, ::MOIndex{S2}) where
+{S1<:GeneralOrbital,S2<:GeneralOrbital} = isdisjoint(S1, S2)
 
 isoccupied(::MOIndex{S}) where {S<:GeneralOrbital} = S <: OccupiedOrbital
 isvirtual(::MOIndex{S}) where {S<:GeneralOrbital} = S <: VirtualOrbital
