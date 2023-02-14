@@ -55,6 +55,11 @@ struct Term{T<:Number}
 
         reduced_constraints = Constraints()
         for (p, s) in constraints
+            if isdisjoint(s, space(p))
+                return return new{T}(zero(T), MOIndex[], KroneckerDelta[],
+                    Tensor[], Operator[], Constraints())
+            end
+
             if is_strict_subspace(s, space(p)) && p ∉ nonfirst_delta_indices
                 if !haskey(delta_constraints, p) ||
                    is_strict_subspace(s, delta_constraints[p])
