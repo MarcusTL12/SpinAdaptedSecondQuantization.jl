@@ -42,6 +42,10 @@ function Base.isless(d1::KroneckerDelta, d2::KroneckerDelta)
     d1.indices < d2.indices
 end
 
+function Base.:(==)(d1::KroneckerDelta, d2::KroneckerDelta)
+    d1.indices == d2.indices
+end
+
 function exchange_indices(d::KroneckerDelta, mapping)
     KroneckerDelta([exchange_index(p, mapping) for p in d.indices])
 end

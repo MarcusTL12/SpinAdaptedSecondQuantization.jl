@@ -180,6 +180,10 @@ function Base.:*(a::Expression, b::Expression)
     Expression([t1 * t2 for t1 in a.terms for t2 in b.terms])
 end
 
+function Base.:(==)(a::Expression, b::Expression)
+    a.terms == b.terms
+end
+
 # Simplification:
 
 export simplify

@@ -155,6 +155,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
         end
     elseif all_nonscalar_empty
         print(io, t.scalar)
+        sep[] = true
     end
 
     if !isempty(t.sum_indices)
@@ -232,6 +233,11 @@ function Base.isless(a::Term, b::Term)
         b.scalar) <
     (b.tensors, b.operators, b.deltas, b.sum_indices, collect(b.constraints),
         a.scalar)
+end
+
+function Base.:(==)(a::Term, b::Term)
+    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) ==
+    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
 end
 
 function exchange_indices(t::Term{T}, mapping) where
