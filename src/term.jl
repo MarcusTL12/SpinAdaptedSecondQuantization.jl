@@ -358,8 +358,9 @@ function get_sum_indices_ordered(t::Term)
     end
 
     for d in t.deltas
-        add_index(d.p)
-        add_index(d.q)
+        for i in d.indices
+            add_index(i)
+        end
     end
 
     for tensor in t.tensors
