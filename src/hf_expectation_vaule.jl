@@ -28,7 +28,7 @@ function hf_expectation_value(ops::Vector{Operator})
 
     if firstop isa SingletExcitationOperator
         if isvirtual(firstop.p)
-            return zero(Expression)
+            return zero(Expression{Int64})
         else
             if isoccupied(firstop.q)
                 hf_expectation_value(firstop) * hf_expectation_value(rest)

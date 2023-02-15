@@ -471,11 +471,33 @@ end
     @test hf_expectation_value(E(p, q) * E(r, s)) == 4 * δ(p,q) * δ(r,s) * constrain(p=>OccupiedOrbital, r=>OccupiedOrbital) +
                                                      2 * δ(p,s) * δ(q,r) * constrain(p=>OccupiedOrbital, q=>VirtualOrbital)
 
-    h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
-    g = ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s]) // 2
-    H = simplify(h + g)
-    v = simplify(hf_expectation_value(H))
-
-    @show v
+    # Issue #13 from ExcitationOperators.jl
+    e1 = hf_expectation_value(∑(E(k,j)*E(j,i), [i, j, k]))
+    e2 = hf_expectation_value(∑(E(i,j)*E(j,i), [i, j])) 
+    @test simplify(e1) == simplify(e2)
+    
+    @test hf_expectation_value(E(i,j)*E(j,i)) == 4 * δ(i,j)
 end
- 
+
+# TODO add commented test-functions when simplify is improved and psym-integrals are added 
+@testset "hf_equations" begin
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+
+    h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
+    g = 1//2 * ∑(real_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s])
+    H = simplify(h + g)
+
+    energy = simplify(hf_expectation_value(H))
+    @show energy
+    #@test energy == 2//1 * ∑(real_tensor(h, i, i), [i]) + ∑(2//1 * real_tensor("g", i, i, j, j) - real_tensor("g", i, j, j, i), [i, j])
+
+    gradient = simplify(hf_expectation_value(commutator(H, E(p,q) - E(q,p))))
+    #fock = real_tensor("h", p, q) + ∑(2//1 * real_tensor("g", p, q, i, i) - real_tensor("g", p, i, i, q), [i])
+
+    @test gradient * constrain(p => OccupiedOrbital, q => OccupiedOrbital) == SASQ.Expression(0)
+    @test gradient * constrain(p => VirtualOrbital, q => VirtualOrbital) == SASQ.Expression(0)
+    #@test gradient * constrain(p => VirtualOrbital, q => OccupiedOrbital) == 4//1 * fock * constrain(p => VirtualOrbital, q => OccupiedOrbital)
+end

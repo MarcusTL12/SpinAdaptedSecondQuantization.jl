@@ -113,8 +113,8 @@ function noop_part(t::Term)
     )
 end
 
-function Base.zero(::Type{Term})
-    Term(0, MOIndex[], KroneckerDelta[], Tensor[], Operator[])
+function Base.zero(::Type{Term{T}}) where {T<:Number}
+    Term(zero(T), MOIndex[], KroneckerDelta[], Tensor[], Operator[])
 end
 
 function Base.iszero(t::Term)
@@ -146,15 +146,11 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
     all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
                           isempty(t.tensors) && isempty(t.operators)
 
-    if !isone(t.scalar)
-        if isone(-t.scalar)
-            print(io, '-')
-        else
-            printsep()
-            printscalar(io, t.scalar)
-        end
+    if !isone(abs(t.scalar))
+        printsep()
+        printscalar(io, t.scalar)
     elseif all_nonscalar_empty
-        print(io, t.scalar)
+        printscalar(io, t.scalar)
         sep[] = true
     end
 
@@ -358,8 +354,9 @@ function get_sum_indices_ordered(t::Term)
     end
 
     for d in t.deltas
-        add_index(d.p)
-        add_index(d.q)
+        for i in d.indices
+            add_index(i)
+        end
     end
 
     for tensor in t.tensors
@@ -617,7 +614,7 @@ function Base.:*(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
 
     constraints = copy(a.constraints)
     if fuse_constraints!(constraints, b.constraints) == 0
-        return zero(Term)
+        return zero(Term{typeof(scalar)})
     end
 
     Term(scalar, sum_indices, deltas, tensors, operators, constraints)
@@ -626,12 +623,13 @@ end
 # Like multiplication, but does not make space for summation indices.
 function fuse(a::Term, b::Term)
     constraints = copy(a.constraints)
+    scalar = a.scalar * b.scalar
     if fuse_constraints!(constraints, b.constraints) == 0
-        return zero(Term)
+        return zero(Term{typeof(scalar)})
     end
 
     simplify_sum_constraints(Term(
-        a.scalar * b.scalar,
+        scalar,
         [a.sum_indices; b.sum_indices],
         [a.deltas; b.deltas],
         [a.tensors; b.tensors],
