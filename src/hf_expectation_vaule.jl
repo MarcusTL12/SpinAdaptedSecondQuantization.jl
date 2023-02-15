@@ -37,14 +37,17 @@ function hf_expectation_value(ops::Vector{Operator})
                     Expression(firstop), Expression(rest)
                 ))
             else
-                hf_expectation_value(firstop) * hf_expectation_value(rest) *
-                constrain(firstop.q => OccupiedOrbital)
-                +
-                hf_expectation_value(commutator(
+                assume_occ = hf_expectation_value(firstop) *
+                             hf_expectation_value(rest) *
+                             constrain(firstop.q => OccupiedOrbital)
+
+                assume_vir = hf_expectation_value(commutator(
                     Expression(firstop) *
                     constrain(firstop.q => VirtualOrbital),
                     Expression(rest)
                 ))
+
+                assume_occ + assume_vir
             end
         end
     else

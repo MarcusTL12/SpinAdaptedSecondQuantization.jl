@@ -26,13 +26,14 @@ struct Term{T<:Number}
         end
 
         delta_constraints = Constraints()
-        nonfirst_delta_indices = Set{MOIndex}()
+        nonfirst_delta_indices = Dict{MOIndex,MOIndex}()
 
         for d in deltas
             s = space(d)
+            firstind = first(d.indices)
             for (i, p) in enumerate(d.indices)
                 if i > 1
-                    push!(nonfirst_delta_indices, p)
+                    nonfirst_delta_indices[p] = firstind
                 end
                 if is_strict_subspace(s, space(p))
                     delta_constraints[p] = s
@@ -55,10 +56,29 @@ struct Term{T<:Number}
 
         reduced_constraints = Constraints()
         for (p, s) in constraints
-            if is_strict_subspace(s, space(p)) && p ∉ nonfirst_delta_indices
+            if isdisjoint(s, space(p))
+                return return new{T}(zero(T), MOIndex[], KroneckerDelta[],
+                    Tensor[], Operator[], Constraints())
+            end
+
+            q = get(nonfirst_delta_indices, p, p)
+
+            if is_strict_subspace(s, space(p))
                 if !haskey(delta_constraints, p) ||
                    is_strict_subspace(s, delta_constraints[p])
-                    reduced_constraints[p] = s
+                    if haskey(reduced_constraints, q)
+                        if isdisjoint(s, reduced_constraints[q])
+                            return return new{T}(zero(T), MOIndex[],
+                                KroneckerDelta[], Tensor[], Operator[],
+                                Constraints())
+                        end
+
+                        reduced_constraints[q] = typeintersect(
+                            reduced_constraints[q], s
+                        )
+                    else
+                        reduced_constraints[q] = s
+                    end
                 end
             end
         end
@@ -135,6 +155,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
         end
     elseif all_nonscalar_empty
         print(io, t.scalar)
+        sep[] = true
     end
 
     if !isempty(t.sum_indices)
@@ -208,8 +229,10 @@ end
 
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) <
-    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
+    (a.tensors, a.operators, a.deltas, a.sum_indices, collect(a.constraints),
+        b.scalar) <
+    (b.tensors, b.operators, b.deltas, b.sum_indices, collect(b.constraints),
+        a.scalar)
 end
 
 function Base.:(==)(a::Term, b::Term)
@@ -385,12 +408,10 @@ function make_space_for_indices(t::Term, new_indices)
     exchange_indices(t, mapping)
 end
 
-function summation(t::Term, sum_indices)
-    t = make_space_for_indices(t, sum_indices)
-
+function simplify_sum_constraints(t::Term)
     mapping = Pair{MOIndex,MOIndex}[]
     all_indices = get_all_indices(t)
-    for p in sum_indices
+    for p in t.sum_indices
         if haskey(t.constraints, p)
             new_ind = next_free_index(all_indices, t.constraints[p])
             push!(all_indices, new_ind)
@@ -398,14 +419,20 @@ function summation(t::Term, sum_indices)
         end
     end
 
-    exchange_indices(Term(
-            t.scalar,
-            MOIndex[t.sum_indices; sum_indices],
-            t.deltas,
-            t.tensors,
-            t.operators,
-            t.constraints
-        ), mapping)
+    exchange_indices(t, mapping)
+end
+
+function summation(t::Term, sum_indices)
+    t = make_space_for_indices(t, sum_indices)
+
+    simplify_sum_constraints(Term(
+        t.scalar,
+        MOIndex[t.sum_indices; sum_indices],
+        t.deltas,
+        t.tensors,
+        t.operators,
+        t.constraints
+    ))
 end
 
 # This function reorders the summation indices such that they show up
@@ -603,14 +630,14 @@ function fuse(a::Term, b::Term)
         return zero(Term)
     end
 
-    Term(
+    simplify_sum_constraints(Term(
         a.scalar * b.scalar,
         [a.sum_indices; b.sum_indices],
         [a.deltas; b.deltas],
         [a.tensors; b.tensors],
         [a.operators; b.operators],
         constraints
-    )
+    ))
 end
 
 # Commutator:
