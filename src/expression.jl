@@ -53,8 +53,8 @@ but rather include a single zero term")
     end
 end
 
-function Base.zero(::Type{Expression})
-    Expression([zero(Term)])
+function Base.zero(::Type{Expression{T}}) where {T<:Number}
+    Expression([zero(Term{T})])
 end
 
 function Expression(s::T) where {T<:Number}
