@@ -42,7 +42,12 @@ function Base.show(io::IO, ex::Expression)
 but rather include a single zero term")
     end
 
-    print(io, first(ex.terms))
+    t = ex.terms[1]
+    if t.scalar < 0
+        print(io, "- ", new_scalar(t, -t.scalar))
+    else
+        print(io, t)
+    end
 
     for t in ex.terms[2:end]
         if t.scalar < 0
