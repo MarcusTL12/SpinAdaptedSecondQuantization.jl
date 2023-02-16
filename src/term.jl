@@ -147,8 +147,12 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
                           isempty(t.tensors) && isempty(t.operators)
 
     if !isone(abs(t.scalar))
-        printsep()
-        printscalar(io, t.scalar)
+        if isone(-t.scalar)
+            print(io, '-')
+        else
+            printsep()
+            printscalar(io, t.scalar)
+        end
     elseif all_nonscalar_empty
         printscalar(io, t.scalar)
         sep[] = true
