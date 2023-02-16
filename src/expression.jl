@@ -187,8 +187,12 @@ end
 # Simplification:
 
 export simplify
-function simplify(e::Expression)
-    Expression([simplify(t) for t in e.terms])
+function simplify(ex::Expression)
+    Expression([simplify(t) for t in ex.terms])
+end
+
+function make_sum_inds_general(ex::Expression)
+    Expression(map(make_sum_inds_general, ex.terms))
 end
 
 # Commutator:

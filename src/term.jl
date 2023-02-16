@@ -113,6 +113,16 @@ function noop_part(t::Term)
     )
 end
 
+function non_constraint_part(t::Term)
+    Term(
+        t.scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        t.constraints,
+    )
+end
+
 function Base.zero(::Type{Term{T}}) where {T<:Number}
     Term(zero(T), MOIndex[], KroneckerDelta[], Tensor[], Operator[])
 end
@@ -577,6 +587,39 @@ function make_sum_inds_general(t::Term)
     exchange_indices(t, mapping) |>
     lower_summation_indices |>
     sort_summation_indices
+end
+
+# This function returns the constraints of *all* indices in the term
+function get_constraints_exhaustive(t::Term)
+    constraints = Constraints()
+
+    for d in t.deltas
+        s = space(d)
+        for p in d.indices
+            constraints[p] = s
+        end
+    end
+
+    fuse_constraints!(constraints, t.constraints)
+
+    for p in get_all_indices(t)
+        if !haskey(constraints, p)
+            constraints[p] = space(p)
+        end
+    end
+
+    constraints
+end
+
+function non_constraint_non_scalar_equal(a::Term, b::Term)
+    (a.tensors, a.operators, a.deltas, a.sum_indices) ==
+    (b.tensors, b.operators, b.deltas, b.sum_indices)
+end
+
+function try_add_constraints(a::Term, b::Term)
+    if !non_constraint_non_scalar_equal(a, b)
+        return (a, b)
+    end
 end
 
 # This function is just a composition of other simplification functions
