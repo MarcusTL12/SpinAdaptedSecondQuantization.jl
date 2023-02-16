@@ -639,7 +639,7 @@ function constraints_equal_but_one(a::Constraints, b::Constraints)
     p_different
 end
 
-# TODO: make this work
+# TODO: add docs
 function try_add_constraints(a::Term, b::Term)
     if non_constraint_non_scalar_equal(a, b)
         return (a, b)
@@ -669,7 +669,17 @@ function try_add_constraints(a::Term, b::Term)
 
     ds = diff_spaces(s1, s2)
     if !isnothing(ds)
-        # TODO: make new terms
+        new_constraints = copy(a.constraints)
+        new_constraints[p] = ds
+
+        t1 = Term(a.scalar, a.sum_indices, a.deltas, a.tensors,
+            a.operators, new_constraints)
+        
+        if iszero(a.scalar + b.scalar)
+            return t1
+        else
+            return (t1, new_scalar(b, a.scalar + b.scalar))
+        end
     end
 
     (a, b)
