@@ -147,3 +147,33 @@ end
 function next_free_index(indices, ::MOIndex{S}) where {S<:GeneralOrbital}
     next_free_index(indices, S)
 end
+
+# utility functions for getting which sets compose each other
+
+# by default spaces can not be added together to form a new space
+function add_spaces(::Type{S1}, ::Type{S2}) where
+{S1<:GeneralOrbital,S2<:GeneralOrbital}
+    nothing
+end
+
+function add_spaces(::Type{OccupiedOrbital}, ::Type{VirtualOrbital})
+    GeneralOrbital
+end
+
+function add_spaces(::Type{VirtualOrbital}, ::Type{OccupiedOrbital})
+    GeneralOrbital
+end
+
+# By default taking the difference of spaces does not form a new space
+function diff_spaces(::Type{S1}, ::Type{S2}) where
+{S1<:GeneralOrbital,S2<:GeneralOrbital}
+    nothing
+end
+
+function diff_spaces(::Type{GeneralOrbital}, ::Type{OccupiedOrbital})
+    VirtualOrbital
+end
+
+function diff_spaces(::Type{GeneralOrbital}, ::Type{VirtualOrbital})
+    OccupiedOrbital
+end

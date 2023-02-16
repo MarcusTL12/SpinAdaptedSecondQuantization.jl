@@ -616,10 +616,36 @@ function non_constraint_non_scalar_equal(a::Term, b::Term)
     (b.tensors, b.operators, b.deltas, b.sum_indices)
 end
 
+# Compares two sets of constraints. If they differ by only one constraint,
+# it will return this index. Otherwise, if they are equal, do not contain
+# the same set of indices, or differ by more than one constraint, it will
+# return nothing
+function constraints_equal_but_one(a::Constraints, b::Constraints)
+    if keys(a) != keys(b)
+        return nothing
+    end
+
+    p_different = nothing
+    for (p, s1) in a
+        if b[p] != s1
+            if isnothing(p_different)
+                p_different = p
+            else
+                return nothing
+            end
+        end
+    end
+
+    p_different
+end
+
+# TODO: make this work
 function try_add_constraints(a::Term, b::Term)
     if !non_constraint_non_scalar_equal(a, b)
         return (a, b)
     end
+
+    (a, b)
 end
 
 # This function is just a composition of other simplification functions
