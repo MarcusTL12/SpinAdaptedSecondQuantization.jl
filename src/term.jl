@@ -621,7 +621,7 @@ end
 # the same set of indices, or differ by more than one constraint, it will
 # return nothing
 function constraints_equal_but_one(a::Constraints, b::Constraints)
-    if keys(a) != keys(b)
+    if collect(keys(a)) != collect(keys(b))
         return nothing
     end
 
@@ -640,23 +640,27 @@ function constraints_equal_but_one(a::Constraints, b::Constraints)
 end
 
 # TODO: add docs
+# TODO: add tests
 function try_add_constraints(a::Term, b::Term)
-    if non_constraint_non_scalar_equal(a, b)
+    if !non_constraint_non_scalar_equal(a, b)
         return (a, b)
     end
 
-    p = constraints_equal_but_one(a.constraints, b.constraints)
+    ac = get_constraints_exhaustive(a)
+    bc = get_constraints_exhaustive(b)
+
+    p = constraints_equal_but_one(ac, bc)
     if isnothing(p)
-        (a, b)
+        return (a, b)
     end
 
-    s1 = a.constraints[p]
-    s2 = b.constraints[p]
+    s1 = ac[p]
+    s2 = bc[p]
 
     # If we can get one single term by fusing spaces we want to do that
     s12 = add_spaces(s1, s2)
     if a.scalar == b.scalar && !isnothing(s12)
-        new_constraints = copy(a.constraints)
+        new_constraints = copy(ac)
         new_constraints[p] = s12
         return Term(a.scalar, a.sum_indices, a.deltas, a.tensors,
             a.operators, new_constraints)
@@ -669,7 +673,7 @@ function try_add_constraints(a::Term, b::Term)
 
     ds = diff_spaces(s1, s2)
     if !isnothing(ds)
-        new_constraints = copy(a.constraints)
+        new_constraints = copy(ac)
         new_constraints[p] = ds
 
         t1 = Term(a.scalar, a.sum_indices, a.deltas, a.tensors,
