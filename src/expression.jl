@@ -114,6 +114,14 @@ function constrain(constraints...)
     )])
 end
 
+function Base.getindex(ex::Expression, i)
+    ex.terms[i]
+end
+
+function Base.setindex!(ex::Expression, t::Term, i)
+    ex.terms[i] = t
+end
+
 export summation, ∑
 
 function summation(e::Expression, sum_indices)
@@ -188,11 +196,60 @@ end
 
 export simplify
 function simplify(ex::Expression)
+    ex |>
+    simplify_terms |>
+    try_add_constraints |>
+    simplify_terms
+end
+
+function simplify_terms(ex::Expression)
     Expression([simplify(t) for t in ex.terms])
 end
 
 function make_sum_inds_general(ex::Expression)
     Expression(map(make_sum_inds_general, ex.terms))
+end
+
+function try_add_constraints(ex::Expression)
+    ex = make_sum_inds_general(ex)
+
+    done = false
+
+    while !done
+        done = true
+
+        for i in eachindex(ex.terms)
+            for j in i+1:length(ex.terms)
+                if !non_constraint_non_scalar_equal(ex[i], ex[j])
+                    break
+                end
+
+                t, did_something = try_add_constraints(ex[i], ex[j])
+
+                if did_something
+                    done = false
+
+                    if t isa Tuple
+                        ex[i] = t[1]
+                        ex[j] = t[2]
+                    else
+                        ex[i] = t
+                        deleteat!(ex.terms, j)
+                    end
+
+                    ex = Expression(ex.terms)
+
+                    break
+                end
+            end
+
+            if !done
+                break
+            end
+        end
+    end
+
+    ex
 end
 
 # Commutator:

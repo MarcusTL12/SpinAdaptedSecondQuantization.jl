@@ -643,7 +643,7 @@ end
 # TODO: add tests
 function try_add_constraints(a::Term, b::Term)
     if !non_constraint_non_scalar_equal(a, b)
-        return (a, b)
+        return (a, b), false
     end
 
     ac = get_constraints_exhaustive(a)
@@ -651,7 +651,7 @@ function try_add_constraints(a::Term, b::Term)
 
     p = constraints_equal_but_one(ac, bc)
     if isnothing(p)
-        return (a, b)
+        return (a, b), false
     end
 
     s1 = ac[p]
@@ -663,7 +663,7 @@ function try_add_constraints(a::Term, b::Term)
         new_constraints = copy(ac)
         new_constraints[p] = s12
         return Term(a.scalar, a.sum_indices, a.deltas, a.tensors,
-            a.operators, new_constraints)
+            a.operators, new_constraints), true
     end
 
     if is_strict_subspace(s1, s2)
@@ -680,13 +680,13 @@ function try_add_constraints(a::Term, b::Term)
             a.operators, new_constraints)
         
         if iszero(a.scalar + b.scalar)
-            return t1
+            return t1, true
         else
-            return (t1, new_scalar(b, a.scalar + b.scalar))
+            return (t1, new_scalar(b, a.scalar + b.scalar)), true
         end
     end
 
-    (a, b)
+    (a, b), false
 end
 
 # This function is just a composition of other simplification functions
