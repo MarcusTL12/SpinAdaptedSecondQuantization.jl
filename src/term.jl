@@ -641,8 +641,35 @@ end
 
 # TODO: make this work
 function try_add_constraints(a::Term, b::Term)
-    if !non_constraint_non_scalar_equal(a, b)
+    if non_constraint_non_scalar_equal(a, b)
         return (a, b)
+    end
+
+    p = constraints_equal_but_one(a.constraints, b.constraints)
+    if isnothing(p)
+        (a, b)
+    end
+
+    s1 = a.constraints[p]
+    s2 = b.constraints[p]
+
+    # If we can get one single term by fusing spaces we want to do that
+    s12 = add_spaces(s1, s2)
+    if a.scalar == b.scalar && !isnothing(s12)
+        new_constraints = copy(a.constraints)
+        new_constraints[p] = s12
+        return Term(a.scalar, a.sum_indices, a.deltas, a.tensors,
+            a.operators, new_constraints)
+    end
+
+    if is_strict_subspace(s1, s2)
+        s1, s2 = s2, s1
+        a, b = b, a
+    end
+
+    ds = diff_spaces(s1, s2)
+    if !isnothing(ds)
+        # TODO: make new terms
     end
 
     (a, b)
