@@ -253,7 +253,7 @@ end
     t1 = ∑(t, [a])
     @test t1 == ∑(δ(a,p) * real_tensor("h", p, i) * E(p, q), [a]).terms[1]
     t1 = SASQ.simplify_summation_deltas(t1)
-    t2 = ∑(t1, [p])
+    t2 = simplify(∑(t1, [p]))
     @test t2 == ∑(real_tensor("h", a, i) * E(a, q), [a]).terms[1]
 
     #ap
@@ -319,7 +319,7 @@ end
                                                                      r => OccupiedOrbital,
                                                                      s => OccupiedOrbital)).terms[1]
 
-    t4 = ∑(t3, [s])
+    t4 = simplify(∑(t3, [s]))
 
     @test t4 == (∑(3//5 * real_tensor("h", b, q) * E(r, i) * constrain(q => VirtualOrbital,
                                                                        r => OccupiedOrbital), [i])).terms[1]

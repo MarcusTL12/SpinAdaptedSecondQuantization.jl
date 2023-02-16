@@ -232,8 +232,10 @@ function Base.isless(a::Term, b::Term)
 end
 
 function Base.:(==)(a::Term, b::Term)
-    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) ==
-    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
+    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints,
+        b.scalar) ==
+    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints,
+        a.scalar)
 end
 
 function exchange_indices(t::Term{T}, mapping) where
@@ -422,14 +424,14 @@ end
 function summation(t::Term, sum_indices)
     t = make_space_for_indices(t, sum_indices)
 
-    simplify_sum_constraints(Term(
+    Term(
         t.scalar,
         MOIndex[t.sum_indices; sum_indices],
         t.deltas,
         t.tensors,
         t.operators,
         t.constraints
-    ))
+    )
 end
 
 # This function reorders the summation indices such that they show up
@@ -556,6 +558,23 @@ function simplify_summation_deltas(t::Term)
     t
 end
 
+function make_sum_inds_general(t::Term)
+    mapping = Pair{MOIndex,MOIndex}[]
+    all_indices = get_all_indices(t)
+
+    for p in t.sum_indices
+        if is_strict_subspace(space(p), GeneralOrbital)
+            new_ind = next_free_index(all_indices, GeneralOrbital)
+            push!(all_indices, new_ind)
+            push!(mapping, p => new_ind)
+        end
+    end
+
+    exchange_indices(t, mapping) |>
+    lower_summation_indices |>
+    sort_summation_indices
+end
+
 # This function is just a composition of other simplification functions
 # in the recomended order to obtain a deterministic simplification of
 # the term.
@@ -565,6 +584,7 @@ function simplify(t::Term)
     t |>
     lower_delta_indices |>
     simplify_summation_deltas |>
+    simplify_sum_constraints |>
     lower_summation_indices |>
     sort_summation_indices
 end
