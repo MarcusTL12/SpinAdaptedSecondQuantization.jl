@@ -501,3 +501,19 @@ end
     @test gradient * constrain(p => VirtualOrbital, q => VirtualOrbital) == SASQ.Expression(0)
     #@test gradient * constrain(p => VirtualOrbital, q => OccupiedOrbital) == 4//1 * fock * constrain(p => VirtualOrbital, q => OccupiedOrbital)
 end
+
+@testset "jacobi_identity" begin
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+    t = general(5)
+    u = general(6)
+    
+    f = commutator
+    A = E(p,q)
+    B = E(r,s)
+    C = E(t,u)
+
+    @test f(A, f(B, C)) + f(C, f(A, B)) + f(B, f(C, A)) == SASQ.Expression(0)
+end
