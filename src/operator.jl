@@ -8,3 +8,4 @@ end
 # Implement ordering of new operator types here:
 
 include("operators/singlet_excitation_operator.jl")
+include("operators/fermion_operator.jl")
