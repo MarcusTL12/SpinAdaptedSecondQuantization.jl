@@ -210,6 +210,7 @@ function make_sum_inds_general(ex::Expression)
     Expression(map(make_sum_inds_general, ex.terms))
 end
 
+# TODO: group terms into equal significant parts
 function try_add_constraints(ex::Expression)
     ex = make_sum_inds_general(ex)
 
