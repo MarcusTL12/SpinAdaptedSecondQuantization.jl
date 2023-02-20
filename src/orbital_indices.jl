@@ -84,10 +84,23 @@ struct MOIndex
 end
 
 function getname(i::MOIndex)
-    getname(GeneralOrbital, i.index)
+    if i.index ∈ 1:1000
+        return getname(GeneralOrbital, i.index)
+    elseif i.index ∈ 1001:2000
+        return getname(OccupiedOrbital, i.index - 1000)
+    elseif i.index ∈ 2001:3000
+        return getname(VirtualOrbital, i.index - 2000)
+    else
+        throw("Did not recognize index, $i")
+    end
 end
 
+# General   0001 - 1000
+# Occupied  1001 - 2000
+# Virtual   2001 - 3000
 general(index) = MOIndex(index)
+occupied(index) = MOIndex(index+1000)
+virtual(index) = MOIndex(index+2000)
 
 function Base.show(io::IO, i::MOIndex)
     print(io, getname(i))

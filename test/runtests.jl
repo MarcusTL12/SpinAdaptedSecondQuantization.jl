@@ -3,115 +3,69 @@ using Test
 using SpinAdaptedSecondQuantization
 import SpinAdaptedSecondQuantization as SASQ
 
-@testset "indices" begin
-    p = general(1)
-    #i = occupied(1)
-    #a = virtual(1)
-    p1 = general(8)
+@testset "ortital spaces" begin
+    @test OccupiedOrbital <: GeneralOrbital
+    @test VirtualOrbital <: GeneralOrbital
+    @test isdisjoint(VirtualOrbital, OccupiedOrbital)
+    @test !isdisjoint(GeneralOrbital, OccupiedOrbital)
+    @test typeintersect(GeneralOrbital, OccupiedOrbital) == OccupiedOrbital
+    @test typeintersect(OccupiedOrbital, VirtualOrbital) == Union{}
+    @test SpinAdaptedSecondQuantization.is_strict_subspace(OccupiedOrbital, GeneralOrbital)
+    @test !SpinAdaptedSecondQuantization.is_strict_subspace(GeneralOrbital, GeneralOrbital)
+end
 
-    #@test (space(p) <: GeneralOrbital) == true
-    #@test (space(p) <: OccupiedOrbital) == false
-    #@test (space(i) <: GeneralOrbital) == true
-    #@test (space(i) <: OccupiedOrbital) == true
- 
-    #@test (space(i) == GeneralOrbital) == false
-    #@test (space(i) == OccupiedOrbital) == true
- 
-    #@test isdisjoint(p, i) == false
-    #@test isdisjoint(a, i) == true
- 
-    #@test isoccupied(i) == true
-    #@test isvirtual(i) == false
-    #@test isoccupied(a) == false
-    #@test isvirtual(a) == true
- 
+@testset "print indices" begin
+    p = general(1)
+    p1 = general(8)
+    i = occupied(1)
+    a = virtual(1)
     @test string(p) == "p"
     @test string(p1) == "p₁"
-
-    #@test string(a) == "\e[36ma\e[39m"
-    #@test string(i) == "\e[92mi\e[39m"
-
-    @test typeintersect(OccupiedOrbital, VirtualOrbital) == Union{}
+    @test string(i) == "i"
+    @test string(a) == "a"
 end
 
 @testset "kronecker delta" begin
     p = general(1)
-    #q = general(2)
-    #i = occupied(1)
-    #a = virtual(1)
-
-    #dpa = SASQ.KroneckerDelta(p, a)
-    #dia = SASQ.KroneckerDelta(i, a)
-    #dip = SASQ.KroneckerDelta(i, p)
+    q = general(2)
     dpp = SASQ.KroneckerDelta(p, p)
-    #dpqi = SASQ.KroneckerDelta(p, q, i)
+    dpq = SASQ.KroneckerDelta(p, q)
 
-    #@test string(dpa) == "δ_p\e[36ma\e[39m"
-    #@test string(dia) == "0"
-    #@test string(dip) == "δ_p\e[92mi\e[39m"
     @test string(dpp) == "1"
-    #@test string(dpqi) == "δ_pq\e[92mi\e[39m"
-
-    #@test dpa != 0
-    #@test dia == 0
-    #@test dip != 0
+    @test string(dpq) == "δ_pq"
     @test dpp == 1
-    #@test dpqi != 0
 end
 
 @testset "kronecker delta compact" begin
     p = general(1)
     q = general(2)
     r = general(3)
-    #i = occupied(1)
-    #a = virtual(1)
-
-    #dpa = SASQ.KroneckerDelta(p, a)
-    #dri = SASQ.KroneckerDelta(r, i)
     dpq = SASQ.KroneckerDelta(p, q)
-    #dqr = SASQ.KroneckerDelta(q, r)
+    dqr = SASQ.KroneckerDelta(q, r)
 
-    #v = [dpa, dpq, dri]
     v = [dpq]
-
-    #@test string(v) == "SpinAdaptedSecondQuantization.KroneckerDelta[δ_p\e[36ma\e[39m, δ_pq, δ_r\e[92mi\e[39m]"
     @test string(v) == "SpinAdaptedSecondQuantization.KroneckerDelta[δ_pq]"
 
-    #v = SASQ.compact_deltas(v)
+    v = [dpq, dqr]
+    @test string(v) == "SpinAdaptedSecondQuantization.KroneckerDelta[δ_pq, δ_qr]"
 
-    #@test string(v) == "SpinAdaptedSecondQuantization.KroneckerDelta[δ_pq\e[36ma\e[39m, δ_r\e[92mi\e[39m]"
-    #@test v != 0
-    #v = [dpa, dpq, dri, dqr]
-
-    #@test string(v) == "SpinAdaptedSecondQuantization.KroneckerDelta[δ_p\e[36ma\e[39m, δ_pq, δ_r\e[92mi\e[39m, δ_qr]"
-
-    #v = SASQ.compact_deltas(v)
-
-    #@test string(v) == "0"
-    #@test v == 0
+    v = SASQ.compact_deltas(v)
+    @test string(v) == "SpinAdaptedSecondQuantization.KroneckerDelta[δ_pqr]"
 end
 
-@testset "singlet excitation operator" begin
+@testset "print singlet excitation operator" begin
     p = general(1)
     q = general(2)
-    #i = occupied(1)
-    #a = virtual(1)
 
     Epq = SASQ.SingletExcitationOperator(p, q)
-    #Eai = SASQ.SingletExcitationOperator(a, i)
-    #Eip = SASQ.SingletExcitationOperator(i, p)
-
     @test string(Epq) == "E_pq"
-    #@test string(Eai) == "E_\e[36ma\e[39m\e[92mi\e[39m"
-    #@test string(Eip) == "E_\e[92mi\e[39mp"
 end
 
-@testset "real tensor" begin
+@testset "print real tensor" begin
     p = general(1)
     q = general(2)
 
     hpq = SASQ.RealTensor("h", [p, q])
-
     @test string(hpq) == "h_pq"
 end
 
@@ -130,32 +84,15 @@ end
             SASQ.RealTensor("h", [p, a]),
             SASQ.RealTensor("g", [i, a, i, i])
         ],
-        [SASQ.SingletExcitationOperator(p, q)]
+        [SASQ.SingletExcitationOperator(p, q)],
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
     )
 
-    @test string(t) == "3/5 ∑_\e[92mi\e[39m\e[36ma\e[39m(δ_pq\e[36ma\e[39m g_\e[92mi\e[39m\e[36ma\e[39m\e[92mi\e[39m\e[92mi\e[39m h_p\e[36ma\e[39m E_pq)"
-    @test string(SASQ.get_all_indices(t)) == "SpinAdaptedSecondQuantization.MOIndex[p, q, \e[92mi\e[39m, \e[36ma\e[39m]"
+    @test string(t) == "3/5 ∑_ia(δ_pqa g_iaii h_pa E_pq) C(p∈V, i∈O)"
+    @test string(SASQ.get_all_indices(t)) == "SpinAdaptedSecondQuantization.MOIndex[p, q, i, a]"
 
     t = SASQ.lower_delta_indices(t)
-
-    @test string(t) == "3/5 ∑_\e[92mi\e[39m\e[36ma\e[39m(δ_pq\e[36ma\e[39m g_\e[92mi\e[39mp\e[92mi\e[39m\e[92mi\e[39m h_pp E_pp)"
-end
-
-@testset "expression constructors" begin
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    a = virtual(1)
-
-    Epq = E(p, q)
-    dpi = δ(p, i)
-    dai = δ(a, i)
-    hai = real_tensor("h", a, i)
-
-    @test string(Epq) == "E_pq"
-    @test string(dpi) == "δ_p\e[92mi\e[39m"
-    @test string(dai) == "0"
-    @test string(hai) == "h_\e[36ma\e[39m\e[92mi\e[39m"
+    @test string(t) == "3/5 ∑_ia(δ_pqa g_ipii h_pp E_pp) C(p∈V, i∈O)"
 end
 
 @testset "term exchange_indices" begin
@@ -163,9 +100,7 @@ end
     q = general(2)
     r = general(3)
     i = occupied(1)
-    j = occupied(2)
     a = virtual(1)
-    b = virtual(2)
 
     t = SASQ.Term(
         3 // 5,
@@ -176,23 +111,10 @@ end
             SASQ.RealTensor("g", [i, a, i, q])
         ],
         [SASQ.SingletExcitationOperator(p, q)],
+        SASQ.Constraints(i=>OccupiedOrbital, a=>VirtualOrbital)
     )
 
-    @test string(t) == "3/5 ∑_\e[92mi\e[39m\e[36ma\e[39m(δ_p\e[36ma\e[39m g_\e[92mi\e[39m\e[36ma\e[39m\e[92mi\e[39mq h_p\e[36ma\e[39m E_pq)"
-
-    t2 = SASQ.exchange_indices(
-        t,
-        [p => q, q => p, a => b, i => j]
-    )
-
-    @test string(t2) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_q\e[36mb\e[39m \
-g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
-
-    t3 = SASQ.make_space_for_index(t, i)
-    @test string(t3) == "3/5 ∑_\e[92mj\e[39m\e[36ma\e[39m(δ_p\e[36ma\e[39m g_\e[92mj\e[39m\e[36ma\e[39m\e[92mj\e[39mq h_p\e[36ma\e[39m E_pq)"
-
-    t4 = SASQ.make_space_for_indices(t, [i, j, a])
-    @test string(t4) == "3/5 ∑_\e[92mj\e[39m\e[36mb\e[39m(δ_p\e[36mb\e[39m g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mq h_p\e[36mb\e[39m E_pq)"
+    @test string(t) == "3/5 ∑_ia(δ_pa g_iaiq h_pa E_pq) C(p∈V, i∈O)"
 
     t = SASQ.Term(
         3 // 7,
@@ -203,32 +125,29 @@ g_\e[92mj\e[39m\e[36mb\e[39m\e[92mj\e[39mp h_q\e[36mb\e[39m E_qp)"
             SASQ.RealTensor("g", [i, a, i, q])
         ],
         [SASQ.SingletExcitationOperator(p, q)],
+        SASQ.Constraints(i=>OccupiedOrbital, a=>VirtualOrbital)
     )
 
-    @test string(t) == "3/7 δ_pqr g_\e[92mi\e[39m\e[36ma\e[39m\e[92mi\e[39mq h_p\e[36ma\e[39m E_pq"
+    @test string(t) == "3/7 δ_pqr g_iaiq h_pa E_pq C(i∈O, a∈V)"
 
     t = SASQ.lower_delta_indices(t)
 
-    @test string(t) == "3/7 δ_pqr g_\e[92mi\e[39m\e[36ma\e[39m\e[92mi\e[39mp h_p\e[36ma\e[39m E_pp"
+    @test string(t) == "3/7 δ_pqr g_iaip h_pa E_pp C(i∈O, a∈V)"
 
     t2 = SASQ.exchange_indices(t, [p => q])
 
-    @test string(t2) == "3/7 δ_qr g_\e[92mi\e[39m\e[36ma\e[39m\e[92mi\e[39mq h_q\e[36ma\e[39m E_qq"
+    @test string(t2) == "3/7 δ_qr g_iaiq h_qa E_qq C(i∈O, a∈V)"
 
     t3 = SASQ.exchange_indices(t2, [q => r])
 
-    @test string(t3) == "3/7 g_\e[92mi\e[39m\e[36ma\e[39m\e[92mi\e[39mr h_r\e[36ma\e[39m E_rr"
-
-    @test t4 == SASQ.exchange_indices(t4, [r => p])
+    @test string(t3) == "3/7 g_iair h_ra E_rr C(i∈O, a∈V)"
 end
 
 @testset "term summation delta" begin
     p = general(1)
     q = general(2)
     i = occupied(1)
-    j = occupied(2)
     a = virtual(1)
-    b = virtual(2)
 
     t = SASQ.Term(
         1,
@@ -238,119 +157,48 @@ end
         SASQ.Operator[
             SASQ.SingletExcitationOperator(p, q)
         ],
+        SASQ.Constraints(i=>OccupiedOrbital, a => VirtualOrbital)
     )
 
     t = SASQ.lower_delta_indices(t)
 
     #p -> a
     t1 = ∑(t, [p])
-    @test t1 == ∑(δ(a,p) * real_tensor("h", p, i) * E(p, q), [p]).terms[1]
     t1 = SASQ.simplify_summation_deltas(t1)
-    @test t1 == (real_tensor("h", a, i) * E(a, q)).terms[1]
-    t2 = ∑(t1, [a])
-    @test t2 == ∑(real_tensor("h", a, i) * E(a, q), [a]).terms[1]
+    t1 = ∑(t1, [a]) * constrain(a => VirtualOrbital)[1]
 
     #a -> p
-    t1 = ∑(t, [a])
-    @test t1 == ∑(δ(a,p) * real_tensor("h", p, i) * E(p, q), [a]).terms[1]
-    t1 = SASQ.simplify_summation_deltas(t1)
-    t2 = simplify(∑(t1, [p]))
-    @test t2 == ∑(real_tensor("h", a, i) * E(a, q), [a]).terms[1]
+    t2 = ∑(t, [a]) * constrain(a => VirtualOrbital)[1]
+    t2 = SASQ.simplify_summation_deltas(t2)
+    t2 = simplify(∑(t2, [p]))
 
     #ap
-    t1 = ∑(t, [a, p])
-    @test t1 == ∑(δ(a,p) * real_tensor("h", p, i) * E(p, q), [p, a]).terms[1]
-    t1 = SASQ.simplify_summation_deltas(t1)
-    @test t1 == ∑(real_tensor("h", a, i) * E(a, q), [a]).terms[1]
+    t3 = ∑(t, [a, p]) * constrain(a => VirtualOrbital)[1]
+    t3 = simplify(t3)
+
+    @test t1 == t2 == t3
 end
 
-@testset "term summation simplify" begin
-    p = general(1)
-    q = general(2)
-    i = occupied(1)
-    j = occupied(2)
-    a = virtual(1)
-    b = virtual(2)
-    d = virtual(4)
-
-    t = real_tensor("g", b, i, d, j)
-
-    t = ∑(t, [b, d, i, j])
-    t = SASQ.lower_summation_indices(t.terms[1])
-    t = SASQ.sort_summation_indices(t)
-    @test t == ∑(real_tensor("g", a, i, b, j), [i, j, a, b]).terms[1]
-end
-
-@testset "term exchange_indices constraints" begin
-    p = general(1)
-    q = general(2)
-    r = general(3)
-    s = general(4)
-    i = occupied(1)
-    j = occupied(2)
-    a = virtual(1)
-    b = virtual(2)
-
-    t = SASQ.Term(
-        3 // 5,
-        SASQ.MOIndex[],
-        SASQ.KroneckerDelta[],
-        [
-            SASQ.RealTensor("h", [a, b]),
-        ],
-        [SASQ.SingletExcitationOperator(i, j)],
-    )
-
-    t2 = SASQ.exchange_indices(
-        t,
-        [a => p, b => q, i => r, j => s]
-    )
-
-    @test t2 == (3//5 * real_tensor("h", p, q) * E(r, s) * constrain(p => VirtualOrbital, 
-                                                                     q => VirtualOrbital,
-                                                                     r => OccupiedOrbital,
-                                                                     s => OccupiedOrbital)).terms[1]
-
-    t3 = SASQ.exchange_indices(
-        t2,
-        [p => b]
-    )
-
-    @test t3 == (3//5 * real_tensor("h", b, q) * E(r, s) * constrain(q => VirtualOrbital,
-                                                                     r => OccupiedOrbital,
-                                                                     s => OccupiedOrbital)).terms[1]
-
-    t4 = simplify(∑(t3, [s]))
-
-    @test t4 == (∑(3//5 * real_tensor("h", b, q) * E(r, i) * constrain(q => VirtualOrbital,
-                                                                       r => OccupiedOrbital), [i])).terms[1]
-end
 
 @testset "term multiplication" begin
     p = general(1)
     q = general(2)
     r = general(3)
     s = general(4)
-    i = occupied(1)
-    j = occupied(2)
-    k = occupied(3)
-    l = occupied(4)
-    a = virtual(1)
-    b = virtual(2)
 
     t1 = SASQ.Term(
         3 // 5,
-        SASQ.MOIndex[i, j],
+        SASQ.MOIndex[p, q],
         SASQ.KroneckerDelta[],
         SASQ.Tensor[],
-        [SASQ.SingletExcitationOperator(i, j)],
+        [SASQ.SingletExcitationOperator(p, q)],
     )
 
-    @test t1 * t1 == SASQ.Term(9//25, 
-                         SASQ.MOIndex[i, j, k, l],
+    @test simplify(t1 * t1) == SASQ.Term(9//25, 
+                         SASQ.MOIndex[p, q, r, s],
                          SASQ.KroneckerDelta[],
                          SASQ.Tensor[],
-                         [SASQ.SingletExcitationOperator(i, j), SASQ.SingletExcitationOperator(k, l)],
+                         [SASQ.SingletExcitationOperator(p, q), SASQ.SingletExcitationOperator(r, s)],
                      )
 end
 
@@ -387,12 +235,12 @@ end
     q = general(2)
     r = general(3)
     s = general(4)
-    i = occupied(1)
-    j = occupied(2)
-    k = occupied(3)
-    l = occupied(4)
-    m = occupied(5)
-    n = occupied(6)
+    i = general(1)
+    j = general(2)
+    k = general(3)
+    l = general(4)
+    m = general(5)
+    n = general(6)
     a = virtual(1)
     b = virtual(2)
 
@@ -419,7 +267,6 @@ end
     b = virtual(2)
 
     @test commutator(E(p, q), E(r, s)) == E(p, s) * δ(q, r) - E(r, q) * δ(p, s)
-    @test commutator(E(i, j), E(a, k)) == - E(a, j) * δ(i, k)
     @test commutator(E(i, a), E(a, i)) == E(i, i) - E(a, a)
     @test commutator(E(a, i), E(a, i)) == SASQ.Expression(0)
     
@@ -445,8 +292,8 @@ end
     @test string(constrain(p => OccupiedOrbital)) == "1 C(p∈O)"
     @test string(constrain(p => VirtualOrbital)) == "1 C(p∈V)"
     @test constrain(p => OccupiedOrbital) * constrain(p => VirtualOrbital) == SASQ.Expression(0)
-    @test constrain(p => VirtualOrbital) * δ(p, a) == δ(p,a)
-    @test constrain(p => VirtualOrbital) * δ(p, i) == SASQ.Expression(0)
+    @test constrain(p => VirtualOrbital, a => VirtualOrbital) * δ(p, a) == δ(p,a) * constrain(p => VirtualOrbital)
+    @test constrain(p => VirtualOrbital, i => OccupiedOrbital) * δ(p, i) == SASQ.Expression(0)
     @test string(δ(p, q) * constrain(q => VirtualOrbital)) == "δ_pq C(p∈V)"
     @test (δ(p, q) * constrain(p => OccupiedOrbital)) * constrain(q => VirtualOrbital) == SASQ.Expression(0)
 end
@@ -464,11 +311,6 @@ end
     b = virtual(2)
 
     @test hf_expectation_value(E(p, q)) == 2 * δ(p,q) * constrain(p => OccupiedOrbital)
-    @test hf_expectation_value(E(i, j)) == 2 * δ(i,j)
-    @test hf_expectation_value(E(a, b)) == SASQ.Expression(0)
-
-    @test hf_expectation_value(E(i, j) * E(k, l)) == 4 * δ(i,j) * δ(k,l)
-    @test hf_expectation_value(E(i, a) * E(b, j)) == 2 * δ(i,j) * δ(a,b)
     @test hf_expectation_value(E(p, q) * E(r, s)) == 4 * δ(p,q) * δ(r,s) * constrain(p=>OccupiedOrbital, r=>OccupiedOrbital) +
                                                      2 * δ(p,s) * δ(q,r) * constrain(p=>OccupiedOrbital, q=>VirtualOrbital)
 
@@ -477,7 +319,7 @@ end
     e2 = hf_expectation_value(∑(E(i,j)*E(j,i), [i, j])) 
     @test simplify(e1) == simplify(e2)
     
-    @test hf_expectation_value(E(i,j)*E(j,i)) == 4 * δ(i,j)
+    @test hf_expectation_value(E(i,j)*E(j,i) * constrain(i => OccupiedOrbital, j=>OccupiedOrbital)) == 4 * δ(i,j) * constrain(i => OccupiedOrbital)
 end
 
 @testset "jacobi_identity" begin
@@ -527,12 +369,13 @@ end
     H = simplify(h + g)
 
     energy = simplify(hf_expectation_value(H))
-    #@test energy == 2//1 * ∑(rsym_tensor("h", i, i), [i]) + ∑(2//1 * rsym_tensor("g", i, i, j, j) - rsym_tensor("g", i, j, j, i), [i, j])
+    energy_exp = simplify(2//1 * ∑(rsym_tensor("h", p, p) * constrain(p => OccupiedOrbital), [p]) + ∑((2//1 * rsym_tensor("g", p, p, q, q) - rsym_tensor("g", p, q, q, p)) * constrain(p => OccupiedOrbital, q => OccupiedOrbital), [p, q]))
+    @test energy == energy_exp
 
     gradient = simplify(hf_expectation_value(commutator(H, E(p,q) - E(q,p))))
-    fock = (rsym_tensor("h", p, q) + ∑(2//1 * rsym_tensor("g", p, q, i, i) - rsym_tensor("g", p, i, i, q), [i])) * constrain(p => VirtualOrbital, q => OccupiedOrbital)
+    fock = (rsym_tensor("h", p, q) + ∑(constrain(i=>OccupiedOrbital) * (2//1 * rsym_tensor("g", p, q, i, i) - rsym_tensor("g", p, i, i, q)), [i])) * constrain(p => VirtualOrbital, q => OccupiedOrbital)
 
     @test gradient * constrain(p => OccupiedOrbital, q => OccupiedOrbital) == SASQ.Expression(0)
     @test gradient * constrain(p => VirtualOrbital, q => VirtualOrbital) == SASQ.Expression(0)
-    #@test simplify(gradient * constrain(p => VirtualOrbital, q => OccupiedOrbital)) == 4//1 * fock * constrain(p => VirtualOrbital, q => OccupiedOrbital)
+    @test simplify(gradient * constrain(p => VirtualOrbital, q => OccupiedOrbital)) == simplify(4//1 * fock * constrain(p => VirtualOrbital, q => OccupiedOrbital))
 end
