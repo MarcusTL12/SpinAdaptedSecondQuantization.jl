@@ -11,12 +11,12 @@ function hf_expectation_value(ex::Expression{T}) where {T<:Number}
 end
 
 function hf_expectation_value(t::Term)
-    op_ex = hf_expectation_value(t.operators)
+    op_ex = hf_expectation_value(t.operators, t.constraints)
 
     Expression([fuse(noop_part(t), t2) for t2 in op_ex.terms])
 end
 
-function hf_expectation_value(ops::Vector{Operator})
+function hf_expectation_value(ops::Vector{Operator}, constraints::Constraints)
     if isempty(ops)
         return Expression(1)
     elseif length(ops) == 1
@@ -27,18 +27,18 @@ function hf_expectation_value(ops::Vector{Operator})
     rest = ops[2:end]
 
     if firstop isa SingletExcitationOperator
-        if isvirtual(firstop.p)
+        if get(constraints, firstop.p, GeneralOrbital) == VirtualOrbital
             return zero(Expression{Int64})
         else
-            if isoccupied(firstop.q)
-                hf_expectation_value(firstop) * hf_expectation_value(rest)
-            elseif isvirtual(firstop.q)
+            if get(constraints, firstop.q, GeneralOrbital) == OccupiedOrbital
+                hf_expectation_value(firstop) * hf_expectation_value(rest, constraints)
+            elseif get(constraints, firstop.q, GeneralOrbital) == VirtualOrbital
                 hf_expectation_value(commutator(
                     Expression(firstop), Expression(rest)
-                ))
+                ), constraints)
             else
                 assume_occ = hf_expectation_value(firstop) *
-                             hf_expectation_value(rest) *
+                             hf_expectation_value(rest, constraints) *
                              constrain(firstop.q => OccupiedOrbital)
 
                 assume_vir = hf_expectation_value(commutator(
@@ -51,7 +51,7 @@ function hf_expectation_value(ops::Vector{Operator})
             end
         end
     else
-        throw("hf_expectation_vaule not implemented for $(typeof(firstop))!")
+        throw("hf_expectation_value not implemented for $(typeof(firstop))!")
     end
 end
 

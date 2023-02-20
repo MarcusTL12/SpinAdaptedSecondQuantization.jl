@@ -206,14 +206,8 @@ function simplify_terms(ex::Expression)
     Expression([simplify(t) for t in ex.terms])
 end
 
-function make_sum_inds_general(ex::Expression)
-    Expression(map(make_sum_inds_general, ex.terms))
-end
-
 # TODO: group terms into equal significant parts
 function try_add_constraints(ex::Expression)
-    ex = make_sum_inds_general(ex)
-
     done = false
 
     while !done

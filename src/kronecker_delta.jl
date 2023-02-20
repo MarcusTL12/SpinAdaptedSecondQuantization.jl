@@ -9,12 +9,6 @@ struct KroneckerDelta
         if length(indices) <= 1
             1
         else
-            for i in eachindex(indices), j in (i+1):length(indices)
-                if isdisjoint(indices[i], indices[j])
-                    return 0
-                end
-            end
-
             new(indices)
         end
     end
@@ -103,12 +97,13 @@ function compact_deltas(deltas::Vector{KroneckerDelta})
     sort!(new_deltas)
 end
 
-function space(d::KroneckerDelta)
-    s, rest = Iterators.peel(space(p) for p in d.indices)
-
-    for s2 in rest
-        s = typeintersect(s, s2)
-    end
-
-    s
-end
+#function space(d::KroneckerDelta)
+#    s, rest = Iterators.peel(space(p) for p in d.indices)
+#
+#    for s2 in rest
+#        s = typeintersect(s, s2)
+#    end
+#
+#    s
+#end
+#

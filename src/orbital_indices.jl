@@ -79,47 +79,25 @@ end
 """
     MOIndex
 """
-struct MOIndex{S<:GeneralOrbital}
+struct MOIndex
     index::Int
-    function MOIndex(index, ::Type{S}) where {S<:GeneralOrbital}
-        new{S}(index)
-    end
 end
 
-space(::MOIndex{S}) where {S<:GeneralOrbital} = S
-
-function getname(i::MOIndex{S}) where {S<:GeneralOrbital}
-    getname(S, i.index)
+function getname(i::MOIndex)
+    getname(GeneralOrbital, i.index)
 end
 
-general(index) = MOIndex(index, GeneralOrbital)
-occupied(index) = MOIndex(index, OccupiedOrbital)
-virtual(index) = MOIndex(index, VirtualOrbital)
+general(index) = MOIndex(index)
 
-function Base.show(io::IO, i::MOIndex{GeneralOrbital})
+function Base.show(io::IO, i::MOIndex)
     print(io, getname(i))
-end
-
-function Base.show(io::IO, i::MOIndex{OccupiedOrbital})
-    print(io, "\x1b[92m", getname(i), "\x1b[39m")
-end
-
-function Base.show(io::IO, i::MOIndex{VirtualOrbital})
-    print(io, "\x1b[36m", getname(i), "\x1b[39m")
 end
 
 Base.isdisjoint(::Type{S1}, ::Type{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital} = typeintersect(S1, S2) == Union{}
 
-Base.isdisjoint(::MOIndex{S1}, ::MOIndex{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital} = isdisjoint(S1, S2)
-
-isoccupied(::MOIndex{S}) where {S<:GeneralOrbital} = S <: OccupiedOrbital
-isvirtual(::MOIndex{S}) where {S<:GeneralOrbital} = S <: VirtualOrbital
-
-function Base.isless(p::MOIndex{S1}, q::MOIndex{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital}
-    (S1, p.index) < (S2, q.index)
+function Base.isless(p::MOIndex, q::MOIndex)
+    p.index < q.index
 end
 
 function exchange_index(p::MOIndex, mapping)
@@ -132,20 +110,14 @@ function exchange_index(p::MOIndex, mapping)
 end
 
 # indices must be sorted
-function next_free_index(indices, ::Type{S}) where {S<:GeneralOrbital}
+function next_free_index(indices)
     i = 1
     for p in indices
-        if space(p) == S
-            if p.index == i
-                i += 1
-            end
+        if p.index == i
+            i += 1
         end
     end
-    MOIndex(i, S)
-end
-
-function next_free_index(indices, ::MOIndex{S}) where {S<:GeneralOrbital}
-    next_free_index(indices, S)
+    MOIndex(i)
 end
 
 # utility functions for getting which sets compose each other

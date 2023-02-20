@@ -37,7 +37,7 @@ end
 function exchange_indices(t::RealSymmetricTensor, mapping)
     new_ind = [exchange_index(i, mapping) for i in t.indices]
     sort_ind = sort_rsym_indices(new_ind)
-    ParticleSymmetricTensor(t.symbol, sort_ind)
+    RealSymmetricTensor(t.symbol, sort_ind)
 end
 
 function rsym_tensor(symbol, indices...)

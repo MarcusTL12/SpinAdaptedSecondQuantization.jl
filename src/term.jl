@@ -13,8 +13,7 @@ struct Term{T<:Number}
     constraints::Constraints
 
     function Term(scalar::T, sum_indices, deltas, tensors, operators,
-        constraints) where
-    {T<:Number}
+                  constraints) where {T<:Number}
         sort!(sum_indices)
         sort!(tensors)
 
@@ -25,61 +24,40 @@ struct Term{T<:Number}
                 Operator[], Constraints())
         end
 
-        delta_constraints = Constraints()
         nonfirst_delta_indices = Dict{MOIndex,MOIndex}()
 
         for d in deltas
-            s = space(d)
             firstind = first(d.indices)
             for (i, p) in enumerate(d.indices)
                 if i > 1
                     nonfirst_delta_indices[p] = firstind
                 end
-                if is_strict_subspace(s, space(p))
-                    delta_constraints[p] = s
-                end
             end
         end
 
         constraints = copy(constraints)
-        if fuse_constraints!(constraints, delta_constraints) == 0
-            return new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
-                Operator[], Constraints())
-        end
 
         # constraints now contains an exhaustive list of constraints,
-        # which is overkill, so now remove those that are captured by
-        # kronecker deltas. ex: δ_pa C(p∈V) -> δ_pa
-        # Also remove useless constraints for good measure. ex: C(p∈G) -> 1
-        # Also remove any constraints on indices that do show up as the
+        # Remove useless constraints for good measure. ex: C(p∈G) -> 1
+        # Remove any constraints on indices that do show up as the
         # non-first element of a kronecker delta
 
         reduced_constraints = Constraints()
         for (p, s) in constraints
-            if isdisjoint(s, space(p))
-                return return new{T}(zero(T), MOIndex[], KroneckerDelta[],
-                    Tensor[], Operator[], Constraints())
-            end
-
             q = get(nonfirst_delta_indices, p, p)
 
-            if is_strict_subspace(s, space(p))
-                if !haskey(delta_constraints, p) ||
-                   is_strict_subspace(s, delta_constraints[p])
-                    if haskey(reduced_constraints, q)
-                        if isdisjoint(s, reduced_constraints[q])
-                            return return new{T}(zero(T), MOIndex[],
-                                KroneckerDelta[], Tensor[], Operator[],
-                                Constraints())
-                        end
-
-                        reduced_constraints[q] = typeintersect(
-                            reduced_constraints[q], s
-                        )
-                    else
-                        reduced_constraints[q] = s
-                    end
+            if haskey(reduced_constraints, q)
+                # Return 0 if an index belongs to disjoint sets
+                # (p ∈ Occ) ∩ (p ∈ Vir) = 0
+                if isdisjoint(s, reduced_constraints[q])
+                    return new{T}(zero(T), MOIndex[],
+                        KroneckerDelta[], Tensor[], Operator[],
+                        Constraints())
                 end
+
+                reduced_constraints[q] = typeintersect(reduced_constraints[q], s)
+            elseif is_strict_subspace(s, GeneralOrbital)
+                reduced_constraints[q] = s
             end
         end
 
@@ -110,16 +88,6 @@ function noop_part(t::Term)
         t.tensors,
         Operator[],
         t.constraints
-    )
-end
-
-function non_constraint_part(t::Term)
-    Term(
-        t.scalar,
-        t.sum_indices,
-        t.deltas,
-        t.tensors,
-        t.constraints,
     )
 end
 
@@ -305,28 +273,8 @@ function exchange_indices(t::Term{T}, mapping, update_constraints=true) where
                 end
             end
 
-            # When increasing the space of an index we need to store the previous
-            # space as a constraint
-            if is_strict_subspace(space(from), space(to))
-                if haskey(t.constraints, to)
-                    t.constraints[to] =
-                        typeintersect(t.constraints[to], space(from))
-                else
-                    t.constraints[to] = space(from)
-                end
-            end
         end
 
-        delete_contraints = MOIndex[]
-        for (p, s) in t.constraints
-            if !is_strict_subspace(s, space(p))
-                push!(delete_contraints, p)
-            end
-        end
-
-        for p in delete_contraints
-            delete!(t.constraints, p)
-        end
     else
         old_constraints = Constraints()
         for (p, s) in t.constraints
@@ -413,7 +361,7 @@ end
 # summing indices that collide with the new indices
 function make_space_for_index(t::Term, new_index::MOIndex)
     if new_index ∈ t.sum_indices
-        mapping = [new_index => next_free_index(get_all_indices(t), new_index)]
+        mapping = [new_index => next_free_index(get_all_indices(t))]
 
         exchange_indices(t, mapping)
     else
@@ -427,7 +375,7 @@ function make_space_for_indices(t::Term, new_indices)
 
     for new_index in new_indices
         if new_index ∈ t.sum_indices
-            unique_index = next_free_index(indices, new_index)
+            unique_index = next_free_index(indices)
             push!(indices, unique_index)
             push!(mapping, new_index => unique_index)
         end
@@ -441,7 +389,7 @@ function simplify_sum_constraints(t::Term)
     all_indices = get_all_indices(t)
     for p in t.sum_indices
         if haskey(t.constraints, p)
-            new_ind = next_free_index(all_indices, t.constraints[p])
+            new_ind = next_free_index(all_indices)
             push!(all_indices, new_ind)
             push!(mapping, p => new_ind)
         end
@@ -472,28 +420,12 @@ function sort_summation_indices(t::Term)
         return t
     end
 
-    space_mapping = Dict()
-    by_space = Vector{MOIndex}[]
-
-    for i in get_sum_indices_ordered(t)
-        s = space(i)
-        space_ind = if haskey(space_mapping, s)
-            space_mapping[s]
-        else
-            push!(by_space, MOIndex[])
-            space_mapping[s] = length(by_space)
-        end
-
-        push!(by_space[space_ind], i)
-    end
-
+    order = get_sum_indices_ordered(t)
     mapping = Pair{MOIndex,MOIndex}[]
 
-    for order in by_space
-        for (pos, ind) in enumerate(sort(order))
-            if ind != order[pos]
-                push!(mapping, ind => order[pos])
-            end
+    for (pos, ind) in enumerate(sort(order))
+        if ind != order[pos]
+            push!(mapping, ind => order[pos])
         end
     end
 
@@ -509,7 +441,7 @@ function lower_summation_indices(t::Term)
     mapping = Pair{MOIndex,MOIndex}[]
 
     for i in reverse(t.sum_indices)
-        free_index = next_free_index(indices, i)
+        free_index = next_free_index(indices)
 
         if free_index < i
             push!(mapping, i => free_index)
@@ -587,29 +519,12 @@ function simplify_summation_deltas(t::Term)
     t
 end
 
-function make_sum_inds_general(t::Term)
-    mapping = Pair{MOIndex,MOIndex}[]
-    all_indices = get_all_indices(t)
-
-    for p in t.sum_indices
-        if is_strict_subspace(space(p), GeneralOrbital)
-            new_ind = next_free_index(all_indices, GeneralOrbital)
-            push!(all_indices, new_ind)
-            push!(mapping, p => new_ind)
-        end
-    end
-
-    exchange_indices(t, mapping) |>
-    lower_summation_indices |>
-    sort_summation_indices
-end
-
 # This function returns the constraints of *all* indices in the term
 function get_constraints_exhaustive(t::Term)
     constraints = Constraints()
 
     for d in t.deltas
-        s = space(d)
+        s = GeneralOrbital
         for p in d.indices
             constraints[p] = s
         end
@@ -619,7 +534,7 @@ function get_constraints_exhaustive(t::Term)
 
     for p in get_all_indices(t)
         if !haskey(constraints, p)
-            constraints[p] = space(p)
+            constraints[p] = GeneralOrbital
         end
     end
 
