@@ -26,3 +26,4 @@ function Base.isless(a::A, b::B) where {A<:Tensor,B<:Tensor}
 end
 
 include("tensors/real_tensor.jl")
+include("tensors/psym_tensor.jl")
