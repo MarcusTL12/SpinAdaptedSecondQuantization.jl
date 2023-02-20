@@ -252,7 +252,7 @@ function Base.:(==)(a::Term, b::Term)
         a.scalar)
 end
 
-function exchange_indices(t::Term{T}, mapping) where
+function exchange_indices(t::Term{T}, mapping, update_constraints=true) where
 {T<:Number}
     if isempty(mapping)
         return t
@@ -294,37 +294,52 @@ function exchange_indices(t::Term{T}, mapping) where
     sort!(t.deltas)
     sort!(t.tensors)
 
-    for (from, to) in mapping
-        if haskey(t.constraints, from)
-            s = pop!(t.constraints, from)
-            if haskey(t.constraints, to)
-                t.constraints[to] = typeintersect(t.constraints[to], s)
-            else
-                t.constraints[to] = s
+    if update_constraints
+        for (from, to) in mapping
+            if haskey(t.constraints, from)
+                s = pop!(t.constraints, from)
+                if haskey(t.constraints, to)
+                    t.constraints[to] = typeintersect(t.constraints[to], s)
+                else
+                    t.constraints[to] = s
+                end
+            end
+
+            # When increasing the space of an index we need to store the previous
+            # space as a constraint
+            if is_strict_subspace(space(from), space(to))
+                if haskey(t.constraints, to)
+                    t.constraints[to] =
+                        typeintersect(t.constraints[to], space(from))
+                else
+                    t.constraints[to] = space(from)
+                end
             end
         end
 
-        # When increasing the space of an index we need to store the previous
-        # space as a constraint
-        if is_strict_subspace(space(from), space(to))
-            if haskey(t.constraints, to)
-                t.constraints[to] =
-                    typeintersect(t.constraints[to], space(from))
-            else
-                t.constraints[to] = space(from)
+        delete_contraints = MOIndex[]
+        for (p, s) in t.constraints
+            if !is_strict_subspace(s, space(p))
+                push!(delete_contraints, p)
             end
         end
-    end
 
-    delete_contraints = MOIndex[]
-    for (p, s) in t.constraints
-        if !is_strict_subspace(s, space(p))
-            push!(delete_contraints, p)
+        for p in delete_contraints
+            delete!(t.constraints, p)
         end
-    end
+    else
+        old_constraints = Constraints()
+        for (p, s) in t.constraints
+            old_constraints[p] = s
+        end
 
-    for p in delete_contraints
-        delete!(t.constraints, p)
+        empty!(t.constraints)
+
+        for (from, to) in mapping
+            if haskey(old_constraints, from)
+                t.constraints[to] = old_constraints[from]
+            end
+        end
     end
 
     t
@@ -482,7 +497,7 @@ function sort_summation_indices(t::Term)
         end
     end
 
-    exchange_indices(t, mapping)
+    exchange_indices(t, mapping, false)
 end
 
 # This function reduces the summation indices to be as small as possible
@@ -678,7 +693,7 @@ function try_add_constraints(a::Term, b::Term)
 
         t1 = Term(a.scalar, a.sum_indices, a.deltas, a.tensors,
             a.operators, new_constraints)
-        
+
         if iszero(a.scalar + b.scalar)
             return t1, true
         else
