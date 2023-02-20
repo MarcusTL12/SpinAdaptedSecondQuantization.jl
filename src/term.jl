@@ -156,7 +156,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
     all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
                           isempty(t.tensors) && isempty(t.operators)
 
-    if !isone(abs(t.scalar))
+    if !isone(t.scalar)
         if isone(-t.scalar)
             print(io, '-')
         else
