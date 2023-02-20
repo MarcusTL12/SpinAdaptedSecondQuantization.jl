@@ -518,19 +518,20 @@ end
     q = general(2)
     r = general(3)
     s = general(4)
+    i = occupied(1)
+    j = occupied(2)
 
-    h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
-    g = 1//2 * ∑(psym_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s])
+    h = ∑(rsym_tensor("h", p, q) * E(p, q), [p, q])
+    g = 1//2 * ∑(rsym_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s])
     H = simplify(h + g)
 
     energy = simplify(hf_expectation_value(H))
-    @show energy
-    #@test energy == 2//1 * ∑(real_tensor(h, i, i), [i]) + ∑(2//1 * real_tensor("g", i, i, j, j) - real_tensor("g", i, j, j, i), [i, j])
+    #@test energy == 2//1 * ∑(rsym_tensor("h", i, i), [i]) + ∑(2//1 * rsym_tensor("g", i, i, j, j) - rsym_tensor("g", i, j, j, i), [i, j])
 
     gradient = simplify(hf_expectation_value(commutator(H, E(p,q) - E(q,p))))
-    #fock = real_tensor("h", p, q) + ∑(2//1 * real_tensor("g", p, q, i, i) - real_tensor("g", p, i, i, q), [i])
+    fock = (rsym_tensor("h", p, q) + ∑(2//1 * rsym_tensor("g", p, q, i, i) - rsym_tensor("g", p, i, i, q), [i])) * constrain(p => VirtualOrbital, q => OccupiedOrbital)
 
     @test gradient * constrain(p => OccupiedOrbital, q => OccupiedOrbital) == SASQ.Expression(0)
     @test gradient * constrain(p => VirtualOrbital, q => VirtualOrbital) == SASQ.Expression(0)
-    #@test gradient * constrain(p => VirtualOrbital, q => OccupiedOrbital) == 4//1 * fock * constrain(p => VirtualOrbital, q => OccupiedOrbital)
+    #@test simplify(gradient * constrain(p => VirtualOrbital, q => OccupiedOrbital)) == 4//1 * fock * constrain(p => VirtualOrbital, q => OccupiedOrbital)
 end

@@ -27,3 +27,4 @@ end
 
 include("tensors/real_tensor.jl")
 include("tensors/psym_tensor.jl")
+include("tensors/rsym_tensor.jl")
