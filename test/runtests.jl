@@ -379,3 +379,20 @@ end
     @test gradient * constrain(p => VirtualOrbital, q => VirtualOrbital) == SASQ.Expression(0)
     @test simplify(gradient * constrain(p => VirtualOrbital, q => OccupiedOrbital)) == simplify(4//1 * fock * constrain(p => VirtualOrbital, q => OccupiedOrbital))
 end
+
+
+@testset "ccsd_equations" begin
+    p = general(1)
+    q = general(2)
+    r = general(3)
+    s = general(4)
+
+    h = ∑(rsym_tensor("h", p, q) * E(p, q), [p, q])
+    g = 1//2 * ∑(rsym_tensor("g", p, q, r, s) * e(p, q, r, s), [p, q, r, s])
+    H = simplify(h + g)
+
+    T1 = ∑(psym_tensor("t", p, q) * constrain(p=>VirtualOrbital, q=>OccupiedOrbital) * E(p,q), [p,q])
+    T2 = ∑(psym_tensor("t", p, q, r, s) * constrain(p=>VirtualOrbital, q=>OccupiedOrbital, r=>VirtualOrbital, s=>OccupiedOrbital) * E(p,q) * E(r,s), [p,q,r,s])
+
+    #@show simplify(hf_expectation_value(H * T1)) == SASQ.Expression(0)
+end

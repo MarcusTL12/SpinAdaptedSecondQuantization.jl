@@ -342,10 +342,22 @@ function get_sum_indices_ordered(t::Term)
         end
     end
 
-    for tensor in t.tensors
-        for i in get_indices(tensor)
-            add_index(i)
+    tensor_indices = get_indices_permutations(t.tensors[1])
+
+    for tensor in t.tensors[2:end]
+        old = copy(tensor_indices)
+        new = get_indices_permutations(tensor)
+
+        tensor_indices = Vector{Vector{MOIndex}}(undef, length(old) * length(new))
+        for i in 1:length(old), j in 1:length(new)
+            tensor_indices[i + length(old) * (j-1)] = vcat(old[i], new[j])
         end
+    end
+
+    _, index = findmin(enumerate_mo_indices, tensor_indices)
+
+    for i in tensor_indices[index]
+        add_index(i)
     end
 
     for o in t.operators
@@ -359,6 +371,25 @@ function get_sum_indices_ordered(t::Term)
     end
 
     indices
+end
+
+function enumerate_mo_indices(indices)
+    # Examples
+    # [p, q, r, s] -> [1, 2, 3, 4]
+    # [p, q, r, r] -> [1, 2, 3, 3]
+    # [r, r, p, q] -> [1, 1, 2, 3]
+    dict = Dict{MOIndex, Int}()
+    list = zeros(Int, length(indices))
+    counter = 1
+    for (n, i) in enumerate(indices)
+        if i ∈ keys(dict)
+            list[n] = dict[i]
+        else
+            list[n] = dict[i] = counter
+            counter += 1
+        end
+    end
+    return list
 end
 
 # These two functions rename summing indices such that there are no

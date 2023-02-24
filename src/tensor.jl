@@ -8,6 +8,9 @@ get_indices(::T) where {T<:Tensor} =
     throw("get_indices not implemented for Tensor type $(T)!")
 exchange_indices(::T, mapping) where {T<:Tensor} =
     throw("exchange_indices not implemented for Tensor type $(T)!")
+get_indices_permutations(::T) where {T<:Tensor} =
+    throw("get_indices_permutations not implemented for Tensor type $(T)!")
+
 
 # Base.show is overridable if wanted (typically for cluster amplitudes)
 function Base.show(io::IO, t::T) where {T<:Tensor}
