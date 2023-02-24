@@ -335,9 +335,19 @@ function exchange_indices(t::Term{T}, mapping, update_constraints=true) where
 
         empty!(t.constraints)
 
-        for (from, to) in mapping
-            if haskey(old_constraints, from)
-                t.constraints[to] = old_constraints[from]
+        # for (from, to) in mapping
+        #     if haskey(old_constraints, from)
+        #         t.constraints[to] = old_constraints[from]
+        #     end
+        # end
+
+        for (p, s) in old_constraints
+            in_mapping = findfirst(((r, _),) -> r == p, mapping)
+
+            if isnothing(in_mapping)
+                t.constraints[p] = s
+            else
+                t.constraints[mapping[in_mapping][2]] = s
             end
         end
     end
