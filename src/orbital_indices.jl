@@ -125,12 +125,12 @@ end
 # indices must be sorted
 function next_free_index(indices)
     i = 1
-    for p in indices
-        if p.index == i
-            i += 1
+    indexes = sort([p.index for p in indices])
+    for i = 1:50
+        if i ∉ indexes
+            return MOIndex(i)
         end
     end
-    MOIndex(i)
 end
 
 # utility functions for getting which sets compose each other
