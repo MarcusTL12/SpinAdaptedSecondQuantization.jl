@@ -33,9 +33,7 @@ function hf_expectation_value(ops::Vector{Operator}, constraints::Constraints)
             if get(constraints, firstop.q, GeneralOrbital) == OccupiedOrbital
                 hf_expectation_value(firstop) * hf_expectation_value(rest, constraints)
             elseif get(constraints, firstop.q, GeneralOrbital) == VirtualOrbital
-                hf_expectation_value(commutator(
-                    Expression(firstop), Expression(rest)
-                ), constraints)
+                hf_expectation_value(commutator(Expression(firstop), Expression(rest)) * constrain(constraints))
             else
                 assume_occ = hf_expectation_value(firstop) *
                              hf_expectation_value(rest, constraints) *
