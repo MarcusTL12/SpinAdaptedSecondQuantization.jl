@@ -1,8 +1,8 @@
-const Constraints = SortedDict{MOIndex,Type}
+const Constraints = SortedDict{Int,Type}
 
 struct Term{T<:Number}
     scalar::T
-    sum_indices::Vector{MOIndex}
+    sum_indices::Vector{Int}
     deltas::Vector{KroneckerDelta}
     tensors::Vector{Tensor}
     operators::Vector{Operator}
@@ -13,18 +13,18 @@ struct Term{T<:Number}
     constraints::Constraints
 
     function Term(scalar::T, sum_indices, deltas, tensors, operators,
-                  constraints) where {T<:Number}
+        constraints) where {T<:Number}
         sort!(sum_indices)
         sort!(tensors)
 
         deltas = compact_deltas(deltas)
 
         if deltas == 0 || iszero(scalar)
-            return new{T}(zero(T), MOIndex[], KroneckerDelta[], Tensor[],
+            return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
                 Operator[], Constraints())
         end
 
-        nonfirst_delta_indices = Dict{MOIndex,MOIndex}()
+        nonfirst_delta_indices = Dict{Int,Int}()
 
         for d in deltas
             firstind = first(d.indices)
@@ -50,7 +50,7 @@ struct Term{T<:Number}
                 # Return 0 if an index belongs to disjoint sets
                 # (p ∈ Occ) ∩ (p ∈ Vir) = 0
                 if isdisjoint(s, reduced_constraints[q])
-                    return new{T}(zero(T), MOIndex[],
+                    return new{T}(zero(T), Int[],
                         KroneckerDelta[], Tensor[], Operator[],
                         Constraints())
                 end
@@ -92,7 +92,7 @@ function noop_part(t::Term)
 end
 
 function Base.zero(::Type{Term{T}}) where {T<:Number}
-    Term(zero(T), MOIndex[], KroneckerDelta[], Tensor[], Operator[])
+    Term(zero(T), Int[], KroneckerDelta[], Tensor[], Operator[])
 end
 
 function Base.iszero(t::Term)
@@ -140,7 +140,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
         printsep()
         print(io, "∑_")
         for i in t.sum_indices
-            print(io, i)
+            print_mo_index(io, i)
         end
         print(io, '(')
         sep[] = false
@@ -176,7 +176,8 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
             if !isfirst
                 print(io, ", ")
             end
-            print(io, i, "∈", getshortname(s))
+            print_mo_index(io, i)
+            print(io, "∈", getshortname(s))
             isfirst = false
         end
 
@@ -328,9 +329,9 @@ end
 # in the order they show up inside the sum
 # The ones that do not show up will come last
 function get_sum_indices_ordered(t::Term)
-    indices = MOIndex[]
+    indices = Int[]
 
-    function add_index(i::MOIndex)
+    function add_index(i::Int)
         if i ∉ indices && i ∈ t.sum_indices
             push!(indices, i)
         end
@@ -348,9 +349,9 @@ function get_sum_indices_ordered(t::Term)
         old = copy(tensor_indices)
         new = get_indices_permutations(tensor)
 
-        tensor_indices = Vector{Vector{MOIndex}}(undef, length(old) * length(new))
+        tensor_indices = Vector{Vector{Int}}(undef, length(old) * length(new))
         for i in 1:length(old), j in 1:length(new)
-            tensor_indices[i + length(old) * (j-1)] = vcat(old[i], new[j])
+            tensor_indices[i+length(old)*(j-1)] = vcat(old[i], new[j])
         end
     end
 
@@ -378,7 +379,7 @@ function enumerate_mo_indices(indices)
     # [p, q, r, s] -> [1, 2, 3, 4]
     # [p, q, r, r] -> [1, 2, 3, 3]
     # [r, r, p, q] -> [1, 1, 2, 3]
-    dict = Dict{MOIndex, Int}()
+    dict = Dict{Int,Int}()
     list = zeros(Int, length(indices))
     counter = 1
     for (n, i) in enumerate(indices)
@@ -394,7 +395,7 @@ end
 
 # These two functions rename summing indices such that there are no
 # summing indices that collide with the new indices
-function make_space_for_index(t::Term, new_index::MOIndex)
+function make_space_for_index(t::Term, new_index::Int)
     if new_index ∈ t.sum_indices
         mapping = [new_index => next_free_index(get_all_indices(t))]
 
@@ -406,7 +407,7 @@ end
 
 function make_space_for_indices(t::Term, new_indices)
     indices = get_all_indices(t)
-    mapping = Pair{MOIndex,MOIndex}[]
+    mapping = Pair{Int,Int}[]
 
     for new_index in new_indices
         if new_index ∈ t.sum_indices
@@ -420,7 +421,7 @@ function make_space_for_indices(t::Term, new_indices)
 end
 
 function simplify_sum_constraints(t::Term)
-    mapping = Pair{MOIndex,MOIndex}[]
+    mapping = Pair{Int,Int}[]
     all_indices = get_all_indices(t)
     for p in t.sum_indices
         if haskey(t.constraints, p)
@@ -438,7 +439,7 @@ function summation(t::Term, sum_indices)
 
     Term(
         t.scalar,
-        MOIndex[t.sum_indices; sum_indices],
+        Int[t.sum_indices; sum_indices],
         t.deltas,
         t.tensors,
         t.operators,
@@ -456,7 +457,7 @@ function sort_summation_indices(t::Term)
     end
 
     order = get_sum_indices_ordered(t)
-    mapping = Pair{MOIndex,MOIndex}[]
+    mapping = Pair{Int,Int}[]
 
     for (pos, ind) in enumerate(sort(order))
         if ind != order[pos]
@@ -473,7 +474,7 @@ end
 function lower_summation_indices(t::Term)
     indices = get_all_indices(t)
 
-    mapping = Pair{MOIndex,MOIndex}[]
+    mapping = Pair{Int,Int}[]
 
     for i in reverse(t.sum_indices)
         free_index = next_free_index(indices)
@@ -492,7 +493,7 @@ end
 # first index that shows up in that delta.
 # Example: δ_pi h_pi E_ip -> δ_pi h_pp E_pp
 function lower_delta_indices(t::Term)
-    mapping = Pair{MOIndex,MOIndex}[]
+    mapping = Pair{Int,Int}[]
 
     for d in t.deltas
         r, rest = Iterators.peel(d.indices)
@@ -758,7 +759,7 @@ function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
 
             fused = Term(
                 a.scalar * t.scalar * b.scalar,
-                MOIndex[a.sum_indices; t.sum_indices; b.sum_indices],
+                Int[a.sum_indices; t.sum_indices; b.sum_indices],
                 KroneckerDelta[a.deltas; t.deltas; b.deltas],
                 Tensor[a.tensors; t.tensors; b.tensors],
                 Operator[lhs; t.operators; rhs],

@@ -50,3 +50,28 @@ end
     gpqrs = SASQ.RealTensor("g", [1, 2, 3, 4])
     @test string(gpqrs) == "g_pqrs"
 end
+
+@testset "print term" begin
+    p = 1
+    q = 2
+    i = 3
+    a = 4
+
+    t = SASQ.Term(
+        3 // 5,
+        [i, a],
+        [SASQ.KroneckerDelta(p, a),
+            SASQ.KroneckerDelta(a, q)],
+        [
+            SASQ.RealTensor("h", [p, a]),
+            SASQ.RealTensor("g", [i, a, i, i])
+        ],
+        [SASQ.SingletExcitationOperator(p, q)],
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
+    )
+
+    @test string(t) == "3/5 ∑_rs(δ_pqs g_rsrr h_ps E_pq) C(p∈V, r∈O)"
+
+    t = SASQ.lower_delta_indices(t)
+    @test string(t) == "3/5 ∑_rs(δ_pqs g_rprr h_pp E_pp) C(p∈V, r∈O)"
+end
