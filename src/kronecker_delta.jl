@@ -45,7 +45,7 @@ function exchange_indices(d::KroneckerDelta, mapping)
 end
 
 function compact_deltas(deltas::Vector{KroneckerDelta})
-    forest = DisjointSets{MOIndex}()
+    forest = DisjointSets{Int}()
 
     function add_index(i)
         if !haskey(forest.intmap, i)
@@ -70,7 +70,7 @@ function compact_deltas(deltas::Vector{KroneckerDelta})
         end
     end
 
-    group_dict = Dict{MOIndex,Vector{MOIndex}}()
+    group_dict = Dict{Int,Vector{Int}}()
 
     for i in collect(forest)
         r = find_root!(forest, i)

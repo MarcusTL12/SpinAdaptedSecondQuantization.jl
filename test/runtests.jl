@@ -29,3 +29,11 @@ end
     @test string(dpq) == "δ_pq"
     @test dpp == 1
 end
+
+@testset "kronecker delta compact" begin
+    dpq = SASQ.KroneckerDelta(1, 2)
+    dqr = SASQ.KroneckerDelta(2, 3)
+    dpqr = SASQ.KroneckerDelta(1, 2, 3)
+
+    @test SASQ.compact_deltas([dpq, dqr]) == [dpqr]
+end
