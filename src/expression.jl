@@ -25,7 +25,7 @@ struct Expression{T<:Number}
         if isempty(terms)
             new{T}([Term(
                 zero(T),
-                MOIndex[],
+                Int[],
                 KroneckerDelta[],
                 Tensor[],
                 Operator[]
@@ -58,7 +58,7 @@ end
 function Expression(s::T) where {T<:Number}
     Expression([Term(
         s,
-        MOIndex[],
+        Int[],
         KroneckerDelta[],
         Tensor[],
         Operator[]
@@ -68,7 +68,7 @@ end
 function Expression(d::KroneckerDelta)
     Expression([Term(
         1,
-        MOIndex[],
+        Int[],
         [d],
         Tensor[],
         Operator[]
@@ -77,7 +77,7 @@ end
 
 Expression(t::Tensor) = Expression([Term(
     1,
-    MOIndex[],
+    Int[],
     KroneckerDelta[],
     Tensor[t],
     Operator[]
@@ -85,7 +85,7 @@ Expression(t::Tensor) = Expression([Term(
 
 Expression(o::Operator) = Expression([Term(
     1,
-    MOIndex[],
+    Int[],
     KroneckerDelta[],
     Tensor[],
     Operator[o]
@@ -93,7 +93,7 @@ Expression(o::Operator) = Expression([Term(
 
 Expression(ops::Vector{Operator}) = Expression([Term(
     1,
-    MOIndex[],
+    Int[],
     KroneckerDelta[],
     Tensor[],
     ops
@@ -104,7 +104,7 @@ export constrain
 function constrain(constraints...)
     Expression([Term(
         1,
-        MOIndex[],
+        Int[],
         KroneckerDelta[],
         Tensor[],
         Operator[],

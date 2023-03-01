@@ -53,6 +53,8 @@ struct Term{T<:Number}
             end
         end
 
+        # TODO: remove general constraints
+
         new{T}(scalar, sum_indices, deltas, tensors, operators, constraints)
     end
 end
@@ -253,11 +255,7 @@ function exchange_indices(t::Term{T}, mapping) where {T<:Number}
     sort!(t.deltas)
     sort!(t.tensors)
 
-    old_constraints = Constraints()
-    for (p, s) in t.constraints
-        old_constraints[p] = s
-    end
-
+    old_constraints = copy(t.constraints)
     empty!(t.constraints)
 
     for (p, s) in old_constraints
@@ -440,7 +438,7 @@ function sort_summation_indices(t::Term)
         end
     end
 
-    exchange_indices(t, mapping, false)
+    exchange_indices(t, mapping)
 end
 
 # This function reduces the summation indices to be as small as possible

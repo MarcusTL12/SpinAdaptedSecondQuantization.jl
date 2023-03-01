@@ -123,3 +123,39 @@ end
 
     @test string(t3) == "3/7 g_stsr h_rt E_rr C(s∈O, t∈V)"
 end
+
+@testset "term summation delta" begin
+    p = 1
+    q = 2
+    i = 3
+    a = 4
+
+    t = SASQ.Term(
+        1,
+        Int[],
+        [SASQ.KroneckerDelta(a, p)],
+        [SASQ.RealTensor("h", [a, i])],
+        SASQ.Operator[
+            SASQ.SingletExcitationOperator(p, q)
+        ],
+        SASQ.Constraints(i=>OccupiedOrbital, a => VirtualOrbital)
+    )
+
+    t = SASQ.lower_delta_indices(t)
+
+    #p -> a
+    t1 = ∑(t, [p])
+    t1 = SASQ.simplify_summation_deltas(t1)
+    t1 = ∑(t1, [a]) * constrain(a => VirtualOrbital)[1]
+
+    #a -> p
+    t2 = ∑(t, [a]) * constrain(a => VirtualOrbital)[1]
+    t2 = SASQ.simplify_summation_deltas(t2)
+    t2 = simplify(∑(t2, [p]))
+
+    #ap
+    t3 = ∑(t, [a, p]) * constrain(a => VirtualOrbital)[1]
+    t3 = simplify(t3)
+
+    @test t1 == t2 == t3
+end
