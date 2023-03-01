@@ -314,3 +314,12 @@ end
     @test hf_expectation_value(E(1, 2) * E(2, 1) * occupied(1, 2)) ==
           4δ(1, 2) * occupied(1, 2)
 end
+
+@testset "jacobi_identity" begin
+    f = commutator
+    A = E(1, 2)
+    B = E(3, 4)
+    C = E(5, 6)
+
+    @test iszero(f(A, f(B, C)) + f(C, f(A, B)) + f(B, f(C, A)))
+end
