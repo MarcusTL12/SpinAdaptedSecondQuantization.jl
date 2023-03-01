@@ -53,7 +53,7 @@ function getnames(::Type{S}) where {S<:GeneralOrbital}
     throw("getnames not implemented for space $S")
 end
 
-getnames(::Type{GeneralOrbital}) = "pqrstuv"
+getnames(::Type{GeneralOrbital}) = "pqrstuvw"
 getnames(::Type{OccupiedOrbital}) = "ijklmno"
 getnames(::Type{VirtualOrbital}) = "abcdefg"
 
@@ -61,59 +61,47 @@ getshortname(::Type{GeneralOrbital}) = "G"
 getshortname(::Type{OccupiedOrbital}) = "O"
 getshortname(::Type{VirtualOrbital}) = "V"
 
-subscript(i) = join(Char(0x2080 + d) for d in reverse!(digits(i)))
+function subscript(io::IO, i)
+    for d in reverse!(digits(i))
+        print(io, Char(0x2080 + d))
+    end
+end
 
-function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
+function subscript(i)
+    io = IOBuffer()
+    subscript(io, i)
+    String(take!(io))
+end
+
+function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
     names = getnames(S)
 
-    name = names[(i-1)%length(names)+1]
+    print(io, names[(i-1)%length(names)+1])
 
     extraind = (i - 1) ÷ length(names)
-    if extraind == 0
-        name
-    else
-        name * subscript(extraind)
+    if extraind != 0
+        subscript(io, extraind)
     end
 end
 
-"""
-    MOIndex
-"""
-struct MOIndex
-    index::Int
+function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
+    io = IOBuffer()
+    getname(io, S, i)
+    String(take!(io))
 end
 
-function getname(i::MOIndex)
-    if i.index ∈ 1:1000
-        return getname(GeneralOrbital, i.index)
-    elseif i.index ∈ 1001:2000
-        return getname(OccupiedOrbital, i.index - 1000)
-    elseif i.index ∈ 2001:3000
-        return getname(VirtualOrbital, i.index - 2000)
-    else
-        throw("Did not recognize index, $i")
-    end
+function print_mo_index(io::IO, p)
+    getname(io, GeneralOrbital, p)
 end
 
-# General   0001 - 1000
-# Occupied  1001 - 2000
-# Virtual   2001 - 3000
-general(index) = MOIndex(index)
-occupied(index) = MOIndex(index+1000)
-virtual(index) = MOIndex(index+2000)
-
-function Base.show(io::IO, i::MOIndex)
-    print(io, getname(i))
+function print_mo_index(p)
+    getname(GeneralOrbital, p)
 end
 
 Base.isdisjoint(::Type{S1}, ::Type{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital} = typeintersect(S1, S2) == Union{}
 
-function Base.isless(p::MOIndex, q::MOIndex)
-    p.index < q.index
-end
-
-function exchange_index(p::MOIndex, mapping)
+function exchange_index(p::Int, mapping)
     for (old, new) in mapping
         if p == old
             return new
@@ -124,13 +112,15 @@ end
 
 # indices must be sorted
 function next_free_index(indices)
+    @assert issorted(indices)
     i = 1
-    indexes = sort([p.index for p in indices])
-    for i = 1:50
-        if i ∉ indexes
-            return MOIndex(i)
+    for p in indices
+        if i < p
+            return p
         end
+        i += 1
     end
+    i
 end
 
 # utility functions for getting which sets compose each other

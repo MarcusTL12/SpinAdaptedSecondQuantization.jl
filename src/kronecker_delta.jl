@@ -1,7 +1,7 @@
 export delta, δ
 
 struct KroneckerDelta
-    indices::Vector{MOIndex}
+    indices::Vector{Int}
 
     function KroneckerDelta(indices)
         indices = unique!(sort(indices))
@@ -22,7 +22,7 @@ function Base.show(io::IO, d::KroneckerDelta)
     print(io, "δ_")
 
     for p in d.indices
-        print(io, p)
+        print_mo_index(io, p)
     end
 end
 
