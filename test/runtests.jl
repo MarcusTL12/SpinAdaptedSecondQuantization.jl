@@ -37,3 +37,8 @@ end
 
     @test SASQ.compact_deltas([dpq, dqr]) == [dpqr]
 end
+
+@testset "print singlet excitation operator" begin
+    Epq = SASQ.SingletExcitationOperator(1, 2)
+    @test string(Epq) == "E_pq"
+end

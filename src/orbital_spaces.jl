@@ -94,6 +94,12 @@ function print_mo_index(io::IO, p)
     getname(io, GeneralOrbital, p)
 end
 
+function print_mo_index(io::IO, indices...)
+    for p in indices
+        print_mo_index(io, p)
+    end
+end
+
 function print_mo_index(p)
     getname(GeneralOrbital, p)
 end
