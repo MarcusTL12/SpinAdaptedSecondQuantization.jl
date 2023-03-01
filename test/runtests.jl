@@ -323,3 +323,17 @@ end
 
     @test iszero(f(A, f(B, C)) + f(C, f(A, B)) + f(B, f(C, A)))
 end
+
+@testset "hf_equations" begin
+    h = ∑(real_tensor("h", 1, 2) * E(1, 2), 1:2)
+    g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...), 1:4) |> simplify
+
+    H = simplify(h + g)
+
+    E_hf = H |> hf_expectation_value |> simplify
+    @test E_hf == ∑(2real_tensor("h", 1, 1) * occupied(1), [1]) + ∑(
+        (2real_tensor("g", 1, 1, 2, 2) - real_tensor("g", 1, 2, 2, 1)) *
+        occupied(1, 2),
+        1:2
+    )
+end
