@@ -301,3 +301,16 @@ end
         [s]
     )
 end
+
+@testset "hf_expectation_value" begin
+    @test hf_expectation_value(E(1, 2)) == 2δ(1, 2) * occupied(1, 2)
+    @test hf_expectation_value(E(1, 2) * virtual(1)) |> iszero
+
+    # Issue #13 from ExcitationOperators.jl
+    e1 = hf_expectation_value(∑(E(3, 2) * E(2, 1), 1:3))
+    e2 = hf_expectation_value(∑(E(1, 2) * E(2, 1), 1:2))
+    @test simplify(e1) == simplify(e2)
+
+    @test hf_expectation_value(E(1, 2) * E(2, 1) * occupied(1, 2)) ==
+          4δ(1, 2) * occupied(1, 2)
+end

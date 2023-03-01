@@ -1,5 +1,10 @@
 const Constraints = SortedDict{Int,Type}
 
+# Lets you call the constraints as a function instead of explisitly calling get
+function (constraints::Constraints)(p::Int)
+    get(constraints, p, GeneralOrbital)
+end
+
 struct Term{T<:Number}
     scalar::T
     sum_indices::Vector{Int}
@@ -32,10 +37,7 @@ struct Term{T<:Number}
         for d in deltas
             firstind, rest = Iterators.peel(d.indices)
             for p in rest
-                s = typeintersect(
-                    get(constraints, firstind, GeneralOrbital),
-                    get(constraints, p, GeneralOrbital)
-                )
+                s = typeintersect(constraints(firstind), constraints(p))
                 if s == Union{}
                     return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
                         Operator[], Constraints())
@@ -674,14 +676,14 @@ function fuse(a::Term, b::Term)
         return zero(Term{typeof(scalar)})
     end
 
-    simplify_sum_constraints(Term(
+    Term(
         scalar,
         [a.sum_indices; b.sum_indices],
         [a.deltas; b.deltas],
         [a.tensors; b.tensors],
         [a.operators; b.operators],
         constraints
-    ))
+    )
 end
 
 # Commutator:

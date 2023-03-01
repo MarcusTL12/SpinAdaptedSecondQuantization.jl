@@ -2,7 +2,7 @@
 struct Expression{T<:Number}
     terms::Vector{Term{T}}
 
-    function Expression(terms::Vector{Term{T}}) where {T<:Number}
+    function Expression(terms::AbstractVector{Term{T}}) where {T<:Number}
         terms = sort(terms)
 
         # Collect equal terms
@@ -61,6 +61,10 @@ end
 
 function Base.zero(::Type{Expression{T}}) where {T<:Number}
     Expression([zero(Term{T})])
+end
+
+function Base.iszero(e::Expression)
+    all(iszero, e.terms)
 end
 
 function Expression(s::T) where {T<:Number}
