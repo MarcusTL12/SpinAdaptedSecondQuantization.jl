@@ -70,8 +70,8 @@ end
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
     )
 
-    @test string(t) == "3/5 ∑_rs(δ_pqs g_rsrr h_ps E_pq) C(p∈V, r∈O)"
+    @test string(t) == "3/5 ∑_rs(δ_pqs g_rsrr h_ps E_pq) C(p∈V, q∈V, r∈O, s∈V)"
 
     t = SASQ.lower_delta_indices(t)
-    @test string(t) == "3/5 ∑_rs(δ_pqs g_rprr h_pp E_pp) C(p∈V, r∈O)"
+    @test string(t) == "3/5 ∑_rs(δ_pqs g_rprr h_pp E_pp) C(p∈V, q∈V, r∈O, s∈V)"
 end

@@ -7,9 +7,7 @@ struct Term{T<:Number}
     tensors::Vector{Tensor}
     operators::Vector{Operator}
 
-    # Dict which holds information about which externally visible
-    # indices are constrained to a lower space than itself.
-    # Should not contain any indices that do not otherwise show up in the term.
+    # Dict that stores which orbital space each index belongs to
     constraints::Constraints
 
     function Term(scalar::T, sum_indices, deltas, tensors, operators,
@@ -24,45 +22,38 @@ struct Term{T<:Number}
                 Operator[], Constraints())
         end
 
-        nonfirst_delta_indices = Dict{Int,Int}()
-
-        for d in deltas
-            firstind = first(d.indices)
-            for (i, p) in enumerate(d.indices)
-                if i > 1
-                    nonfirst_delta_indices[p] = firstind
-                end
-            end
-        end
-
         constraints = copy(constraints)
 
-        # constraints now contains an exhaustive list of constraints,
-        # Remove useless constraints for good measure. ex: C(p∈G) -> 1
-        # Remove any constraints on indices that do show up as the
-        # non-first element of a kronecker delta
+        # Make mapping from all indices that show up in deltas to the
+        # first index in their respective deltas
+        nonfirst_delta_indices = Tuple{Int,Int}[]
 
-        reduced_constraints = Constraints()
-        for (p, s) in constraints
-            q = get(nonfirst_delta_indices, p, p)
-
-            if haskey(reduced_constraints, q)
-                # Return 0 if an index belongs to disjoint sets
-                # (p ∈ Occ) ∩ (p ∈ Vir) = 0
-                if isdisjoint(s, reduced_constraints[q])
-                    return new{T}(zero(T), Int[],
-                        KroneckerDelta[], Tensor[], Operator[],
-                        Constraints())
+        # First tighten in the constraints of the first index in each delta
+        for d in deltas
+            firstind, rest = Iterators.peel(d.indices)
+            for p in rest
+                s = typeintersect(
+                    get(constraints, firstind, GeneralOrbital),
+                    get(constraints, p, GeneralOrbital)
+                )
+                if s == Union{}
+                    return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
+                        Operator[], Constraints())
+                elseif is_strict_subspace(s, GeneralOrbital)
+                    constraints[firstind] = s
                 end
-
-                reduced_constraints[q] = typeintersect(reduced_constraints[q], s)
-            elseif is_strict_subspace(s, GeneralOrbital)
-                reduced_constraints[q] = s
+                push!(nonfirst_delta_indices, (p, firstind))
             end
         end
 
-        new{T}(scalar, sum_indices, deltas, tensors,
-            operators, reduced_constraints)
+        # Then copy those constraints over to all the other indices in the delta
+        for (p, q) in nonfirst_delta_indices
+            if haskey(constraints, q)
+                constraints[p] = constraints[q]
+            end
+        end
+
+        new{T}(scalar, sum_indices, deltas, tensors, operators, constraints)
     end
 end
 
