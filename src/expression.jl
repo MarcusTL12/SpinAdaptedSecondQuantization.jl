@@ -107,7 +107,7 @@ Expression(ops::Vector{Operator}) = Expression([Term(
     ops
 )])
 
-export constrain
+export constrain, occupied, virtual
 
 function constrain(constraints...)
     Expression([Term(
@@ -118,6 +118,14 @@ function constrain(constraints...)
         Operator[],
         Constraints(constraints...)
     )])
+end
+
+function occupied(indices...)
+    constrain(p => OccupiedOrbital for p in indices)
+end
+
+function virtual(indices...)
+    constrain(p => VirtualOrbital for p in indices)
 end
 
 function Base.getindex(ex::Expression, i)

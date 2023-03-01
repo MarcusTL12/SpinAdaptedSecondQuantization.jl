@@ -613,16 +613,6 @@ function simplify(t::Term)
     simplify_summation_deltas |>
     lower_summation_indices |>
     sort_summation_indices
-
-    # t = lower_delta_indices(t)
-    # @show t
-    # t = simplify_summation_deltas(t)
-    # @show t
-    # t = lower_summation_indices(t)
-    # @show t
-    # t = sort_summation_indices(t)
-    # @show t
-    # t
 end
 
 # Some operator overloading (Not ment for external use):

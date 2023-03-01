@@ -216,56 +216,54 @@ end
     @test (e1 + e2 + 2) == (2 + e1 + e2) == (e2 + 2 + e1)
 end
 
-# @testset "expression multiplication" begin
-#     p = 1
-#     q = 2
-#     r = 3
-#     s = 4
+@testset "expression multiplication" begin
+    p = 1
+    q = 2
+    r = 3
+    s = 4
 
-#     i = 5
-#     j = 6
-#     k = 7
-#     l = 8
-#     ic = constrain(i => OccupiedOrbital)
-#     jc = constrain(j => OccupiedOrbital)
-#     kc = constrain(k => OccupiedOrbital)
-#     lc = constrain(l => OccupiedOrbital)
+    i = 5
+    j = 6
+    k = 7
+    l = 8
+    ic = constrain(i => OccupiedOrbital)
+    jc = constrain(j => OccupiedOrbital)
+    kc = constrain(k => OccupiedOrbital)
+    lc = constrain(l => OccupiedOrbital)
 
-#     m = 9
-#     n = 10
+    m = 9
+    n = 10
 
-#     a = 11
-#     b = 12
-#     ac = constrain(a => VirtualOrbital)
-#     bc = constrain(b => VirtualOrbital)
+    a = 11
+    b = 12
+    ac = constrain(a => VirtualOrbital)
+    bc = constrain(b => VirtualOrbital)
 
-#     e1 = δ(a, b) * ac * bc
-#     e2 = real_tensor("h", i, j) * ic * jc
-#     h = ∑(e2 * E(i, j), [i, j])
-#     g = ∑(
-#         real_tensor("g", i, j, k, l) * E(i, j) * E(k, l) * ic * jc * kc * lc,
-#         [i, j, k, l]
-#     )
+    e1 = δ(a, b) * ac * bc
+    e2 = real_tensor("h", i, j) * ic * jc
+    h = ∑(e2 * E(i, j), [i, j])
+    g = ∑(
+        real_tensor("g", i, j, k, l) * E(i, j) * E(k, l) * ic * jc * kc * lc,
+        [i, j, k, l]
+    )
 
-#     @test ((e1 + e2) * 3) // 5 * e2 ==
-#           3 // 5 * δ(a, b) * real_tensor("h", i, j) * ac * bc * ic * jc +
-#           3 // 5 * real_tensor("h", i, j) * real_tensor("h", i, j) * ic * jc
+    @test ((e1 + e2) * 3) // 5 * e2 ==
+          3 // 5 * δ(a, b) * real_tensor("h", i, j) * ac * bc * ic * jc +
+          3 // 5 * real_tensor("h", i, j) * real_tensor("h", i, j) * ic * jc
 
-#     @test (h + h) == 2 * h
+    @test (h + h) == 2 * h
 
-#     @show g h g * h
+    @test simplify(g * h) == ∑(
+        real_tensor("g", 1, 2, 3, 4) *
+        real_tensor("h", 5, 6) * E(1, 2) * E(3, 4) * E(5, 6) *
+        occupied(1:6...),
+        collect(1:6)
+    )
 
-#     # @test simplify(g * h) == ∑(
-#     #     real_tensor("g", i, j, k, l) *
-#     #     real_tensor("h", m, n) * E(i, j) * E(k, l) * E(m, n) *
-#     #     ic * jc * kc * lc,
-#     #     [i, j, k, l, m, n]
-#     # )
-
-#     # @test simplify(h * g) == ∑(
-#     #     real_tensor("g", i, j, k, l) *
-#     #     real_tensor("h", m, n) * E(m, n) * E(i, j) * E(k, l) *
-#     #     ic * jc * kc * lc,
-#     #     [i, j, k, l, m, n]
-#     # )
-# end
+    @test simplify(h * g) == ∑(
+        real_tensor("g", 1, 2, 3, 4) *
+        real_tensor("h", 5, 6) * E(5, 6) * E(1, 2) * E(3, 4) *
+        occupied(1:6...),
+        collect(1:6)
+    )
+end
