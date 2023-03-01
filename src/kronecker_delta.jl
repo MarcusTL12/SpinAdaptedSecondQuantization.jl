@@ -96,14 +96,3 @@ function compact_deltas(deltas::Vector{KroneckerDelta})
 
     sort!(new_deltas)
 end
-
-#function space(d::KroneckerDelta)
-#    s, rest = Iterators.peel(space(p) for p in d.indices)
-#
-#    for s2 in rest
-#        s = typeintersect(s, s2)
-#    end
-#
-#    s
-#end
-#

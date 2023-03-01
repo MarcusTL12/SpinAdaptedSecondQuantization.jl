@@ -20,3 +20,12 @@ end
     @test SASQ.print_mo_index(9) == "p₁"
     @test SASQ.print_mo_index(104) == "w₁₂"
 end
+
+@testset "kronecker delta" begin
+    dpp = SASQ.KroneckerDelta(1, 1)
+    dpq = SASQ.KroneckerDelta(1, 2)
+
+    @test string(dpp) == "1"
+    @test string(dpq) == "δ_pq"
+    @test dpp == 1
+end
