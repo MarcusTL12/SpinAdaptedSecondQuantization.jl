@@ -336,4 +336,9 @@ end
         occupied(1, 2),
         1:2
     )
+
+    gradient = simplify(hf_expectation_value(
+        commutator(H, (E(1, 2) - E(2, 1)) * occupied(1) * virtual(2))
+    ))
+    @show gradient
 end

@@ -41,7 +41,7 @@ function hf_expectation_value(firstop::SingletExcitationOperator, rest,
             hf_expectation_value(
                 commutator(
                     Expression(firstop),
-                    Expression(rest)
+                    Expression(Vector(rest))
                 ) * constrain(constraints)
             )
         else
