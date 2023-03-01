@@ -381,20 +381,6 @@ function make_space_for_indices(t::Term, new_indices)
     exchange_indices(t, mapping)
 end
 
-function simplify_sum_constraints(t::Term)
-    mapping = Pair{Int,Int}[]
-    all_indices = get_all_indices(t)
-    for p in t.sum_indices
-        if haskey(t.constraints, p)
-            new_ind = next_free_index(all_indices)
-            push!(all_indices, new_ind)
-            push!(mapping, p => new_ind)
-        end
-    end
-
-    exchange_indices(t, mapping)
-end
-
 function summation(t::Term, sum_indices)
     t = make_space_for_indices(t, sum_indices)
 
@@ -422,7 +408,7 @@ function sort_summation_indices(t::Term)
 
     for (pos, ind) in enumerate(sort(order))
         if ind != order[pos]
-            push!(mapping, ind => order[pos])
+            push!(mapping, order[pos] => ind)
         end
     end
 
@@ -625,9 +611,18 @@ function simplify(t::Term)
     t |>
     lower_delta_indices |>
     simplify_summation_deltas |>
-    simplify_sum_constraints |>
     lower_summation_indices |>
     sort_summation_indices
+
+    # t = lower_delta_indices(t)
+    # @show t
+    # t = simplify_summation_deltas(t)
+    # @show t
+    # t = lower_summation_indices(t)
+    # @show t
+    # t = sort_summation_indices(t)
+    # @show t
+    # t
 end
 
 # Some operator overloading (Not ment for external use):

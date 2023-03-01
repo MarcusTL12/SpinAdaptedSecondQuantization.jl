@@ -42,7 +42,15 @@ function Base.show(io::IO, ex::Expression)
 but rather include a single zero term")
     end
 
-    for t in ex.terms[1:end]
+    t, rest = Iterators.peel(ex.terms)
+
+    if t.scalar < 0
+        println(io, "- ", new_scalar(t, -t.scalar))
+    else
+        println(io, t)
+    end
+
+    for t in rest
         if t.scalar < 0
             println(io, "- ", new_scalar(t, -t.scalar))
         else

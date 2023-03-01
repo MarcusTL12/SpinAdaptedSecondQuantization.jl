@@ -116,15 +116,13 @@ function exchange_index(p::Int, mapping)
     p
 end
 
-# indices must be sorted
 function next_free_index(indices)
-    @assert issorted(indices)
+    sort!(indices)
     i = 1
     for p in indices
-        if i < p
-            return p
+        if i == p
+            i += 1
         end
-        i += 1
     end
     i
 end
