@@ -267,3 +267,37 @@ end
         collect(1:6)
     )
 end
+
+@testset "simple commutator" begin
+    p = 1
+    q = 2
+    r = 3
+    s = 4
+
+    i = 5
+    j = 6
+    k = 7
+
+    a = 9
+    b = 10
+
+    Eai = E(a, i) * occupied(i) * virtual(a)
+    Eia = E(i, a) * occupied(i) * virtual(a)
+
+    @test commutator(E(p, q), E(r, s)) == E(p, s) * δ(q, r) - E(r, q) * δ(p, s)
+    @test commutator(Eia, Eai) == (E(i, i) - E(a, a)) * occupied(i) * virtual(a)
+    @test commutator(E(a, i), E(a, i)) == SASQ.Expression(0)
+
+    h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
+    hcomm = simplify(commutator(h, E(p, q)))
+    @test hcomm == ∑(
+        -real_tensor("h", q, r) * E(p, r) +
+        real_tensor("h", r, p) * E(r, q),
+        [r]
+    )
+    @test hcomm * E(r, r) == ∑(
+        -real_tensor("h", q, s) * E(p, s) * E(r, r) +
+        real_tensor("h", s, p) * E(s, q) * E(r, r),
+        [s]
+    )
+end
