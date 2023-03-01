@@ -42,3 +42,11 @@ end
     Epq = SASQ.SingletExcitationOperator(1, 2)
     @test string(Epq) == "E_pq"
 end
+
+@testset "print real tensor" begin
+    hpq = SASQ.RealTensor("h", [1, 2])
+    @test string(hpq) == "h_pq"
+
+    gpqrs = SASQ.RealTensor("g", [1, 2, 3, 4])
+    @test string(gpqrs) == "g_pqrs"
+end

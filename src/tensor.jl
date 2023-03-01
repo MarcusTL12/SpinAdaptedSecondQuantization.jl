@@ -16,7 +16,7 @@ get_indices_permutations(::T) where {T<:Tensor} =
 function Base.show(io::IO, t::T) where {T<:Tensor}
     print(io, get_symbol(t), '_')
     for ind in get_indices(t)
-        print(io, ind)
+        print_mo_index(io, ind)
     end
 end
 
@@ -29,5 +29,5 @@ function Base.isless(a::A, b::B) where {A<:Tensor,B<:Tensor}
 end
 
 include("tensors/real_tensor.jl")
-include("tensors/psym_tensor.jl")
-include("tensors/rsym_tensor.jl")
+# include("tensors/psym_tensor.jl")
+# include("tensors/rsym_tensor.jl")
