@@ -184,3 +184,23 @@ end
         ],
     )
 end
+
+@testset "expression addition" begin
+    p = 1
+    q = 2
+    r = 3
+    s = 4
+
+    i = 5; ic = constrain(i => OccupiedOrbital)
+    j = 6; jc = constrain(j => OccupiedOrbital)
+
+    a = 7; ac = constrain(a => VirtualOrbital)
+    b = 8; bc = constrain(b => VirtualOrbital)
+
+    e1 = δ(a, b) * ac * bc
+    e2 = real_tensor("h", i, j) * ic * jc
+
+    @test (e1 + 1) == (1 + e1)
+    @test (e1 + e2) == (e2 + e1)
+    @test (e1 + e2 + 2) == (2 + e1 + e2) == (e2 + 2 + e1)
+end
