@@ -316,22 +316,10 @@ function get_sum_indices_ordered(t::Term)
         end
     end
 
-    tensor_indices = get_indices_permutations(t.tensors[1])
-
-    for tensor in t.tensors[2:end]
-        old = copy(tensor_indices)
-        new = get_indices_permutations(tensor)
-
-        tensor_indices = Vector{Vector{Int}}(undef, length(old) * length(new))
-        for i in 1:length(old), j in 1:length(new)
-            tensor_indices[i+length(old)*(j-1)] = vcat(old[i], new[j])
+    for tensor in t.tensors
+        for i in get_indices(tensor)
+            add_index(i)
         end
-    end
-
-    _, index = findmin(enumerate_mo_indices, tensor_indices)
-
-    for i in tensor_indices[index]
-        add_index(i)
     end
 
     for o in t.operators

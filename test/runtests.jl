@@ -138,7 +138,7 @@ end
         SASQ.Operator[
             SASQ.SingletExcitationOperator(p, q)
         ],
-        SASQ.Constraints(i=>OccupiedOrbital, a => VirtualOrbital)
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
     )
 
     t = SASQ.lower_delta_indices(t)
@@ -158,4 +158,29 @@ end
     t3 = simplify(t3)
 
     @test t1 == t2 == t3
+end
+
+@testset "term multiplication" begin
+    p = 1
+    q = 2
+    r = 3
+    s = 4
+
+    t1 = SASQ.Term(
+        3 // 5,
+        [p, q],
+        SASQ.KroneckerDelta[],
+        SASQ.Tensor[],
+        [SASQ.SingletExcitationOperator(p, q)],
+    )
+
+    @test simplify(t1 * t1) == SASQ.Term(9 // 25,
+        [p, q, r, s],
+        SASQ.KroneckerDelta[],
+        SASQ.Tensor[],
+        [
+            SASQ.SingletExcitationOperator(p, q),
+            SASQ.SingletExcitationOperator(r, s)
+        ],
+    )
 end
