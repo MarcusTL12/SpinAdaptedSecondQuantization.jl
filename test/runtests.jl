@@ -337,8 +337,20 @@ end
         1:2
     )
 
-    gradient = simplify(hf_expectation_value(
-        commutator(H, (E(1, 2) - E(2, 1)) * occupied(1) * virtual(2))
-    ))
-    @show gradient
+    hF = ∑(
+        (real_tensor("F", 1, 2) + ∑(
+            (-2real_tensor("g", 1, 2, 3, 3) + real_tensor("g", 1, 3, 3, 2)) *
+            occupied(3),
+            [3]
+        )) * E(1, 2),
+        1:2
+    )
+    HF = hF + g
+    E_hf = ((HF + H) // 2) |> hf_expectation_value |> simplify
+    @show E_hf
+
+    # gradient = simplify(hf_expectation_value(
+    #     commutator(H, E(1, 2) * occupied(1) * virtual(2))
+    # ))
+    # @show gradient
 end
