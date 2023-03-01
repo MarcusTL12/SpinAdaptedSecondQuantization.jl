@@ -212,8 +212,7 @@ function Base.:(==)(a::Term, b::Term)
         a.scalar)
 end
 
-function exchange_indices(t::Term{T}, mapping, update_constraints=true) where
-{T<:Number}
+function exchange_indices(t::Term{T}, mapping) where {T<:Number}
     if isempty(mapping)
         return t
     end
@@ -254,35 +253,20 @@ function exchange_indices(t::Term{T}, mapping, update_constraints=true) where
     sort!(t.deltas)
     sort!(t.tensors)
 
-    if update_constraints
-        for (from, to) in mapping
-            if haskey(t.constraints, from)
-                s = pop!(t.constraints, from)
-                if haskey(t.constraints, to)
-                    t.constraints[to] = typeintersect(t.constraints[to], s)
-                else
-                    t.constraints[to] = s
-                end
-            end
+    old_constraints = Constraints()
+    for (p, s) in t.constraints
+        old_constraints[p] = s
+    end
 
-        end
+    empty!(t.constraints)
 
-    else
-        old_constraints = Constraints()
-        for (p, s) in t.constraints
-            old_constraints[p] = s
-        end
+    for (p, s) in old_constraints
+        in_mapping = findfirst(((r, _),) -> r == p, mapping)
 
-        empty!(t.constraints)
-
-        for (p, s) in old_constraints
-            in_mapping = findfirst(((r, _),) -> r == p, mapping)
-
-            if isnothing(in_mapping)
-                t.constraints[p] = s
-            else
-                t.constraints[mapping[in_mapping][2]] = s
-            end
+        if isnothing(in_mapping)
+            t.constraints[p] = s
+        else
+            t.constraints[mapping[in_mapping][2]] = s
         end
     end
 

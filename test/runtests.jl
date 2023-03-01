@@ -74,4 +74,52 @@ end
 
     t = SASQ.lower_delta_indices(t)
     @test string(t) == "3/5 ∑_rs(δ_pqs g_rprr h_pp E_pp) C(p∈V, q∈V, r∈O, s∈V)"
+
+    t = SASQ.Term(
+        3 // 5,
+        [i, a],
+        [SASQ.KroneckerDelta(p, a)],
+        [
+            SASQ.RealTensor("h", [p, a]),
+            SASQ.RealTensor("g", [i, a, i, q])
+        ],
+        [SASQ.SingletExcitationOperator(p, q)],
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
+    )
+
+    @test string(t) == "3/5 ∑_rs(δ_ps g_rsrq h_ps E_pq) C(p∈V, r∈O, s∈V)"
+end
+
+@testset "term exchange_indices" begin
+    p = 1
+    q = 2
+    r = 3
+    i = 4
+    a = 5
+
+    t = SASQ.Term(
+        3 // 7,
+        Int[],
+        [SASQ.KroneckerDelta(p, q, r)],
+        [
+            SASQ.RealTensor("h", [p, a]),
+            SASQ.RealTensor("g", [i, a, i, q])
+        ],
+        [SASQ.SingletExcitationOperator(p, q)],
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
+    )
+
+    @test string(t) == "3/7 δ_pqr g_stsq h_pt E_pq C(s∈O, t∈V)"
+
+    t = SASQ.lower_delta_indices(t)
+
+    @test string(t) == "3/7 δ_pqr g_stsp h_pt E_pp C(s∈O, t∈V)"
+
+    t2 = SASQ.exchange_indices(t, [p => q])
+
+    @test string(t2) == "3/7 δ_qr g_stsq h_qt E_qq C(s∈O, t∈V)"
+
+    t3 = SASQ.exchange_indices(t2, [q => r])
+
+    @test string(t3) == "3/7 g_stsr h_rt E_rr C(s∈O, t∈V)"
 end
