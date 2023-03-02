@@ -324,7 +324,7 @@ end
     @test iszero(f(A, f(B, C)) + f(C, f(A, B)) + f(B, f(C, A)))
 end
 
-@testset "hf_equations" begin
+@testset "hf energy" begin
     h = ∑(real_tensor("h", 1, 2) * E(1, 2), 1:2)
     g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...), 1:4) |> simplify
 
@@ -348,9 +348,4 @@ end
     HF = hF + g
     E_hf = ((HF + H) // 2) |> hf_expectation_value |> simplify
     @show E_hf
-
-    # gradient = simplify(hf_expectation_value(
-    #     commutator(H, E(1, 2) * occupied(1) * virtual(2))
-    # ))
-    # @show gradient
 end
