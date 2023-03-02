@@ -225,11 +225,11 @@ function simplify_terms(ex::Expression)
 end
 
 function try_add_constraints(ex::Expression)
-    block_start = 1
-    while block_start <= length(ex.terms)
-        block_ident = ex[block_start]
-        block_end = block_start
-        for i in block_start+1:length(ex.terms)
+    block_begin = 1
+    while block_begin <= length(ex.terms)
+        block_ident = ex[block_begin]
+        block_end = block_begin
+        for i in block_begin+1:length(ex.terms)
             if non_constraint_non_scalar_equal(block_ident, ex[i])
                 block_end = i
             else
@@ -242,14 +242,14 @@ function try_add_constraints(ex::Expression)
         while !done
             done = true
 
-            for i in block_start:block_end
+            for i in block_begin:block_end
                 for j in i+1:block_end
                     t, did_something = try_add_constraints(ex[i], ex[j])
 
                     if did_something
                         done = false
 
-                        n_terms_before = length(ex.terms)
+                        # n_terms_before = length(ex.terms)
 
                         if t isa Tuple
                             ex[i] = t[1]
@@ -257,13 +257,26 @@ function try_add_constraints(ex::Expression)
                         else
                             ex[i] = t
                             deleteat!(ex.terms, j)
+                            block_end -= 1
                         end
 
-                        ex = Expression(ex.terms)
+                        # want to do this, but this is slow
+                        # ex = Expression(ex.terms)
 
-                        n_terms_lost = n_terms_before - length(ex.terms)
-
-                        block_end -= n_terms_lost
+                        # So instead do the same work on the subblock
+                        sort!(@view ex.terms[block_begin:block_end])
+                        k = block_begin
+                        while k < block_end
+                            while equal_nonscalar(ex[k], ex[k+1])
+                                ex[k] = new_scalar(
+                                    ex[k],
+                                    ex[k].scalar + ex[k+1].scalar
+                                )
+                                deleteat!(ex.terms, k + 1)
+                                block_end -= 1
+                            end
+                            k += 1
+                        end
 
                         break
                     end
@@ -275,10 +288,10 @@ function try_add_constraints(ex::Expression)
             end
         end
 
-        block_start = block_end + 1
+        block_begin = block_end + 1
     end
 
-    ex
+    Expression(ex.terms)
 end
 
 # Commutator:
