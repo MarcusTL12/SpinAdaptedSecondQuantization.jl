@@ -11,6 +11,20 @@ end
 
 get_symbol(t::RealSymmetricTensor) = t.symbol
 get_indices(t::RealSymmetricTensor) = t.indices
+function get_indices_permutations(t::RealSymmetricTensor)
+    n_pairs = length(t.indices) ÷ 2
+    #n_perm = 2^(n_pairs) * factorial(n_pairs)
+    if n_pairs == 1
+        return [t.indices[[1,2]], t.indices[[2,1]]]
+    elseif n_pairs == 2
+        return [t.indices[[1,2,3,4]], t.indices[[3,4,1,2]],
+                t.indices[[1,2,4,3]], t.indices[[3,4,2,1]],
+                t.indices[[2,1,3,4]], t.indices[[4,3,1,2]],
+                t.indices[[2,1,4,3]], t.indices[[4,3,2,1]]]
+    else
+        throw("not implemented RSymmTensor nPairs = $n_pairs")
+    end
+end
 
 function sort_rsym_indices(indices)
     @assert iseven(length(indices))
@@ -37,7 +51,7 @@ end
 function exchange_indices(t::RealSymmetricTensor, mapping)
     new_ind = [exchange_index(i, mapping) for i in t.indices]
     sort_ind = sort_rsym_indices(new_ind)
-    ParticleSymmetricTensor(t.symbol, sort_ind)
+    RealSymmetricTensor(t.symbol, sort_ind)
 end
 
 function rsym_tensor(symbol, indices...)

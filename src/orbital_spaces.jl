@@ -1,5 +1,5 @@
 export GeneralOrbital, OccupiedOrbital, VirtualOrbital
-export general, occupied, virtual, isoccupied, isvirtual, space
+export general, isoccupied, isvirtual
 
 # Note: perhaps redefine this as Union{OccupiedOrbital,VirtualOrbital}
 """
@@ -53,7 +53,7 @@ function getnames(::Type{S}) where {S<:GeneralOrbital}
     throw("getnames not implemented for space $S")
 end
 
-getnames(::Type{GeneralOrbital}) = "pqrstuv"
+getnames(::Type{GeneralOrbital}) = "pqrstuvw"
 getnames(::Type{OccupiedOrbital}) = "ijklmno"
 getnames(::Type{VirtualOrbital}) = "abcdefg"
 
@@ -61,68 +61,88 @@ getshortname(::Type{GeneralOrbital}) = "G"
 getshortname(::Type{OccupiedOrbital}) = "O"
 getshortname(::Type{VirtualOrbital}) = "V"
 
-subscript(i) = join(Char(0x2080 + d) for d in reverse!(digits(i)))
+function subscript(io::IO, i)
+    for d in reverse!(digits(i))
+        print(io, Char(0x2080 + d))
+    end
+end
 
-function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
+function subscript(i)
+    io = IOBuffer()
+    subscript(io, i)
+    String(take!(io))
+end
+
+get_color(::Type{S}) where {S<:GeneralOrbital} = ""
+get_color(::Type{OccupiedOrbital}) = "\x1b[92m"
+get_color(::Type{VirtualOrbital}) = "\x1b[36m"
+
+function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
     names = getnames(S)
 
-    name = names[(i-1)%length(names)+1]
+    print(io, names[(i-1)%length(names)+1])
 
     extraind = (i - 1) ÷ length(names)
-    if extraind == 0
-        name
-    else
-        name * subscript(extraind)
+    if extraind != 0
+        subscript(io, extraind)
     end
 end
 
-"""
-    MOIndex
-"""
-struct MOIndex{S<:GeneralOrbital}
-    index::Int
-    function MOIndex(index, ::Type{S}) where {S<:GeneralOrbital}
-        new{S}(index)
+function getname(io::IO, ::Type{S}, constraints::Constraints, i::Int) where
+{S<:GeneralOrbital}
+    if index_color
+        print(io, get_color(constraints(i)))
+    end
+    getname(io, S, i)
+    if index_color
+        print(io, "\x1b[39m")
     end
 end
 
-space(::MOIndex{S}) where {S<:GeneralOrbital} = S
-
-function getname(i::MOIndex{S}) where {S<:GeneralOrbital}
-    getname(S, i.index)
+function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
+    io = IOBuffer()
+    getname(io, S, i)
+    String(take!(io))
 end
 
-general(index) = MOIndex(index, GeneralOrbital)
-occupied(index) = MOIndex(index, OccupiedOrbital)
-virtual(index) = MOIndex(index, VirtualOrbital)
-
-function Base.show(io::IO, i::MOIndex{GeneralOrbital})
-    print(io, getname(i))
+function print_mo_index(io::IO, p)
+    getname(io, GeneralOrbital, p)
 end
 
-function Base.show(io::IO, i::MOIndex{OccupiedOrbital})
-    print(io, "\x1b[92m", getname(i), "\x1b[39m")
+function print_mo_index(io::IO, constraints::Constraints, p)
+    getname(io, GeneralOrbital, constraints, p)
 end
 
-function Base.show(io::IO, i::MOIndex{VirtualOrbital})
-    print(io, "\x1b[36m", getname(i), "\x1b[39m")
+function print_mo_index(io::IO, indices...)
+    for p in indices
+        print_mo_index(io, p)
+    end
+end
+
+function print_mo_index(io::IO, constraints::Constraints, indices...)
+    for p in indices
+        print_mo_index(io, constraints, p)
+    end
+end
+
+function print_mo_index(p)
+    getname(GeneralOrbital, p)
+end
+
+index_color::Bool = true
+
+function enable_color()
+    global index_color = true
+end
+
+function disable_color()
+    global index_color = false
 end
 
 Base.isdisjoint(::Type{S1}, ::Type{S2}) where
 {S1<:GeneralOrbital,S2<:GeneralOrbital} = typeintersect(S1, S2) == Union{}
 
-Base.isdisjoint(::MOIndex{S1}, ::MOIndex{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital} = isdisjoint(S1, S2)
-
-isoccupied(::MOIndex{S}) where {S<:GeneralOrbital} = S <: OccupiedOrbital
-isvirtual(::MOIndex{S}) where {S<:GeneralOrbital} = S <: VirtualOrbital
-
-function Base.isless(p::MOIndex{S1}, q::MOIndex{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital}
-    (S1, p.index) < (S2, q.index)
-end
-
-function exchange_index(p::MOIndex, mapping)
+function exchange_index(p::Int, mapping)
     for (old, new) in mapping
         if p == old
             return new
@@ -131,21 +151,15 @@ function exchange_index(p::MOIndex, mapping)
     p
 end
 
-# indices must be sorted
-function next_free_index(indices, ::Type{S}) where {S<:GeneralOrbital}
+function next_free_index(indices)
+    sort!(indices)
     i = 1
     for p in indices
-        if space(p) == S
-            if p.index == i
-                i += 1
-            end
+        if i == p
+            i += 1
         end
     end
-    MOIndex(i, S)
-end
-
-function next_free_index(indices, ::MOIndex{S}) where {S<:GeneralOrbital}
-    next_free_index(indices, S)
+    i
 end
 
 # utility functions for getting which sets compose each other
