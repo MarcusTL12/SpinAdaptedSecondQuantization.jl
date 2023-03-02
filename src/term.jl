@@ -593,8 +593,8 @@ function try_add_constraints(a::Term, b::Term)
         return (a, b), false
     end
 
-    s1 = ac[p]
-    s2 = bc[p]
+    s1 = a.constraints(p)
+    s2 = b.constraints(p)
 
     # If we can get one single term by fusing spaces we want to do that
     s12 = add_spaces(s1, s2)
