@@ -224,42 +224,58 @@ function simplify_terms(ex::Expression)
     Expression([simplify(t) for t in ex.terms])
 end
 
-# TODO: group terms into equal significant parts
 function try_add_constraints(ex::Expression)
-    done = false
-
-    while !done
-        done = true
-
-        for i in eachindex(ex.terms)
-            for j in i+1:length(ex.terms)
-                if !non_constraint_non_scalar_equal(ex[i], ex[j])
-                    break
-                end
-
-                t, did_something = try_add_constraints(ex[i], ex[j])
-
-                if did_something
-                    done = false
-
-                    if t isa Tuple
-                        ex[i] = t[1]
-                        ex[j] = t[2]
-                    else
-                        ex[i] = t
-                        deleteat!(ex.terms, j)
-                    end
-
-                    ex = Expression(ex.terms)
-
-                    break
-                end
-            end
-
-            if !done
+    block_start = 1
+    while block_start <= length(ex.terms)
+        block_ident = ex[block_start]
+        block_end = block_start
+        for i in block_start+1:length(ex.terms)
+            if non_constraint_non_scalar_equal(block_ident, ex[i])
+                block_end = i
+            else
                 break
             end
         end
+
+        done = false
+
+        while !done
+            done = true
+
+            for i in block_start:block_end
+                for j in i+1:block_end
+                    t, did_something = try_add_constraints(ex[i], ex[j])
+
+                    if did_something
+                        done = false
+
+                        n_terms_before = length(ex.terms)
+
+                        if t isa Tuple
+                            ex[i] = t[1]
+                            ex[j] = t[2]
+                        else
+                            ex[i] = t
+                            deleteat!(ex.terms, j)
+                        end
+
+                        ex = Expression(ex.terms)
+
+                        n_terms_lost = n_terms_before - length(ex.terms)
+
+                        block_end -= n_terms_lost
+
+                        break
+                    end
+                end
+
+                if !done
+                    break
+                end
+            end
+        end
+
+        block_start = block_end + 1
     end
 
     ex
