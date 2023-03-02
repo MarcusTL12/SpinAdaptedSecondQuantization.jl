@@ -2,7 +2,7 @@
 struct Expression{T<:Number}
     terms::Vector{Term{T}}
 
-    function Expression(terms::Vector{Term{T}}) where {T<:Number}
+    function Expression(terms::AbstractVector{Term{T}}) where {T<:Number}
         terms = sort(terms)
 
         # Collect equal terms
@@ -25,7 +25,7 @@ struct Expression{T<:Number}
         if isempty(terms)
             new{T}([Term(
                 zero(T),
-                MOIndex[],
+                Int[],
                 KroneckerDelta[],
                 Tensor[],
                 Operator[]
@@ -42,13 +42,19 @@ function Base.show(io::IO, ex::Expression)
 but rather include a single zero term")
     end
 
-    print(io, first(ex.terms))
+    t, rest = Iterators.peel(ex.terms)
 
-    for t in ex.terms[2:end]
+    if t.scalar < 0
+        println(io, "- ", new_scalar(t, -t.scalar))
+    else
+        println(io, t)
+    end
+
+    for t in rest
         if t.scalar < 0
-            print(io, " - ", new_scalar(t, -t.scalar))
+            println(io, "- ", new_scalar(t, -t.scalar))
         else
-            print(io, " + ", t)
+            println(io, "+ ", t)
         end
     end
 end
@@ -57,10 +63,14 @@ function Base.zero(::Type{Expression{T}}) where {T<:Number}
     Expression([zero(Term{T})])
 end
 
+function Base.iszero(e::Expression)
+    all(iszero, e.terms)
+end
+
 function Expression(s::T) where {T<:Number}
     Expression([Term(
         s,
-        MOIndex[],
+        Int[],
         KroneckerDelta[],
         Tensor[],
         Operator[]
@@ -70,7 +80,7 @@ end
 function Expression(d::KroneckerDelta)
     Expression([Term(
         1,
-        MOIndex[],
+        Int[],
         [d],
         Tensor[],
         Operator[]
@@ -79,7 +89,7 @@ end
 
 Expression(t::Tensor) = Expression([Term(
     1,
-    MOIndex[],
+    Int[],
     KroneckerDelta[],
     Tensor[t],
     Operator[]
@@ -87,7 +97,7 @@ Expression(t::Tensor) = Expression([Term(
 
 Expression(o::Operator) = Expression([Term(
     1,
-    MOIndex[],
+    Int[],
     KroneckerDelta[],
     Tensor[],
     Operator[o]
@@ -95,23 +105,31 @@ Expression(o::Operator) = Expression([Term(
 
 Expression(ops::Vector{Operator}) = Expression([Term(
     1,
-    MOIndex[],
+    Int[],
     KroneckerDelta[],
     Tensor[],
     ops
 )])
 
-export constrain
+export constrain, occupied, virtual
 
 function constrain(constraints...)
     Expression([Term(
         1,
-        MOIndex[],
+        Int[],
         KroneckerDelta[],
         Tensor[],
         Operator[],
         Constraints(constraints...)
     )])
+end
+
+function occupied(indices...)
+    constrain(p => OccupiedOrbital for p in indices)
+end
+
+function virtual(indices...)
+    constrain(p => VirtualOrbital for p in indices)
 end
 
 function Base.getindex(ex::Expression, i)
@@ -206,14 +224,8 @@ function simplify_terms(ex::Expression)
     Expression([simplify(t) for t in ex.terms])
 end
 
-function make_sum_inds_general(ex::Expression)
-    Expression(map(make_sum_inds_general, ex.terms))
-end
-
 # TODO: group terms into equal significant parts
 function try_add_constraints(ex::Expression)
-    ex = make_sum_inds_general(ex)
-
     done = false
 
     while !done

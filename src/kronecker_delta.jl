@@ -1,7 +1,7 @@
 export delta, δ
 
 struct KroneckerDelta
-    indices::Vector{MOIndex}
+    indices::Vector{Int}
 
     function KroneckerDelta(indices)
         indices = unique!(sort(indices))
@@ -9,12 +9,6 @@ struct KroneckerDelta
         if length(indices) <= 1
             1
         else
-            for i in eachindex(indices), j in (i+1):length(indices)
-                if isdisjoint(indices[i], indices[j])
-                    return 0
-                end
-            end
-
             new(indices)
         end
     end
@@ -28,7 +22,15 @@ function Base.show(io::IO, d::KroneckerDelta)
     print(io, "δ_")
 
     for p in d.indices
-        print(io, p)
+        print_mo_index(io, p)
+    end
+end
+
+function Base.print(io::IO, constraints::Constraints, d::KroneckerDelta)
+    print(io, "δ_")
+
+    for p in d.indices
+        print_mo_index(io, constraints, p)
     end
 end
 
@@ -51,7 +53,7 @@ function exchange_indices(d::KroneckerDelta, mapping)
 end
 
 function compact_deltas(deltas::Vector{KroneckerDelta})
-    forest = DisjointSets{MOIndex}()
+    forest = DisjointSets{Int}()
 
     function add_index(i)
         if !haskey(forest.intmap, i)
@@ -76,7 +78,7 @@ function compact_deltas(deltas::Vector{KroneckerDelta})
         end
     end
 
-    group_dict = Dict{MOIndex,Vector{MOIndex}}()
+    group_dict = Dict{Int,Vector{Int}}()
 
     for i in collect(forest)
         r = find_root!(forest, i)
@@ -101,14 +103,4 @@ function compact_deltas(deltas::Vector{KroneckerDelta})
     end
 
     sort!(new_deltas)
-end
-
-function space(d::KroneckerDelta)
-    s, rest = Iterators.peel(space(p) for p in d.indices)
-
-    for s2 in rest
-        s = typeintersect(s, s2)
-    end
-
-    s
 end
