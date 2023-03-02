@@ -347,5 +347,8 @@ end
     )
     HF = hF + g
     E_hf = ((HF + H) // 2) |> hf_expectation_value |> simplify
-    @show E_hf
+    @test E_hf == ∑(
+        (real_tensor("h", 1, 1) + real_tensor("F", 1, 1)) * occupied(1),
+        [1]
+    )
 end
