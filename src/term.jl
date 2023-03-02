@@ -135,7 +135,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
         printsep()
         print(io, "∑_")
         for i in t.sum_indices
-            print_mo_index(io, i)
+            print_mo_index(io, t.constraints, i)
         end
         print(io, '(')
         sep[] = false
@@ -143,12 +143,12 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
 
     for d in t.deltas
         printsep()
-        print(io, d)
+        print(io, t.constraints, d)
     end
 
     for ten in t.tensors
         printsep()
-        print(io, ten)
+        print(io, t.constraints, ten)
     end
 
     for op in t.operators
@@ -160,19 +160,22 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
         print(io, ')')
     end
 
-    if !isempty(t.constraints)
+    constraint_noprint = index_color ? get_non_constraint_indices(t) : Int[]
+    constraint_print = [i for (i, _) in t.constraints if i ∉ constraint_noprint]
+
+    if !isempty(constraint_print)
         printsep()
 
         print(io, "C(")
 
         isfirst = true
 
-        for (i, s) in t.constraints
+        for i in constraint_print
             if !isfirst
                 print(io, ", ")
             end
             print_mo_index(io, i)
-            print(io, "∈", getshortname(s))
+            print(io, "∈", getshortname(t.constraints(i)))
             isfirst = false
         end
 
@@ -271,6 +274,29 @@ function exchange_indices(t::Term{T}, mapping) where {T<:Number}
     end
 
     t
+end
+
+function get_non_constraint_indices(t::Term)
+    indices = copy(t.sum_indices)
+
+    for d in t.deltas
+        append!(indices, d.indices)
+    end
+
+    for tensor in t.tensors
+        for i in get_indices(tensor)
+            push!(indices, i)
+        end
+    end
+
+    for o in t.operators
+        for i in get_all_indices(o)
+            push!(indices, i)
+        end
+    end
+
+    sort!(indices)
+    unique!(indices)
 end
 
 function get_all_indices(t::Term)

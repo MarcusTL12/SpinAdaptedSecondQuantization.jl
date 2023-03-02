@@ -20,6 +20,13 @@ function Base.show(io::IO, t::T) where {T<:Tensor}
     end
 end
 
+function Base.print(io::IO, constraints::Constraints, t::T) where {T<:Tensor}
+    print(io, get_symbol(t), '_')
+    for ind in get_indices(t)
+        print_mo_index(io, constraints, ind)
+    end
+end
+
 function Base.:(==)(a::A, b::B) where {A<:Tensor,B<:Tensor}
     (get_symbol(a), get_indices(a)) == (get_symbol(b), get_indices(b))
 end

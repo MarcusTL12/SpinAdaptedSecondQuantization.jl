@@ -73,6 +73,10 @@ function subscript(i)
     String(take!(io))
 end
 
+get_color(::Type{S}) where {S<:GeneralOrbital} = ""
+get_color(::Type{OccupiedOrbital}) = "\x1b[92m"
+get_color(::Type{VirtualOrbital}) = "\x1b[36m"
+
 function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
     names = getnames(S)
 
@@ -81,6 +85,17 @@ function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
     extraind = (i - 1) ÷ length(names)
     if extraind != 0
         subscript(io, extraind)
+    end
+end
+
+function getname(io::IO, ::Type{S}, constraints::Constraints, i::Int) where
+{S<:GeneralOrbital}
+    if index_color
+        print(io, get_color(constraints(i)))
+    end
+    getname(io, S, i)
+    if index_color
+        print(io, "\x1b[39m")
     end
 end
 
@@ -94,14 +109,34 @@ function print_mo_index(io::IO, p)
     getname(io, GeneralOrbital, p)
 end
 
+function print_mo_index(io::IO, constraints::Constraints, p)
+    getname(io, GeneralOrbital, constraints, p)
+end
+
 function print_mo_index(io::IO, indices...)
     for p in indices
         print_mo_index(io, p)
     end
 end
 
+function print_mo_index(io::IO, constraints::Constraints, indices...)
+    for p in indices
+        print_mo_index(io, constraints, p)
+    end
+end
+
 function print_mo_index(p)
     getname(GeneralOrbital, p)
+end
+
+index_color::Bool = true
+
+function enable_color()
+    global index_color = true
+end
+
+function disable_color()
+    global index_color = false
 end
 
 Base.isdisjoint(::Type{S1}, ::Type{S2}) where

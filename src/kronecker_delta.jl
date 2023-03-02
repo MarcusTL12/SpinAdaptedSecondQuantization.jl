@@ -26,6 +26,14 @@ function Base.show(io::IO, d::KroneckerDelta)
     end
 end
 
+function Base.print(io::IO, constraints::Constraints, d::KroneckerDelta)
+    print(io, "δ_")
+
+    for p in d.indices
+        print_mo_index(io, constraints, p)
+    end
+end
+
 # Externally visible constructor
 delta(indices...) = Expression(KroneckerDelta(indices...))
 
