@@ -211,12 +211,22 @@ function equal_nonscalar(a::Term, b::Term)
         a.constraints == b.constraints
 end
 
+function Base.isless(a::Constraints, b::Constraints)
+    for (x, y) in zip(a, b)
+        if x < y
+            return true
+        elseif x > y
+            return false
+        end
+    end
+
+    length(a) < length(b)
+end
+
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    (a.tensors, a.operators, a.deltas, a.sum_indices, collect(a.constraints),
-        b.scalar) <
-    (b.tensors, b.operators, b.deltas, b.sum_indices, collect(b.constraints),
-        a.scalar)
+    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) <
+    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
 end
 
 function Base.:(==)(a::Term, b::Term)
