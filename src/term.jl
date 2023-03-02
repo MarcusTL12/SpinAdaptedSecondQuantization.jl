@@ -578,6 +578,30 @@ function constraints_equal_but_one(a::Constraints, b::Constraints)
     p_different
 end
 
+
+function constraints_equal_but_one(a::Term, b::Term)
+    a_indices = get_all_indices(a)
+    b_indices = get_all_indices(b)
+
+    if a_indices != b_indices
+        return nothing
+    end
+
+    p_different = nothing
+    for p in a_indices
+        s1 = a.constraints(p)
+        if b.constraints(p) != s1
+            if isnothing(p_different)
+                p_different = p
+            else
+                return nothing
+            end
+        end
+    end
+
+    p_different
+end
+
 # TODO: add docs
 # TODO: add tests
 function try_add_constraints(a::Term, b::Term)
