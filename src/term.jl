@@ -1,6 +1,6 @@
 const Constraints = SortedDict{Int,Type}
 
-# Lets you call the constraints as a function instead of explisitly calling get
+# Lets you call the constraints as a function instead of explicitly calling get
 function (constraints::Constraints)(p::Int)
     get(constraints, p, GeneralOrbital)
 end
