@@ -2,6 +2,7 @@ module SpinAdaptedSecondQuantization
 
 using DataStructures
 
+const Constraints = SortedDict{Int,Type}
 include("orbital_spaces.jl")
 include("kronecker_delta.jl")
 include("operator.jl")
