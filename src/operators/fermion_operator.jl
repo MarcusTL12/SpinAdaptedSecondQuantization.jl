@@ -7,7 +7,7 @@ The basic fermionic type operator.
 """
 
 struct FermionOperator <: Operator
-    p::MOIndex
+    p::Int
     spin::Bool
     dag::Bool
 end
@@ -15,7 +15,8 @@ end
 function Base.show(io::IO, a::FermionOperator)
     spin = a.spin ? "↑" : "↓"
     dag = a.dag ? "+" : "-"
-    print(io, "($spin$(dag))_", a.p)
+    print(io, "($(spin)$(dag))_")
+    print_mo_index(io, a.p)
 end
 
 function exchange_indices(a::FermionOperator, mapping)
