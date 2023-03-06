@@ -9,7 +9,7 @@ function contract(a, b)
     δ(a.p, b.p) * (!a.dag && b.dag) * (a.spin == b.spin)
 end
 
-function find_all_pairs(vec :: Vector{T}) where T
+function fully_contracted_pairs(vec :: Vector{T}) where T
     # Recursive function which finds all possible unique pairs in a vector
     # [1,2] -> [[(1,2)]]
     # [1,2,3,4] ->  [[(1, 2), (3, 4)], [(1, 3), (2, 4)], [(1, 4), (2, 3)]]
@@ -30,7 +30,7 @@ function find_all_pairs(vec :: Vector{T}) where T
     for i = 2:n
         pair = (vec[1], vec[i])
         rest = vec[(1:n .!= 1) .&& (1:n .!= i)]
-        x = find_all_pairs(rest)
+        x = fully_contracted_pairs(rest)
         for elem in x
             counter += 1
             list[counter] = vcat([pair], elem)
@@ -38,9 +38,4 @@ function find_all_pairs(vec :: Vector{T}) where T
     end
 
     return list
-end
-
-for i = 2:2:16
-    v = collect(1:i)
-    @show length(find_all_pairs(v))
 end
