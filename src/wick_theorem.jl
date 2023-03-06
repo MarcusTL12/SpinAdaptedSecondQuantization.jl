@@ -1,11 +1,15 @@
-function wick_theorem(string)
-    for op in string
-        @assert typeof(op) == SASQ.FermionOperator
+# TODO T <: FermionOperator
+function wick_theorem(opstring :: Vector{T}) where T <: Operator
+    for op in opstring
+        @assert typeof(op) == FermionOperator
     end
-
+    list_of_pairs = fully_contracted_pairs(opstring)
+    sum(prod(contract(a,b) for (a,b) in pairs) for pairs in list_of_pairs)
 end
 
-function contract(a, b)
+function contract(a :: FermionOperator, b :: FermionOperator)
+    # Contractions used in Wick's theorem
+    # contract(a, b) = <vac| a b |vac>
     δ(a.p, b.p) * (!a.dag && b.dag) * (a.spin == b.spin)
 end
 
