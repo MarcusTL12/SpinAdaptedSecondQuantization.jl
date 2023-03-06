@@ -375,3 +375,10 @@ end
                                                     [(1, 6), (2, 4), (3, 5)],
                                                     [(1, 6), (2, 5), (3, 4)]]
 end
+
+@testset "wicks theorem" begin
+    h = sum(∑(real_tensor("h", 1, 2) * fermiondag(1,spin) * fermion(2, spin), 1:2) for spin in [true, false])
+    g = 1 // 2 * sum(∑(real_tensor("g", 1:4...) * fermiondag(1,spin1) * fermiondag(3,spin2) * fermion(2, spin2) * fermion(4, spin1), 1:4) for spin1 in [true, false], spin2 in [true, false])
+    H = h + g
+    @show wick_theorem(H) |> simplify
+end

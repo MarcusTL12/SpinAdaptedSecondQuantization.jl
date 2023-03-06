@@ -1,16 +1,47 @@
+export wick_theorem
+
 # TODO T <: FermionOperator
+function wick_theorem(ex :: Expression)
+    # Returns an Expression for <vac| opstring |vac>
+    sum(wick_theorem(term) for term in ex.terms)
+end
+
+function wick_theorem(t :: Term)
+    # Returns an Expression for <vac| opstring |vac>
+    wick_expr =  wick_theorem(t.operators)
+    Expression([Term(
+        copy(t.scalar) * term.scalar,
+        copy(t.sum_indices),
+        vcat(copy(t.deltas), term.deltas),
+        copy(t.tensors),
+        Operator[],
+        merge(t.constraints, term.constraints)) for term in wick_expr.terms])
+end
+
 function wick_theorem(opstring :: Vector{T}) where T <: Operator
+    # Returns an Expression for <vac| opstring |vac>
     for op in opstring
         @assert typeof(op) == FermionOperator
     end
+
+    if isodd(length(opstring)) || length(opstring) == 0
+        return Expression(0)
+    end
+
     list_of_pairs = fully_contracted_pairs(opstring)
-    sum(prod(contract(a,b) for (a,b) in pairs) for pairs in list_of_pairs)
+    list_of_pairs_index = fully_contracted_pairs(collect(1:length(opstring)))
+    signs = map(find_sign, list_of_pairs_index)
+
+    @show signs
+    @show [prod(contract(a,b) for (a,b) in pairs) for (i, pairs) in enumerate(list_of_pairs)]
+    sum(signs[i] * prod(contract(a,b) for (a,b) in pairs) for (i, pairs) in enumerate(list_of_pairs))
 end
 
 function contract(a :: FermionOperator, b :: FermionOperator)
     # Contractions used in Wick's theorem
     # contract(a, b) = <vac| a b |vac>
-    δ(a.p, b.p) * (!a.dag && b.dag) * (a.spin == b.spin)
+    δ(a.p, b.p) * (a.dag && !b.dag) * (a.spin == b.spin) * occupied(a.p) +
+    δ(a.p, b.p) * (!a.dag && b.dag) * (a.spin == b.spin) * virtual(a.p)
 end
 
 function fully_contracted_pairs(vec :: Vector{T}) where T
@@ -42,4 +73,19 @@ function fully_contracted_pairs(vec :: Vector{T}) where T
     end
 
     return list
+end
+
+function find_sign(pairs)
+    C = 1
+    for i = 1:length(pairs), j = i+1:length(pairs)
+        p1 = pairs[i]
+        p2 = pairs[j]
+
+        inter = intersect(p1[1]:p1[2], p2[1]:p2[2])
+        if !isempty(inter) && inter != p1[1]:p1[2] && inter != p2[1]:p2[2]
+            C *= -1
+        end
+    end
+
+    return C
 end
