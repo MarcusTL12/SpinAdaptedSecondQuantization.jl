@@ -378,7 +378,12 @@ end
 
 @testset "wicks theorem" begin
     h = sum(∑(real_tensor("h", 1, 2) * fermiondag(1,spin) * fermion(2, spin), 1:2) for spin in [true, false])
-    g = 1 // 2 * sum(∑(real_tensor("g", 1:4...) * fermiondag(1,spin1) * fermiondag(3,spin2) * fermion(2, spin2) * fermion(4, spin1), 1:4) for spin1 in [true, false], spin2 in [true, false])
+    g = 1 // 2 * sum(∑(real_tensor("g", 1:4...) * fermiondag(1,spin1) * fermiondag(3,spin2) * fermion(4, spin2) * fermion(2, spin1), 1:4) for spin1 in [true, false], spin2 in [true, false])
     H = h + g
-    @show wick_theorem(H) |> simplify
+    E_hf = simplify(wick_theorem(H))
+    @test E_hf == ∑(2real_tensor("h", 1, 1) * occupied(1), [1]) + ∑(
+        (2real_tensor("g", 1, 1, 2, 2) - real_tensor("g", 1, 2, 2, 1)) *
+        occupied(1, 2),
+        1:2
+    )
 end

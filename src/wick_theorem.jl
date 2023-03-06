@@ -32,8 +32,6 @@ function wick_theorem(opstring :: Vector{T}) where T <: Operator
     list_of_pairs_index = fully_contracted_pairs(collect(1:length(opstring)))
     signs = map(find_sign, list_of_pairs_index)
 
-    @show signs
-    @show [prod(contract(a,b) for (a,b) in pairs) for (i, pairs) in enumerate(list_of_pairs)]
     sum(signs[i] * prod(contract(a,b) for (a,b) in pairs) for (i, pairs) in enumerate(list_of_pairs))
 end
 
