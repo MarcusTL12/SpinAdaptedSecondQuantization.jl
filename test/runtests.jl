@@ -354,36 +354,31 @@ end
     )
 end
 
-@testset "fully_contracted_pairs" begin
-    @test fully_contracted_pairs([1,2]) == [[(1,2)]]
-    @test fully_contracted_pairs([1,2,3,4]) == [[(1, 2), (3, 4)],
-                                                [(1, 3), (2, 4)],
-                                                [(1, 4), (2, 3)]]
-    @test fully_contracted_pairs([1,2,3,4,5,6]) == [[(1, 2), (3, 4), (5, 6)],
-                                                    [(1, 2), (3, 5), (4, 6)],
-                                                    [(1, 2), (3, 6), (4, 5)],
-                                                    [(1, 3), (2, 4), (5, 6)],
-                                                    [(1, 3), (2, 5), (4, 6)],
-                                                    [(1, 3), (2, 6), (4, 5)],
-                                                    [(1, 4), (2, 3), (5, 6)],
-                                                    [(1, 4), (2, 5), (3, 6)],
-                                                    [(1, 4), (2, 6), (3, 5)],
-                                                    [(1, 5), (2, 3), (4, 6)],
-                                                    [(1, 5), (2, 4), (3, 6)],
-                                                    [(1, 5), (2, 6), (3, 4)],
-                                                    [(1, 6), (2, 3), (4, 5)],
-                                                    [(1, 6), (2, 4), (3, 5)],
-                                                    [(1, 6), (2, 5), (3, 4)]]
-end
-
 @testset "wicks theorem" begin
+    @test SASQ.fully_contracted_pairs([1,2]) == [[(1,2)]]
+    @test SASQ.fully_contracted_pairs([1,2,3,4]) == [[(1, 2), (3, 4)],
+                                                     [(1, 3), (2, 4)],
+                                                     [(1, 4), (2, 3)]]
+    @test SASQ.fully_contracted_pairs([1,2,3,4,5,6]) == [[(1, 2), (3, 4), (5, 6)],
+                                                         [(1, 2), (3, 5), (4, 6)],
+                                                         [(1, 2), (3, 6), (4, 5)],
+                                                         [(1, 3), (2, 4), (5, 6)],
+                                                         [(1, 3), (2, 5), (4, 6)],
+                                                         [(1, 3), (2, 6), (4, 5)],
+                                                         [(1, 4), (2, 3), (5, 6)],
+                                                         [(1, 4), (2, 5), (3, 6)],
+                                                         [(1, 4), (2, 6), (3, 5)],
+                                                         [(1, 5), (2, 3), (4, 6)],
+                                                         [(1, 5), (2, 4), (3, 6)],
+                                                         [(1, 5), (2, 6), (3, 4)],
+                                                         [(1, 6), (2, 3), (4, 5)],
+                                                         [(1, 6), (2, 4), (3, 5)],
+                                                         [(1, 6), (2, 5), (3, 4)]]
+
     h = sum(∑(real_tensor("h", 1, 2) * fermiondag(1,spin) * fermion(2, spin), 1:2) for spin in [true, false])
     g = 1 // 2 * sum(∑(real_tensor("g", 1:4...) * fermiondag(1,spin1) * fermiondag(3,spin2) * fermion(4, spin2) * fermion(2, spin1), 1:4) for spin1 in [true, false], spin2 in [true, false])
     H = h + g
     E_hf = simplify(wick_theorem(H))
-    @test E_hf == ∑(2real_tensor("h", 1, 1) * occupied(1), [1]) + ∑(
-        (2real_tensor("g", 1, 1, 2, 2) - real_tensor("g", 1, 2, 2, 1)) *
-        occupied(1, 2),
-        1:2
-    )
+    @test E_hf == ∑(2 * real_tensor("h", 1, 1) * occupied(1), [1]) +
+        ∑((2 * real_tensor("g", 1, 1, 2, 2) - real_tensor("g", 1, 2, 2, 1)) * occupied(1, 2), 1:2)
 end
