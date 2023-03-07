@@ -2,12 +2,12 @@ export wick_theorem
 
 # TODO T <: FermionOperator
 function wick_theorem(ex :: Expression)
-    # Returns an Expression for <vac| opstring |vac>
+    # Returns an Expression for <ref| opstring |ref>
     sum(wick_theorem(term) for term in ex.terms)
 end
 
 function wick_theorem(t :: Term)
-    # Returns an Expression for <vac| opstring |vac>
+    # Returns an Expression for <ref| opstring |ref>
     wick_expr =  wick_theorem(t.operators)
     Expression([Term(
         copy(t.scalar) * term.scalar,
@@ -19,7 +19,7 @@ function wick_theorem(t :: Term)
 end
 
 function wick_theorem(opstring :: Vector{T}) where T <: Operator
-    # Returns an Expression for <vac| opstring |vac>
+    # Returns an Expression for <ref| opstring |ref>
     for op in opstring
         @assert typeof(op) == FermionOperator
     end
@@ -37,7 +37,7 @@ end
 
 function contract(a :: FermionOperator, b :: FermionOperator)
     # Contractions used in Wick's theorem
-    # contract(a, b) = <vac| a b |vac>
+    # contract(a, b) = <ref| a b |ref>
     δ(a.p, b.p) * (a.dag && !b.dag) * (a.spin == b.spin) * occupied(a.p) +
     δ(a.p, b.p) * (!a.dag && b.dag) * (a.spin == b.spin) * virtual(a.p)
 end
@@ -74,6 +74,8 @@ function fully_contracted_pairs(vec :: Vector{T}) where T
 end
 
 function find_sign(pairs)
+    # Wick's theorem to find sign
+    # sign = (-1)^number of intersections between pairs
     C = 1
     for i = 1:length(pairs), j = i+1:length(pairs)
         p1 = pairs[i]
