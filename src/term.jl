@@ -160,7 +160,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
 
     for op in t.operators
         printsep()
-        print(io, op)
+        print(io, t.constraints, op)
     end
 
     if !isempty(t.sum_indices)
