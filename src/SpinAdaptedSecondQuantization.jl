@@ -1,6 +1,7 @@
 module SpinAdaptedSecondQuantization
 
 using DataStructures
+using Permutations
 
 const Constraints = SortedDict{Int,Type}
 include("orbital_spaces.jl")

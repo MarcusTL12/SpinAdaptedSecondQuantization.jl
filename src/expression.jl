@@ -295,6 +295,11 @@ function try_add_constraints(ex::Expression)
     Expression(ex.terms)
 end
 
+export permute_all_sum_indices
+function permute_all_sum_indices(ex::Expression)
+    Expression([permute_all_sum_indices(t) for t in ex.terms])
+end
+
 # Commutator:
 
 export commutator
