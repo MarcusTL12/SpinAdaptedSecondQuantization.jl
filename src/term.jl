@@ -413,6 +413,9 @@ end
 
 function make_space_for_indices(t::Term, new_indices)
     indices = get_all_indices(t)
+    append!(indices, new_indices)
+    sort!(indices)
+    unique!(indices)
     mapping = Pair{Int,Int}[]
 
     for new_index in new_indices
