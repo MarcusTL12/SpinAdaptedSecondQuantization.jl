@@ -390,3 +390,11 @@ end
            2psym_tensor("g", 1, 4, 3, 2) - psym_tensor("g", 1, 2, 3, 4)) *
           occupied(1, 2) * virtual(3, 4)
 end
+
+@testset "permute_all_sum_indices" begin
+    x = simplify(∑(real_tensor("g", 1, 2) * real_tensor("g", 2, 1) *
+                   (real_tensor("h", 1, 2) - real_tensor("h", 2, 1)), 1:2))
+
+    @test !iszero(x)
+    @test iszero(permute_all_sum_indices(x))
+end

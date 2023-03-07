@@ -632,10 +632,13 @@ end
 function permute_all_sum_indices(t::Term)
     min_t = t
     permuted_inds = copy(t.sum_indices)
+    mapping = [p => p for p in permuted_inds]
     for perm in Iterators.drop(PermGen(length(t.sum_indices)), 1)
         copy!(permuted_inds, t.sum_indices)
         permute!(permuted_inds, perm.data)
-        mapping = [p => q for (p, q) in zip(t.sum_indices, permuted_inds)]
+        for (i, (p, q)) in enumerate(zip(t.sum_indices, permuted_inds))
+            mapping[i] = p => q
+        end
         min_t = min(min_t, exchange_indices(t, mapping))
     end
     min_t
