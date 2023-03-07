@@ -25,10 +25,7 @@ get_indices(t::ParticleSymmetricTensor) = t.indices
 # end
 
 function sort_psym_indices!(indices)
-    @assert iseven(length(indices))
-
-    indices_paired = reinterpret(NTuple{2,Int}, indices)
-    sort!(indices_paired)
+    sort!(reinterpret(NTuple{2,Int}, indices))
 end
 
 function exchange_indices(t::ParticleSymmetricTensor, mapping)
