@@ -267,7 +267,8 @@ function try_add_constraints(ex::Expression)
                         sort!(@view ex.terms[block_begin:block_end])
                         k = block_begin
                         while k < block_end
-                            while equal_nonscalar(ex[k], ex[k+1])
+                            while k < block_end &&
+                                equal_nonscalar(ex[k], ex[k+1])
                                 ex[k] = new_scalar(
                                     ex[k],
                                     ex[k].scalar + ex[k+1].scalar
@@ -292,6 +293,11 @@ function try_add_constraints(ex::Expression)
     end
 
     Expression(ex.terms)
+end
+
+export permute_all_sum_indices
+function permute_all_sum_indices(ex::Expression)
+    Expression([permute_all_sum_indices(t) for t in ex.terms])
 end
 
 # Commutator:

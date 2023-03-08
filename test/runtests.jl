@@ -353,3 +353,48 @@ end
         [1]
     )
 end
+
+@testset "cis" begin
+    hF = ∑(
+        (real_tensor("F", 1, 2) + ∑(
+            (-2psym_tensor("g", 1, 2, 3, 3) + psym_tensor("g", 1, 3, 3, 2)) *
+            occupied(3),
+            [3]
+        )) * E(1, 2),
+        1:2
+    )
+    g = 1 // 2 * ∑(psym_tensor("g", 1:4...) * e(1:4...), 1:4) |> simplify
+
+    HF = simplify(hF + g)
+
+    EHF = hf_expectation_value(HF) |> simplify
+
+    E_single = simplify(
+        (hf_expectation_value(E(1, 2) * HF * E(2, 1)) // 2 -
+         hf_expectation_value(HF)) * occupied(1) * virtual(2)
+    )
+
+    @test E_single ==
+          (real_tensor("F", 2, 2) - real_tensor("F", 1, 1) +
+           2psym_tensor("g", 1, 2, 2, 1) - psym_tensor("g", 1, 1, 2, 2)) *
+          occupied(1) * virtual(2)
+
+    H_cis = simplify(
+        (hf_expectation_value(E(2, 3) * HF * E(4, 1)) // 2 -
+         hf_expectation_value(HF) * δ(1, 2) * δ(3, 4)) *
+        occupied(1, 2) * virtual(3, 4)
+    )
+
+    @test H_cis ==
+          (δ(1, 2) * real_tensor("F", 3, 4) - δ(3, 4) * real_tensor("F", 1, 2) +
+           2psym_tensor("g", 1, 4, 3, 2) - psym_tensor("g", 1, 2, 3, 4)) *
+          occupied(1, 2) * virtual(3, 4)
+end
+
+@testset "permute_all_sum_indices" begin
+    x = simplify(∑(real_tensor("g", 1, 2) * real_tensor("g", 2, 1) *
+                   (real_tensor("h", 1, 2) - real_tensor("h", 2, 1)), 1:2))
+
+    @test !iszero(x)
+    @test iszero(permute_all_sum_indices(x))
+end

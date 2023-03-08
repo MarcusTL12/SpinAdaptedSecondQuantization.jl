@@ -160,7 +160,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
 
     for op in t.operators
         printsep()
-        print(io, op)
+        print(io, t.constraints, op)
     end
 
     if !isempty(t.sum_indices)
@@ -627,6 +627,21 @@ function try_add_constraints(a::Term, b::Term)
     end
 
     (a, b), false
+end
+
+function permute_all_sum_indices(t::Term)
+    min_t = t
+    permuted_inds = copy(t.sum_indices)
+    mapping = [p => p for p in permuted_inds]
+    for perm in Iterators.drop(PermGen(length(t.sum_indices)), 1)
+        copy!(permuted_inds, t.sum_indices)
+        permute!(permuted_inds, perm.data)
+        for (i, (p, q)) in enumerate(zip(t.sum_indices, permuted_inds))
+            mapping[i] = p => q
+        end
+        min_t = min(min_t, exchange_indices(t, mapping))
+    end
+    min_t
 end
 
 # This function is just a composition of other simplification functions
