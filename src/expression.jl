@@ -316,12 +316,13 @@ end
 export simplify_heavy
 function simplify_heavy(ex::Expression)
     done = false
+    ex = simplify(ex)
     while !done
-        new_ex = permute_all_sum_indices(simplify(ex))
+        new_ex = simplify(permute_all_sum_indices(ex))
         done = new_ex == ex
         ex = new_ex
     end
-    simplify(ex)
+    ex
 end
 
 # Commutator:
