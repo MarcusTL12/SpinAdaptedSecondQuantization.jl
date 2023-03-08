@@ -12,11 +12,12 @@ struct FermionOperator <: Operator
     dag::Bool
 end
 
-function Base.show(io::IO, a::FermionOperator)
-    spin = a.spin ? "↑" : "↓"
-    dag = a.dag ? "+" : "-"
-    print(io, "($(spin)$(dag))_")
-    print_mo_index(io, a.p)
+function Base.print(io::IO, constraints::Constraints, a::FermionOperator)
+    spin = a.spin ? 'α' : 'β'
+    dag = a.dag ? '†' : '⁻'
+    print(io, 'a', dag, '_')
+    print_mo_index(io, constraints, a.p)
+    print(io, spin)
 end
 
 function exchange_indices(a::FermionOperator, mapping)
