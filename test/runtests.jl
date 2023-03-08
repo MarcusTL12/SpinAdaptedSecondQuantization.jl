@@ -262,8 +262,8 @@ end
     )
 
     @test simplify(h * g) == ∑(
-        real_tensor("g", 1, 2, 3, 4) *
-        real_tensor("h", 5, 6) * E(5, 6) * E(1, 2) * E(3, 4) *
+        real_tensor("g", 3, 4, 5, 6) *
+        real_tensor("h", 1, 2) * E(1, 2) * E(3, 4) * E(5, 6) *
         occupied(1:6...),
         collect(1:6)
     )
