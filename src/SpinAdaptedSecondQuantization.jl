@@ -11,5 +11,6 @@ include("term.jl")
 include("expression.jl")
 
 include("hf_expectation_value.jl")
+include("ket.jl")
 
 end # module SpinAdaptedSecondQuantization

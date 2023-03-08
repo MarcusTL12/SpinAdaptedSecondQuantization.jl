@@ -714,6 +714,10 @@ end
 # Commutator:
 
 function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
+    if isempty(a.operators) || isempty(b.operators)
+        return Expression(0)
+    end
+
     b = make_space_for_indices(b, get_all_indices(a))
     a = make_space_for_indices(a, get_all_indices(b))
 
