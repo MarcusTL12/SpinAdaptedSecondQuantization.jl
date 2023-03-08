@@ -53,7 +53,16 @@ struct Term{T<:Number}
             end
         end
 
-        # TODO: remove general constraints
+        gen_constraints = Int[]
+        for (p, s) in constraints
+            if s == GeneralOrbital
+                push!(gen_constraints, p)
+            end
+        end
+
+        for p in gen_constraints
+            delete!(constraints, p)
+        end
 
         new{T}(scalar, sum_indices, deltas, tensors, operators, constraints)
     end
@@ -151,7 +160,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
 
     for op in t.operators
         printsep()
-        print(io, op)
+        print(io, t.constraints, op)
     end
 
     if !isempty(t.sum_indices)
@@ -202,12 +211,22 @@ function equal_nonscalar(a::Term, b::Term)
         a.constraints == b.constraints
 end
 
+function Base.isless(a::Constraints, b::Constraints)
+    for (x, y) in zip(a, b)
+        if x < y
+            return true
+        elseif x > y
+            return false
+        end
+    end
+
+    length(a) < length(b)
+end
+
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    (a.tensors, a.operators, a.deltas, a.sum_indices, collect(a.constraints),
-        b.scalar) <
-    (b.tensors, b.operators, b.deltas, b.sum_indices, collect(b.constraints),
-        a.scalar)
+    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) <
+    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
 end
 
 function Base.:(==)(a::Term, b::Term)
@@ -394,6 +413,9 @@ end
 
 function make_space_for_indices(t::Term, new_indices)
     indices = get_all_indices(t)
+    append!(indices, new_indices)
+    sort!(indices)
+    unique!(indices)
     mapping = Pair{Int,Int}[]
 
     for new_index in new_indices
@@ -528,28 +550,6 @@ function simplify_summation_deltas(t::Term)
     t
 end
 
-# This function returns the constraints of *all* indices in the term
-function get_constraints_exhaustive(t::Term)
-    constraints = Constraints()
-
-    for d in t.deltas
-        s = GeneralOrbital
-        for p in d.indices
-            constraints[p] = s
-        end
-    end
-
-    fuse_constraints!(constraints, t.constraints)
-
-    for p in get_all_indices(t)
-        if !haskey(constraints, p)
-            constraints[p] = GeneralOrbital
-        end
-    end
-
-    constraints
-end
-
 function non_constraint_non_scalar_equal(a::Term, b::Term)
     (a.tensors, a.operators, a.deltas, a.sum_indices) ==
     (b.tensors, b.operators, b.deltas, b.sum_indices)
@@ -559,14 +559,18 @@ end
 # it will return this index. Otherwise, if they are equal, do not contain
 # the same set of indices, or differ by more than one constraint, it will
 # return nothing
-function constraints_equal_but_one(a::Constraints, b::Constraints)
-    if collect(keys(a)) != collect(keys(b))
+function constraints_equal_but_one(a::Term, b::Term)
+    a_indices = get_all_indices(a)
+    b_indices = get_all_indices(b)
+
+    if a_indices != b_indices
         return nothing
     end
 
     p_different = nothing
-    for (p, s1) in a
-        if b[p] != s1
+    for p in a_indices
+        s1 = a.constraints(p)
+        if b.constraints(p) != s1
             if isnothing(p_different)
                 p_different = p
             else
@@ -585,21 +589,18 @@ function try_add_constraints(a::Term, b::Term)
         return (a, b), false
     end
 
-    ac = get_constraints_exhaustive(a)
-    bc = get_constraints_exhaustive(b)
-
-    p = constraints_equal_but_one(ac, bc)
+    p = constraints_equal_but_one(a, b)
     if isnothing(p)
         return (a, b), false
     end
 
-    s1 = ac[p]
-    s2 = bc[p]
+    s1 = a.constraints(p)
+    s2 = b.constraints(p)
 
     # If we can get one single term by fusing spaces we want to do that
     s12 = add_spaces(s1, s2)
     if a.scalar == b.scalar && !isnothing(s12)
-        new_constraints = copy(ac)
+        new_constraints = copy(a.constraints)
         new_constraints[p] = s12
         return Term(a.scalar, a.sum_indices, a.deltas, a.tensors,
             a.operators, new_constraints), true
@@ -612,7 +613,7 @@ function try_add_constraints(a::Term, b::Term)
 
     ds = diff_spaces(s1, s2)
     if !isnothing(ds)
-        new_constraints = copy(ac)
+        new_constraints = copy(a.constraints)
         new_constraints[p] = ds
 
         t1 = Term(a.scalar, a.sum_indices, a.deltas, a.tensors,
@@ -626,6 +627,21 @@ function try_add_constraints(a::Term, b::Term)
     end
 
     (a, b), false
+end
+
+function permute_all_sum_indices(t::Term)
+    min_t = t
+    permuted_inds = copy(t.sum_indices)
+    mapping = [p => p for p in permuted_inds]
+    for perm in Iterators.drop(PermGen(length(t.sum_indices)), 1)
+        copy!(permuted_inds, t.sum_indices)
+        permute!(permuted_inds, perm.data)
+        for (i, (p, q)) in enumerate(zip(t.sum_indices, permuted_inds))
+            mapping[i] = p => q
+        end
+        min_t = min(min_t, exchange_indices(t, mapping))
+    end
+    min_t
 end
 
 # This function is just a composition of other simplification functions

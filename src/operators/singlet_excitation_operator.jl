@@ -15,6 +15,11 @@ function Base.show(io::IO, e::SingletExcitationOperator)
     print_mo_index(io, e.p, e.q)
 end
 
+function Base.print(io::IO, constraints::Constraints, e::SingletExcitationOperator)
+    print(io, "E_")
+    print_mo_index(io, constraints, e.p, e.q)
+end
+
 function exchange_indices(e::SingletExcitationOperator, mapping)
     SingletExcitationOperator(
         exchange_index(e.p, mapping),
@@ -41,3 +46,4 @@ function commutator(a::SingletExcitationOperator, b::SingletExcitationOperator)
 
     δ(q, r) * E(p, s) - δ(p, s) * E(r, q)
 end
+
