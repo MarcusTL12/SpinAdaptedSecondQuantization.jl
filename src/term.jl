@@ -225,8 +225,8 @@ end
 
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    (a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) <
-    (b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
+    (length(a.operators), a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) <
+    (length(b.operators), b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
 end
 
 function Base.:(==)(a::Term, b::Term)
@@ -361,14 +361,14 @@ function get_sum_indices_ordered(t::Term)
         end
     end
 
-    for tensor in t.tensors
-        for i in get_indices(tensor)
+    for o in t.operators
+        for i in get_all_indices(o)
             add_index(i)
         end
     end
 
-    for o in t.operators
-        for i in get_all_indices(o)
+    for tensor in t.tensors
+        for i in get_indices(tensor)
             add_index(i)
         end
     end
@@ -735,6 +735,40 @@ function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
 
     b = make_space_for_indices(b, get_all_indices(a))
     a = make_space_for_indices(a, get_all_indices(b))
+
+    terms = Term{promote_type(A, B)}[]
+
+    for i in eachindex(a.operators), j in eachindex(b.operators)
+        e = commutator(a.operators[i], b.operators[j])
+
+        lhs = Operator[a.operators[1:i-1]; b.operators[1:j-1]]
+        rhs = Operator[b.operators[j+1:end]; a.operators[i+1:end]]
+
+        for t in e.terms
+            constraints = copy(a.constraints)
+            fuse_constraints!(constraints, t.constraints)
+            fuse_constraints!(constraints, b.constraints)
+
+            fused = Term(
+                a.scalar * t.scalar * b.scalar,
+                Int[a.sum_indices; t.sum_indices; b.sum_indices],
+                KroneckerDelta[a.deltas; t.deltas; b.deltas],
+                Tensor[a.tensors; t.tensors; b.tensors],
+                Operator[lhs; t.operators; rhs],
+                constraints
+            )
+
+            push!(terms, fused)
+        end
+    end
+
+    Expression(terms)
+end
+
+function commutator_fuse(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
+    if isempty(a.operators) || isempty(b.operators)
+        return Expression(0)
+    end
 
     terms = Term{promote_type(A, B)}[]
 

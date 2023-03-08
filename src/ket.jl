@@ -19,8 +19,8 @@ function act_on_ket(t :: Term)
 
     t1 = Expression([fuse(right_op_acted[1], ter) for ter in newt_act.terms])
     t2 = Expression([fuse(right_op_acted[2], ter) for ter in newt_act.terms])
-    t3 = act_on_ket(commutator(newt, right_op_acted[1]))
-    t4 = act_on_ket(commutator(newt, right_op_acted[2]))
+    t3 = act_on_ket(commutator_fuse(newt, right_op_acted[1]))
+    t4 = act_on_ket(commutator_fuse(newt, right_op_acted[2]))
 
     return t1 + t2 + t3 + t4
 end
