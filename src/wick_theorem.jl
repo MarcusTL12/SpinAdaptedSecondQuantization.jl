@@ -9,13 +9,8 @@ end
 function wick_theorem(t :: Term)
     # Returns an Expression for <ref| opstring |ref>
     wick_expr =  wick_theorem(t.operators)
-    Expression([Term(
-        copy(t.scalar) * term.scalar,
-        copy(t.sum_indices),
-        vcat(copy(t.deltas), term.deltas),
-        copy(t.tensors),
-        Operator[],
-        merge(t.constraints, term.constraints)) for term in wick_expr.terms])
+    noop_term = noop_part(t)
+    Expression([fuse(noop_term, wterm) for wterm in wick_expr.terms])
 end
 
 function wick_theorem(opstring :: Vector{T}) where T <: Operator
