@@ -297,7 +297,25 @@ end
 
 export permute_all_sum_indices
 function permute_all_sum_indices(ex::Expression)
-    Expression([permute_all_sum_indices(t) for t in ex.terms])
+    terms = copy(ex.terms)
+
+    Threads.@threads for i in eachindex(terms)
+        terms[i] = permute_all_sum_indices(terms[i])
+    end
+
+    Expression(terms)
+end
+
+# Unnecessarily expensive simplify for testing on small expressions
+export simplify_heavy
+function simplify_heavy(ex::Expression)
+    done = false
+    while !done
+        new_ex = permute_all_sum_indices(simplify(ex))
+        done = new_ex == ex
+        ex = new_ex
+    end
+    ex
 end
 
 # Commutator:
