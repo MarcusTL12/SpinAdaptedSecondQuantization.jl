@@ -1,19 +1,19 @@
 export wick_theorem
 
 # TODO T <: FermionOperator
-function wick_theorem(ex :: Expression)
+function wick_theorem(ex::Expression)
     # Returns an Expression for <ref| ex1 |ref>
     sum(wick_theorem(term) for term in ex.terms)
 end
 
-function wick_theorem(t :: Term)
+function wick_theorem(t::Term)
     # Returns an Expression for <ref| term |ref>
-    wick_expr =  wick_theorem(t.operators)
+    wick_expr = wick_theorem(t.operators)
     noop_term = noop_part(t)
     Expression([fuse(noop_term, wterm) for wterm in wick_expr.terms])
 end
 
-function wick_theorem(opstring :: Vector{T}) where T <: Operator
+function wick_theorem(opstring::Vector{T}) where {T<:Operator}
     # Returns an Expression for <ref| opstring |ref>
     for op in opstring
         @assert typeof(op) == FermionOperator
@@ -27,17 +27,18 @@ function wick_theorem(opstring :: Vector{T}) where T <: Operator
     list_of_pairs_index = fully_contracted_pairs(collect(1:length(opstring)))
     signs = map(find_sign, list_of_pairs_index)
 
-    sum(signs[i] * prod(contract(a,b) for (a,b) in pairs) for (i, pairs) in enumerate(list_of_pairs))
+    sum(signs[i] * prod(contract(a, b) for (a, b) in pairs)
+        for (i, pairs) in enumerate(list_of_pairs))
 end
 
-function contract(a :: FermionOperator, b :: FermionOperator)
+function contract(a::FermionOperator, b::FermionOperator)
     # Contractions used in Wick's theorem
     # contract(a, b) = <ref| a b |ref>
     δ(a.p, b.p) * (a.dag && !b.dag) * (a.spin == b.spin) * occupied(a.p) +
     δ(a.p, b.p) * (!a.dag && b.dag) * (a.spin == b.spin) * virtual(a.p)
 end
 
-function fully_contracted_pairs(vec :: Vector{T}) where T
+function fully_contracted_pairs(vec::Vector{T}) where {T}
     # Recursive function which finds all possible unique pairs in a vector
     # [1,2] -> [[(1,2)]]
     # [1,2,3,4] ->  [[(1, 2), (3, 4)], [(1, 3), (2, 4)], [(1, 4), (2, 3)]]
@@ -57,7 +58,7 @@ function fully_contracted_pairs(vec :: Vector{T}) where T
     counter = 0
     for i = 2:n
         pair = (vec[1], vec[i])
-        rest = vec[(1:n .!= 1) .&& (1:n .!= i)]
+        rest = vec[(1:n.!=1).&&(1:n.!=i)]
         x = fully_contracted_pairs(rest)
         for elem in x
             counter += 1
