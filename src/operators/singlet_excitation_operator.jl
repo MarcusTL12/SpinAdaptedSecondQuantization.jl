@@ -31,6 +31,14 @@ function get_all_indices(e::SingletExcitationOperator)
     [e.p, e.q]
 end
 
+function Base.:(==)(a::SingletExcitationOperator, b::SingletExcitationOperator)
+    (a.p, a.q) == (b.p, b.q)
+end
+
+function Base.isless(a::SingletExcitationOperator, b::SingletExcitationOperator)
+    (a.p, a.q) < (b.p, b.q)
+end
+
 # Externally visible constructor
 E(p, q) = Expression(SingletExcitationOperator(p, q))
 
@@ -47,3 +55,8 @@ function commutator(a::SingletExcitationOperator, b::SingletExcitationOperator)
     δ(q, r) * E(p, s) - δ(p, s) * E(r, q)
 end
 
+function convert_to_elementary_operators(o::SingletExcitationOperator)
+    Expression(
+        [(fermiondag(o.p, spin)*fermion(o.q, spin))[1] for spin in false:true]
+    )
+end
