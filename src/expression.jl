@@ -321,7 +321,7 @@ function simplify_heavy(ex::Expression)
         done = new_ex == ex
         ex = new_ex
     end
-    ex
+    simplify(ex)
 end
 
 # Commutator:
