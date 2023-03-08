@@ -9,3 +9,4 @@ Permutations = "2ae35dd2-176d-5d53-8349-f30d82d94d4f"
 
 [compat]
 DataStructures = "0.18"
+Permutations = "0.4"
