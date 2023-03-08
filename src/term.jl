@@ -730,7 +730,7 @@ end
 
 function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     if isempty(a.operators) || isempty(b.operators)
-        return Expression(0)
+        return Expression(zero(promote_type(A, B)))
     end
 
     b = make_space_for_indices(b, get_all_indices(a))
