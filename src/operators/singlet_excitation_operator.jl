@@ -31,6 +31,14 @@ function get_all_indices(e::SingletExcitationOperator)
     [e.p, e.q]
 end
 
+function Base.:(==)(a::SingletExcitationOperator, b::SingletExcitationOperator)
+    (a.p, a.q) == (b.p, b.q)
+end
+
+function Base.isless(a::SingletExcitationOperator, b::SingletExcitationOperator)
+    (a.p, a.q) < (b.p, b.q)
+end
+
 # Externally visible constructor
 E(p, q) = Expression(SingletExcitationOperator(p, q))
 

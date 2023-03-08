@@ -28,6 +28,14 @@ function get_all_indices(e::FermionOperator)
     [e.p]
 end
 
+function Base.isless(a::FermionOperator, b::FermionOperator)
+    (a.dag, a.spin, a.p) < (b.dag, b.spin, b.p)
+end
+
+function Base.:(==)(a::FermionOperator, b::FermionOperator)
+    (a.p, a.spin, a.dag) == (b.p, b.spin, b.dag)
+end
+
 # Externally visible constructor
 fermion(p, spin) = Expression(FermionOperator(p, spin, false))
 fermiondag(p, spin) = Expression(FermionOperator(p, spin, true))
@@ -38,5 +46,5 @@ function commutator(a::FermionOperator, b::FermionOperator)
 end
 
 function anticommutator(a::FermionOperator, b::FermionOperator)
-    δ(a.p, b.p) * (a.spin==b.spin) * (a.dag != b.dag)
+    δ(a.p, b.p) * (a.spin == b.spin) * (a.dag != b.dag)
 end
