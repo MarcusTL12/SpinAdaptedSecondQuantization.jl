@@ -210,6 +210,12 @@ function Base.:(==)(a::Expression, b::Expression)
     a.terms == b.terms
 end
 
+# Fusion:
+
+function fuse(a::Expression, b::Expression)
+    Expression([fuse(t1, t2) for t1 in a.terms for t2 in b.terms])
+end
+
 # Simplification:
 
 export simplify
@@ -319,7 +325,6 @@ function simplify_heavy(ex::Expression)
 end
 
 # Commutator:
-
 export commutator
 function commutator(a::Expression{A}, b::Expression{B}) where
 {A<:Number,B<:Number}
@@ -327,6 +332,19 @@ function commutator(a::Expression{A}, b::Expression{B}) where
 
     for t1 in a.terms, t2 in b.terms
         append!(terms, commutator(t1, t2).terms)
+    end
+
+    Expression(terms)
+end
+
+# Function to express all operators in an expression in terms of
+# elementary fermionic/bosinic anihilation and creation operators (if possible)
+export convert_to_elementary_operators
+function convert_to_elementary_operators(ex::Expression{T}) where {T<:Number}
+    terms = Term{T}[]
+
+    for t in ex.terms
+        append!(terms, convert_to_elementary_operators(t).terms)
     end
 
     Expression(terms)

@@ -727,7 +727,6 @@ function fuse(a::Term, b::Term)
 end
 
 # Commutator:
-
 function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     b = make_space_for_indices(b, get_all_indices(a))
     a = make_space_for_indices(a, get_all_indices(b))
@@ -759,4 +758,16 @@ function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     end
 
     Expression(terms)
+end
+
+# Function to express all operators in an expression in terms of
+# elementary fermionic/bosinic anihilation and creation operators (if possible)
+function convert_to_elementary_operators(t::Term{T}) where {T<:Number}
+    ex = Expression([noop_part(t)])
+
+    for o in t.operators
+        ex = fuse(ex, convert_to_elementary_operators(o))
+    end
+
+    ex
 end

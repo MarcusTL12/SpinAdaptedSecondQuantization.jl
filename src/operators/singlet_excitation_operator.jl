@@ -47,3 +47,8 @@ function commutator(a::SingletExcitationOperator, b::SingletExcitationOperator)
     δ(q, r) * E(p, s) - δ(p, s) * E(r, q)
 end
 
+function convert_to_elementary_operators(o::SingletExcitationOperator)
+    Expression(
+        [(fermiondag(o.p, spin)*fermion(o.q, spin))[1] for spin in false:true]
+    )
+end
