@@ -2,12 +2,12 @@ export wick_theorem
 
 # TODO T <: FermionOperator
 function wick_theorem(ex :: Expression)
-    # Returns an Expression for <ref| opstring |ref>
+    # Returns an Expression for <ref| ex1 |ref>
     sum(wick_theorem(term) for term in ex.terms)
 end
 
 function wick_theorem(t :: Term)
-    # Returns an Expression for <ref| opstring |ref>
+    # Returns an Expression for <ref| term |ref>
     wick_expr =  wick_theorem(t.operators)
     noop_term = noop_part(t)
     Expression([fuse(noop_term, wterm) for wterm in wick_expr.terms])
