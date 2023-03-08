@@ -398,3 +398,19 @@ end
     @test !iszero(x)
     @test iszero(permute_all_sum_indices(x))
 end
+
+@testset "ket" begin
+    h = ∑(real_tensor("h", 1, 2) * E(1, 2), 1:2)
+    g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...), 1:4)
+    H = simplify(h + g)
+
+    Hket = act_on_ket(H) |> simplify
+    noop_terms = filter(x -> iszero(length(x.operators)), Hket.terms)
+    Hket0 = SASQ.Expression(noop_terms)
+
+    @test Hket0 == ∑(2real_tensor("h", 1, 1) * occupied(1), [1]) + ∑(
+        (2real_tensor("g", 1, 1, 2, 2) - real_tensor("g", 1, 2, 2, 1)) *
+        occupied(1, 2),
+        1:2
+    )
+end

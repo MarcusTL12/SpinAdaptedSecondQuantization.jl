@@ -17,17 +17,18 @@ function act_on_ket(t :: Term)
     right_op_acted = act_on_ket(right_op)
     newt_act = act_on_ket(newt)
 
-    t1 = Expression([fuse(right_op_acted[1], ter) for ter in newt_act.terms])
-    t2 = Expression([fuse(right_op_acted[2], ter) for ter in newt_act.terms])
-    t3 = act_on_ket(commutator_fuse(newt, right_op_acted[1]))
-    t4 = act_on_ket(commutator_fuse(newt, right_op_acted[2]))
+    ex = Expression(0)
+    for r in right_op_acted.terms
+        ex += Expression([fuse(r, ter) for ter in newt_act.terms])
+        ex += act_on_ket(commutator_fuse(newt, r))
+    end
 
-    return t1 + t2 + t3 + t4
+    return ex
 end
 
 function act_on_ket(op :: SingletExcitationOperator)
     p = op.p
     q = op.q
-    [(E(p, q) * virtual(p) * occupied(q))[1],
-     (2 * δ(p, q) * occupied(p, q))[1]]
+    E(p, q) * virtual(p) * occupied(q) +
+        2 * δ(p, q) * occupied(p, q)
 end
