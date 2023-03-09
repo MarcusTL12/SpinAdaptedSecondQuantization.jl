@@ -1,3 +1,4 @@
+export bch
 
 struct Expression{T<:Number}
     terms::Vector{Term{T}}
