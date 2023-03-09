@@ -338,6 +338,16 @@ function commutator(a::Expression{A}, b::Expression{B}) where
     Expression(terms)
 end
 
+function commutator(A::Expression, B::Expression, n::Integer) 
+    # [A, B]_n
+    # [A, B]_3 = [[[A, B], B], B]
+    X = A
+    for _ = 1:n
+        X = commutator(X, B)
+    end
+    return X
+end
+
 # Function to express all operators in an expression in terms of
 # elementary fermionic/bosinic anihilation and creation operators (if possible)
 export convert_to_elementary_operators
