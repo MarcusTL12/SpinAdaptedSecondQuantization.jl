@@ -1,3 +1,4 @@
+export bch
 
 struct Expression{T<:Number}
     terms::Vector{Term{T}}
@@ -336,6 +337,26 @@ function commutator(a::Expression{A}, b::Expression{B}) where
     end
 
     Expression(terms)
+end
+
+function commutator(A::Expression, B::Expression, n::Integer) 
+    # [A, B]_n
+    # [A, B]_3 = [[[A, B], B], B]
+    X = A
+    for _ = 1:n
+        X = commutator(X, B)
+    end
+    return X
+end
+
+function bch(A, B, n)
+    # Baker-Campbell-Haussdorf expansion,
+    # e^-B A e^B = A + 1/1! [A,B] + 1/2! [[A,B],B] + ... + 1/n! [A,B]_n
+    X = A
+    for i = 1:n
+        X += commutator(A, B, i) // factorial(i)
+    end
+    return X
 end
 
 # Function to express all operators in an expression in terms of
