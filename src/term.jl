@@ -661,11 +661,15 @@ end
 # TODO: This requires extensive testing of determinism and correctness.
 # The specific steps and the order of them might need to be adjusted.
 function simplify(t::Term)
-    t |>
-    lower_delta_indices |>
-    simplify_summation_deltas |>
-    lower_summation_indices |>
-    sort_summation_indices
+    if t.max_simplified
+        t
+    else
+        t |>
+        lower_delta_indices |>
+        simplify_summation_deltas |>
+        lower_summation_indices |>
+        sort_summation_indices
+    end
 end
 
 # Some operator overloading (Not ment for external use):
@@ -777,12 +781,12 @@ end
 
 function commutator_fuse(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     if isempty(a.operators) || isempty(b.operators)
-        return Expression(zero(promote_type(A,B)))
+        return Expression(zero(promote_type(A, B)))
     end
 
     constraints = copy(a.constraints)
     if fuse_constraints!(constraints, b.constraints) == 0
-        return Expression(zero(promote_type(A,B)))
+        return Expression(zero(promote_type(A, B)))
     end
 
     terms = Term{promote_type(A, B)}[]
