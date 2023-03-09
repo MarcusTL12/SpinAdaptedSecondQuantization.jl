@@ -225,8 +225,8 @@ end
 
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    (length(a.operators), a.tensors, a.operators, a.deltas, a.sum_indices, a.constraints, b.scalar) <
-    (length(b.operators), b.tensors, b.operators, b.deltas, b.sum_indices, b.constraints, a.scalar)
+    (length(a.operators), a.operators, a.tensors, a.deltas, a.sum_indices, a.constraints, b.scalar) <
+    (length(b.operators), b.operators, b.tensors, b.deltas, b.sum_indices, b.constraints, a.scalar)
 end
 
 function Base.:(==)(a::Term, b::Term)

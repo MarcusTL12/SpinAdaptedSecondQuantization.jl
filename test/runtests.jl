@@ -422,7 +422,7 @@ end
            2psym_tensor("g", 1, 2, 2, 1) - psym_tensor("g", 1, 1, 2, 2)) *
           occupied(1) * virtual(2)
 
-    H_cis = simplify(
+    H_cis = simplify_heavy(
         (hf_expectation_value(E(2, 3) * HF * E(4, 1)) // 2 -
          hf_expectation_value(HF) * δ(1, 2) * δ(3, 4)) *
         occupied(1, 2) * virtual(3, 4)
