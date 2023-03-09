@@ -348,6 +348,16 @@ function commutator(A::Expression, B::Expression, n::Integer)
     return X
 end
 
+function bch(A, B, n)
+    # Baker-Campbell-Haussdorf expansion,
+    # e^-B A e^B = A + 1/1! [A,B] + 1/2! [[A,B],B] + ... + 1/n! [A,B]_n
+    X = A
+    for i = 1:n
+        X += commutator(A, B, i) // factorial(i)
+    end
+    return X
+end
+
 # Function to express all operators in an expression in terms of
 # elementary fermionic/bosinic anihilation and creation operators (if possible)
 export convert_to_elementary_operators
