@@ -13,8 +13,11 @@ struct Term{T<:Number}
     # Dict that stores which orbital space each index belongs to
     constraints::Constraints
 
+    # Tag to say that it is unnessecary to try to further simplify this term
+    max_simplified::Bool
+
     function Term(scalar::T, sum_indices, deltas, tensors, operators,
-        constraints) where {T<:Number}
+        constraints, max_simplified) where {T<:Number}
         sort!(sum_indices)
         sort!(tensors)
 
@@ -22,7 +25,7 @@ struct Term{T<:Number}
 
         if deltas == 0 || iszero(scalar)
             return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
-                Operator[], Constraints())
+                Operator[], Constraints(), true)
         end
 
         constraints = copy(constraints)
@@ -38,7 +41,7 @@ struct Term{T<:Number}
                 s = typeintersect(constraints(firstind), constraints(p))
                 if s == Union{}
                     return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
-                        Operator[], Constraints())
+                        Operator[], Constraints(), true)
                 elseif is_strict_subspace(s, GeneralOrbital)
                     constraints[firstind] = s
                 end
@@ -64,8 +67,15 @@ struct Term{T<:Number}
             delete!(constraints, p)
         end
 
-        new{T}(scalar, sum_indices, deltas, tensors, operators, constraints)
+        new{T}(
+            scalar, sum_indices, deltas, tensors, operators, constraints, false
+        )
     end
+end
+
+function Term(scalar::T, sum_indices, deltas, tensors, operators,
+    constraints) where {T<:Number}
+    Term(scalar, sum_indices, deltas, tensors, operators, constraints, false)
 end
 
 function Term(scalar::T, sum_indices, deltas, tensors, operators) where
@@ -79,7 +89,8 @@ Base.copy(t::Term) = Term(
     copy(t.deltas),
     copy(t.tensors),
     copy(t.operators),
-    copy(t.constraints)
+    copy(t.constraints),
+    t.max_simplified
 )
 
 function noop_part(t::Term)
