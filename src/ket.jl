@@ -30,13 +30,13 @@ function act_on_ket(t::Term{A}) where {A<:Number}
     right_op_act = act_on_ket(right_op)
     copyt_act = act_on_ket(copyt)
 
-    ex = Expression(zero(A))
+    terms = Term{A}[]
     for r in right_op_act.terms
-        ex += Expression([fuse(r, ter) for ter in copyt_act.terms])
-        ex += act_on_ket(commutator_fuse(copyt, r))
+        append!(terms, fuse(r, ter) for ter in copyt_act.terms)
+        append!(terms, act_on_ket(commutator_fuse(copyt, r)).terms)
     end
 
-    return ex
+    Expression(terms)
 end
 
 function act_on_ket(op::SingletExcitationOperator)
