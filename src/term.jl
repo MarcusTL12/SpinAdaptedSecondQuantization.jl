@@ -68,7 +68,13 @@ struct Term{T<:Number}
         end
 
         new{T}(
-            scalar, sum_indices, deltas, tensors, operators, constraints, false
+            scalar,
+            sum_indices,
+            deltas,
+            tensors,
+            operators,
+            constraints,
+            max_simplified
         )
     end
 end
@@ -203,7 +209,15 @@ end
 
 # utility function to "copy" a term but replace the scalar with a new one
 function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
-    Term(scalar, t.sum_indices, t.deltas, t.tensors, t.operators, t.constraints)
+    Term(
+        scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        t.operators,
+        t.constraints,
+        t.max_simplified
+    )
 end
 
 function Base.:-(t::Term)
@@ -236,8 +250,10 @@ end
 
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    (length(a.operators), a.operators, a.tensors, a.deltas, a.sum_indices, a.constraints, b.scalar) <
-    (length(b.operators), b.operators, b.tensors, b.deltas, b.sum_indices, b.constraints, a.scalar)
+    (length(a.operators), a.operators, a.tensors, a.deltas, a.sum_indices,
+        a.constraints, b.scalar) <
+    (length(b.operators), b.operators, b.tensors, b.deltas, b.sum_indices,
+        b.constraints, a.scalar)
 end
 
 function Base.:(==)(a::Term, b::Term)
