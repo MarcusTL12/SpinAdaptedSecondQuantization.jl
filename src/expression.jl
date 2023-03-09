@@ -302,12 +302,11 @@ function try_add_constraints(ex::Expression)
     Expression(ex.terms)
 end
 
-export permute_all_sum_indices
-function permute_all_sum_indices(ex::Expression)
+function simplify_heavy_terms(ex::Expression)
     terms = copy(ex.terms)
 
     Threads.@threads for i in eachindex(terms)
-        terms[i] = permute_all_sum_indices(terms[i])
+        terms[i] = simplify_heavy(terms[i])
     end
 
     Expression(terms)
@@ -318,11 +317,14 @@ export simplify_heavy
 function simplify_heavy(ex::Expression)
     done = false
     ex = simplify(ex)
+    i = 0
     while !done
-        new_ex = simplify(permute_all_sum_indices(ex))
+        i += 1
+        new_ex = try_add_constraints(simplify_heavy_terms(ex))
         done = new_ex == ex
         ex = new_ex
     end
+    @show i
     ex
 end
 

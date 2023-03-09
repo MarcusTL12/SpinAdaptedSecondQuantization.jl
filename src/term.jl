@@ -672,6 +672,31 @@ function simplify(t::Term)
     end
 end
 
+function set_max_simplified(t::Term)
+    Term(
+        t.scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        t.operators,
+        t.constraints,
+        true
+    )
+end
+
+function simplify_heavy(t::Term)
+    if t.max_simplified
+        t
+    else
+        t |>
+        lower_delta_indices |>
+        simplify_summation_deltas |>
+        lower_summation_indices |>
+        permute_all_sum_indices |>
+        set_max_simplified
+    end
+end
+
 # Some operator overloading (Not ment for external use):
 
 function Base.:*(a::A, b::Term{B}) where {A<:Number,B<:Number}
