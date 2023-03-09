@@ -1,14 +1,6 @@
 export act_on_ket
 
-function act_on_ket(ex :: Expression{T}) where T
-#    terms = Term{T}[]
-#    Threads.@threads for t in ex.terms
-#        act = act_on_ket(t)
-#        for x in act.terms
-#            push!(terms, x)
-#        end
-#    end
-#    return Expression(terms)
+function act_on_ket(ex::Expression{T}) where {T}
     nth = Threads.nthreads()
     terms = [Term{T}[] for _ in 1:nth]
     Threads.@threads for id in 1:nth
@@ -25,7 +17,7 @@ function act_on_ket(ex :: Expression{T}) where T
     Expression(all_terms)
 end
 
-function act_on_ket(t :: Term{A}) where A <: Number
+function act_on_ket(t::Term{A}) where {A<:Number}
     if iszero(t.scalar)
         return Expression(zero(A))
     end
@@ -47,9 +39,9 @@ function act_on_ket(t :: Term{A}) where A <: Number
     return ex
 end
 
-function act_on_ket(op :: SingletExcitationOperator)
+function act_on_ket(op::SingletExcitationOperator)
     p = op.p
     q = op.q
     E(p, q) * virtual(p) * occupied(q) +
-        2 * δ(p, q) * occupied(p, q)
+    2 * δ(p, q) * occupied(p, q)
 end
