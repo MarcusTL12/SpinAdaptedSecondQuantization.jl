@@ -12,15 +12,15 @@ function act_on_ket(t :: Term)
         return Expression([t])
     end
 
-    newt = copy(t)
-    right_op = pop!(newt.operators)
-    right_op_acted = act_on_ket(right_op)
-    newt_act = act_on_ket(newt)
+    copyt = copy(t)
+    right_op = pop!(copyt.operators)
+    right_op_act = act_on_ket(right_op)
+    copyt_act = act_on_ket(copyt)
 
     ex = Expression(0)
-    for r in right_op_acted.terms
-        ex += Expression([fuse(r, ter) for ter in newt_act.terms])
-        ex += act_on_ket(commutator_fuse(newt, r))
+    for r in right_op_act.terms
+        ex += Expression([fuse(r, ter) for ter in copyt_act.terms])
+        ex += act_on_ket(commutator_fuse(copyt, r))
     end
 
     return ex
