@@ -769,6 +769,11 @@ function commutator_fuse(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
         return Expression(zero(promote_type(A,B)))
     end
 
+    constraints = copy(a.constraints)
+    if fuse_constraints!(constraints, b.constraints) == 0
+        return Expression(zero(promote_type(A,B)))
+    end
+
     terms = Term{promote_type(A, B)}[]
 
     for i in eachindex(a.operators), j in eachindex(b.operators)
