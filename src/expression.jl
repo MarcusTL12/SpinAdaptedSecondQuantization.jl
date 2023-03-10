@@ -317,14 +317,11 @@ export simplify_heavy
 function simplify_heavy(ex::Expression)
     done = false
     ex = simplify(ex)
-    i = 0
     while !done
-        i += 1
         new_ex = try_add_constraints(simplify_heavy_terms(ex))
         done = new_ex == ex
         ex = new_ex
     end
-    @show i
     ex
 end
 
