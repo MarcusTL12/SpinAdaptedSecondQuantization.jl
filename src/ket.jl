@@ -1,11 +1,11 @@
 export act_on_ket
 
-function act_on_ket(ex::Expression{T}) where {T}
+function act_on_ket(ex::Expression{T}, max_ops=Inf) where {T}
     nth = Threads.nthreads()
     terms = [Term{T}[] for _ in 1:nth]
     Threads.@threads for id in 1:nth
         for i in id:nth:length(ex.terms)
-            append!(terms[id], act_on_ket(ex[i]).terms)
+            append!(terms[id], act_on_ket(ex[i], max_ops).terms)
         end
     end
 
@@ -17,7 +17,7 @@ function act_on_ket(ex::Expression{T}) where {T}
     Expression(all_terms)
 end
 
-function act_on_ket(t::Term{A}) where {A<:Number}
+function act_on_ket(t::Term{A}, max_ops) where {A<:Number}
     if iszero(t.scalar)
         return Expression(zero(A))
     end
@@ -28,12 +28,18 @@ function act_on_ket(t::Term{A}) where {A<:Number}
     copyt = copy(t)
     right_op = pop!(copyt.operators)
     right_op_act = act_on_ket(right_op)
-    copyt_act = act_on_ket(copyt)
+    copyt_act = act_on_ket(copyt,
+        max_ops - minimum(length(t.operators) for t in right_op_act.terms))
 
     terms = Term{A}[]
     for r in right_op_act.terms
-        append!(terms, fuse(r, ter) for ter in copyt_act.terms)
-        append!(terms, act_on_ket(commutator_fuse(copyt, r)).terms)
+        if length(r.operators) <= max_ops
+            new_max = max_ops - length(r.operators)
+            append!(terms, fuse(r, ter)
+                           for ter in copyt_act.terms
+                           if length(ter.operators) <= new_max)
+        end
+        append!(terms, act_on_ket(commutator_fuse(copyt, r), max_ops).terms)
     end
 
     Expression(terms)
