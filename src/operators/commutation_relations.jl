@@ -9,11 +9,11 @@ function reductive_commutator(
     r = b.p
     s = b.q
 
-    (-1, δ(q, r) * E(p, s) - δ(p, s) * E(r, q))
+    (1, δ(q, r) * E(p, s) - δ(p, s) * E(r, q))
 end
 
 function reductive_commutator(a::FermionOperator, b::FermionOperator)
-    (1, δ(a.p, b.p) * (a.spin == b.spin) * (a.dag != b.dag))
+    (-1, δ(a.p, b.p) * (a.spin == b.spin) * (a.dag != b.dag))
 end
 
 function reductive_commutator(e::SingletExcitationOperator, a::FermionOperator)
@@ -21,7 +21,7 @@ function reductive_commutator(e::SingletExcitationOperator, a::FermionOperator)
     q = e.q
     r = a.p
 
-    (-1, if a.dag
+    (1, if a.dag
         δ(q, r) * fermiondag(p, a.spin)
     else
         -δ(p, r) * fermion(q, a.spin)

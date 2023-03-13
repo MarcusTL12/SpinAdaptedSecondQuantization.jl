@@ -37,7 +37,7 @@ function act_on_ket(t::Term{A}, max_ops) where {A<:Number}
 
         if length(r.operators) <= max_ops
             new_max = max_ops - length(r.operators)
-            append!(terms, (-Γ) * fuse(r, ter)
+            append!(terms, Γ * fuse(r, ter)
                            for ter in copyt_act.terms
                            if length(ter.operators) <= new_max)
         end

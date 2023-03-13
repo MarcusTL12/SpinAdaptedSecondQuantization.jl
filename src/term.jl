@@ -3,6 +3,8 @@ function (constraints::Constraints)(p::Int)
     get(constraints, p, GeneralOrbital)
 end
 
+# TODO: make simple constructor that does not check indices
+# This would improve performance of copying/scaling etc...
 struct Term{T<:Number}
     scalar::T
     sum_indices::Vector{Int}
@@ -793,7 +795,7 @@ function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
 
     Γ, e = reductive_commutator_fuse(a, b)
 
-    if Γ == 1
+    if Γ == -1
         e - 2 * b * a
     else
         e
@@ -803,7 +805,7 @@ end
 function reductive_commutator(a::Term{A}, b::Term{B}) where
 {A<:Number,B<:Number}
     if isempty(a.operators) || isempty(b.operators)
-        return (-1, Expression(zero(promote_type(A, B))))
+        return (1, Expression(zero(promote_type(A, B))))
     end
 
     b = make_space_for_indices(b, get_all_indices(a))
@@ -815,7 +817,7 @@ end
 function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
 {A<:Number,B<:Number}
     if isempty(a.operators) || isempty(b.operators)
-        return (-1, Expression(zero(promote_type(A, B))))
+        return (1, Expression(zero(promote_type(A, B))))
     end
 
     constraints = copy(a.constraints)
@@ -825,12 +827,13 @@ function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
 
     terms = Term{promote_type(A, B)}[]
 
-    Δi = 1
-    for i in eachindex(a.operators)
-        Γij = 1
-        for j in eachindex(b.operators)
-            γij, e = reductive_commutator(a.operators[i], b.operators[j])
-            Γij *= -γij
+    Γj = 1
+    for j in eachindex(b.operators)
+        γij = 1
+        start_ind = length(terms) + 1
+        for i in eachindex(a.operators)
+            δij, e = reductive_commutator(a.operators[i], b.operators[j])
+            γij *= δij
 
             lhs = Operator[a.operators[1:i-1]; b.operators[1:j-1]]
             rhs = Operator[b.operators[j+1:end]; a.operators[i+1:end]]
@@ -841,7 +844,7 @@ function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
                 fuse_constraints!(constraints, b.constraints)
 
                 fused = Term(
-                    -Δi * Γij * a.scalar * t.scalar * b.scalar,
+                    γij * a.scalar * t.scalar * b.scalar,
                     Int[a.sum_indices; t.sum_indices; b.sum_indices],
                     KroneckerDelta[a.deltas; t.deltas; b.deltas],
                     Tensor[a.tensors; t.tensors; b.tensors],
@@ -852,10 +855,15 @@ function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
                 push!(terms, fused)
             end
         end
-        Δi *= -Γij
+        Γj *= γij
+        if Γj == -1
+            for k in start_ind:length(terms)
+                terms[k] *= -1
+            end
+        end
     end
 
-    (Δi, Expression(terms))
+    (Γj, Expression(terms))
 end
 
 # Function to express all operators in an expression in terms of
