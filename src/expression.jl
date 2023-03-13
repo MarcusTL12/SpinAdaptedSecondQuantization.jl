@@ -338,7 +338,7 @@ function commutator(a::Expression{A}, b::Expression{B}) where
     Expression(terms)
 end
 
-function commutator(A::Expression, B::Expression, n::Integer) 
+function commutator(A::Expression, B::Expression, n::Integer)
     # [A, B]_n
     # [A, B]_3 = [[[A, B], B], B]
     X = A
