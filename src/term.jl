@@ -833,6 +833,63 @@ function commutator_fuse(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     Expression(terms)
 end
 
+function reductive_commutator(a::Term{A}, b::Term{B}) where
+{A<:Number,B<:Number}
+    if isempty(a.operators) || isempty(b.operators)
+        return (-1, Expression(zero(promote_type(A, B))))
+    end
+
+    b = make_space_for_indices(b, get_all_indices(a))
+    a = make_space_for_indices(a, get_all_indices(b))
+
+    reductive_commutator_fuse(a, b)
+end
+
+function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
+{A<:Number,B<:Number}
+    if isempty(a.operators) || isempty(b.operators)
+        return (-1, Expression(zero(promote_type(A, B))))
+    end
+
+    constraints = copy(a.constraints)
+    if fuse_constraints!(constraints, b.constraints) == 0
+        return Expression(zero(promote_type(A, B)))
+    end
+
+    terms = Term{promote_type(A, B)}[]
+
+    Δi = 1
+    for i in eachindex(a.operators)
+        Γij = 1
+        for j in eachindex(b.operators)
+            γij, e = reductive_commutator(a.operators[i], b.operators[j])
+            Γij *= -γij
+
+            lhs = Operator[a.operators[1:i-1]; b.operators[1:j-1]]
+            rhs = Operator[b.operators[j+1:end]; a.operators[i+1:end]]
+
+            for t in e.terms
+                constraints = copy(a.constraints)
+                fuse_constraints!(constraints, t.constraints)
+                fuse_constraints!(constraints, b.constraints)
+
+                fused = Term(
+                    Δi * Γij * a.scalar * t.scalar * b.scalar,
+                    Int[a.sum_indices; t.sum_indices; b.sum_indices],
+                    KroneckerDelta[a.deltas; t.deltas; b.deltas],
+                    Tensor[a.tensors; t.tensors; b.tensors],
+                    Operator[lhs; t.operators; rhs],
+                    constraints
+                )
+
+                push!(terms, fused)
+            end
+        end
+        Δi *= -Γij
+    end
+
+    Δi, Expression(terms)
+end
 
 # Function to express all operators in an expression in terms of
 # elementary fermionic/bosinic anihilation and creation operators (if possible)

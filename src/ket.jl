@@ -33,13 +33,16 @@ function act_on_ket(t::Term{A}, max_ops) where {A<:Number}
 
     terms = Term{A}[]
     for r in right_op_act.terms
+        Γ, comm = reductive_commutator_fuse(copyt, r)
+
         if length(r.operators) <= max_ops
             new_max = max_ops - length(r.operators)
-            append!(terms, fuse(r, ter)
+            append!(terms, (-Γ) * fuse(r, ter)
                            for ter in copyt_act.terms
                            if length(ter.operators) <= new_max)
         end
-        append!(terms, act_on_ket(commutator_fuse(copyt, r), max_ops).terms)
+
+        append!(terms, act_on_ket(comm, max_ops).terms)
     end
 
     Expression(terms)
@@ -50,4 +53,12 @@ function act_on_ket(op::SingletExcitationOperator)
     q = op.q
     E(p, q) * virtual(p) * occupied(q) +
     2 * δ(p, q) * occupied(p, q)
+end
+
+function act_on_ket(op::FermionOperator)
+    Expression(op) * if op.dag
+        virtual(op.p)
+    else
+        occupied(op.p)
+    end
 end

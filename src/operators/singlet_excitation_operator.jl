@@ -55,6 +55,18 @@ function commutator(a::SingletExcitationOperator, b::SingletExcitationOperator)
     δ(q, r) * E(p, s) - δ(p, s) * E(r, q)
 end
 
+function reductive_commutator(
+    a::SingletExcitationOperator,
+    b::SingletExcitationOperator
+)
+    p = a.p
+    q = a.q
+    r = b.p
+    s = b.q
+
+    (-1, δ(q, r) * E(p, s) - δ(p, s) * E(r, q))
+end
+
 function convert_to_elementary_operators(o::SingletExcitationOperator)
     Expression(
         [(fermiondag(o.p, spin)*fermion(o.q, spin))[1] for spin in false:true]

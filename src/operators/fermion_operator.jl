@@ -48,3 +48,7 @@ end
 function anticommutator(a::FermionOperator, b::FermionOperator)
     δ(a.p, b.p) * (a.spin == b.spin) * (a.dag != b.dag)
 end
+
+function reductive_commutator(a::FermionOperator, b::FermionOperator)
+    (1, δ(a.p, b.p) * (a.spin == b.spin) * (a.dag != b.dag))
+end
