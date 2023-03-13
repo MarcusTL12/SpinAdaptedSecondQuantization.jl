@@ -40,15 +40,10 @@ end
 fermion(p, spin) = Expression(FermionOperator(p, spin, false))
 fermiondag(p, spin) = Expression(FermionOperator(p, spin, true))
 
-# Commutation relations:
-function commutator(a::FermionOperator, b::FermionOperator)
-    anticommutator(a, b) - 2 * Expression(b) * Expression(a)
-end
-
-function anticommutator(a::FermionOperator, b::FermionOperator)
-    δ(a.p, b.p) * (a.spin == b.spin) * (a.dag != b.dag)
-end
-
-function reductive_commutator(a::FermionOperator, b::FermionOperator)
-    (1, δ(a.p, b.p) * (a.spin == b.spin) * (a.dag != b.dag))
+function act_on_ket(op::FermionOperator)
+    Expression(op) * if op.dag
+        virtual(op.p)
+    else
+        occupied(op.p)
+    end
 end

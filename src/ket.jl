@@ -47,18 +47,3 @@ function act_on_ket(t::Term{A}, max_ops) where {A<:Number}
 
     Expression(terms)
 end
-
-function act_on_ket(op::SingletExcitationOperator)
-    p = op.p
-    q = op.q
-    E(p, q) * virtual(p) * occupied(q) +
-    2 * δ(p, q) * occupied(p, q)
-end
-
-function act_on_ket(op::FermionOperator)
-    Expression(op) * if op.dag
-        virtual(op.p)
-    else
-        occupied(op.p)
-    end
-end

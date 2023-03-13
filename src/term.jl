@@ -888,7 +888,7 @@ function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
         Δi *= -Γij
     end
 
-    Δi, Expression(terms)
+    (Δi, Expression(terms))
 end
 
 # Function to express all operators in an expression in terms of
