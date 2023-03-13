@@ -13,8 +13,11 @@ struct Term{T<:Number}
     # Dict that stores which orbital space each index belongs to
     constraints::Constraints
 
+    # Tag to say that it is unnessecary to try to further simplify this term
+    max_simplified::Bool
+
     function Term(scalar::T, sum_indices, deltas, tensors, operators,
-        constraints) where {T<:Number}
+        constraints, max_simplified) where {T<:Number}
         sort!(sum_indices)
         sort!(tensors)
 
@@ -22,7 +25,7 @@ struct Term{T<:Number}
 
         if deltas == 0 || iszero(scalar)
             return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
-                Operator[], Constraints())
+                Operator[], Constraints(), true)
         end
 
         constraints = copy(constraints)
@@ -38,7 +41,7 @@ struct Term{T<:Number}
                 s = typeintersect(constraints(firstind), constraints(p))
                 if s == Union{}
                     return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
-                        Operator[], Constraints())
+                        Operator[], Constraints(), true)
                 elseif is_strict_subspace(s, GeneralOrbital)
                     constraints[firstind] = s
                 end
@@ -64,8 +67,21 @@ struct Term{T<:Number}
             delete!(constraints, p)
         end
 
-        new{T}(scalar, sum_indices, deltas, tensors, operators, constraints)
+        new{T}(
+            scalar,
+            sum_indices,
+            deltas,
+            tensors,
+            operators,
+            constraints,
+            max_simplified
+        )
     end
+end
+
+function Term(scalar::T, sum_indices, deltas, tensors, operators,
+    constraints) where {T<:Number}
+    Term(scalar, sum_indices, deltas, tensors, operators, constraints, false)
 end
 
 function Term(scalar::T, sum_indices, deltas, tensors, operators) where
@@ -79,7 +95,8 @@ Base.copy(t::Term) = Term(
     copy(t.deltas),
     copy(t.tensors),
     copy(t.operators),
-    copy(t.constraints)
+    copy(t.constraints),
+    t.max_simplified
 )
 
 function noop_part(t::Term)
@@ -192,7 +209,15 @@ end
 
 # utility function to "copy" a term but replace the scalar with a new one
 function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
-    Term(scalar, t.sum_indices, t.deltas, t.tensors, t.operators, t.constraints)
+    Term(
+        scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        t.operators,
+        t.constraints,
+        t.max_simplified
+    )
 end
 
 function Base.:-(t::Term)
@@ -225,8 +250,10 @@ end
 
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    (length(a.operators), a.operators, a.tensors, a.deltas, a.sum_indices, a.constraints, b.scalar) <
-    (length(b.operators), b.operators, b.tensors, b.deltas, b.sum_indices, b.constraints, a.scalar)
+    (length(a.operators), a.operators, a.tensors, a.deltas, a.sum_indices,
+        a.constraints, b.scalar) <
+    (length(b.operators), b.operators, b.tensors, b.deltas, b.sum_indices,
+        b.constraints, a.scalar)
 end
 
 function Base.:(==)(a::Term, b::Term)
@@ -650,11 +677,40 @@ end
 # TODO: This requires extensive testing of determinism and correctness.
 # The specific steps and the order of them might need to be adjusted.
 function simplify(t::Term)
-    t |>
-    lower_delta_indices |>
-    simplify_summation_deltas |>
-    lower_summation_indices |>
-    sort_summation_indices
+    if t.max_simplified
+        t
+    else
+        t |>
+        lower_delta_indices |>
+        simplify_summation_deltas |>
+        lower_summation_indices |>
+        sort_summation_indices
+    end
+end
+
+function set_max_simplified(t::Term)
+    Term(
+        t.scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        t.operators,
+        t.constraints,
+        true
+    )
+end
+
+function simplify_heavy(t::Term)
+    if t.max_simplified
+        t
+    else
+        t |>
+        lower_delta_indices |>
+        simplify_summation_deltas |>
+        lower_summation_indices |>
+        permute_all_sum_indices |>
+        set_max_simplified
+    end
 end
 
 # Some operator overloading (Not ment for external use):
@@ -766,12 +822,12 @@ end
 
 function commutator_fuse(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     if isempty(a.operators) || isempty(b.operators)
-        return Expression(zero(promote_type(A,B)))
+        return Expression(zero(promote_type(A, B)))
     end
 
     constraints = copy(a.constraints)
     if fuse_constraints!(constraints, b.constraints) == 0
-        return Expression(zero(promote_type(A,B)))
+        return Expression(zero(promote_type(A, B)))
     end
 
     terms = Term{promote_type(A, B)}[]
