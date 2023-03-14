@@ -131,10 +131,28 @@ end
 
 index_color::Bool = true
 
+"""
+    enable_color()
+
+Enables the coloring of MO-indices to indicate orbital space constraints.
+Color is enabled by default.
+Currently the coloring scheme is given by:
+    GeneralOrbital: colorless
+    OccupiedOrbital: green
+    VirtualOrbital: blue
+"""
 function enable_color()
     global index_color = true
 end
 
+"""
+    disable_color()
+
+Disables the coloring of MO-indices to indicate orbital space constraints.
+This will make all constraints be printed explicitly which can make some
+terms a bit long to read.
+Color is enabled by default.
+"""
 function disable_color()
     global index_color = false
 end

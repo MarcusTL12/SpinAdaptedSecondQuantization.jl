@@ -1,9 +1,22 @@
 module SpinAdaptedSecondQuantization
 
+export SASQ
+"""
+    SASQ = SpinAdaptedSecondQuantization
+
+Short acronym for accessing internals (like enable_/disable_color)
+since the full module name is a bit long.
+"""
+const SASQ = SpinAdaptedSecondQuantization
+
 using DataStructures
 using Permutations
 
-"Type alias for container of MO-Index constraints"
+"""
+    Constraints = SortedDict{Int,Type}
+
+Type alias for container of MO-Index constraints
+"""
 const Constraints = SortedDict{Int,Type}
 
 include("orbital_spaces.jl")
