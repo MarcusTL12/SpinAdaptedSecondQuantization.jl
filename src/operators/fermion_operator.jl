@@ -8,16 +8,15 @@ The basic fermionic type operator.
 
 struct FermionOperator <: Operator
     p::Int
-    spin::Bool
+    spin::Spin
     dag::Bool
 end
 
 function Base.print(io::IO, constraints::Constraints, a::FermionOperator)
-    spin = a.spin ? 'α' : 'β'
     dag = a.dag ? '†' : '⁻'
     print(io, 'a', dag, '_')
     print_mo_index(io, constraints, a.p)
-    print(io, spin)
+    print(io, a.spin)
 end
 
 function exchange_indices(a::FermionOperator, mapping)

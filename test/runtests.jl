@@ -380,7 +380,7 @@ end
 
     h = sum(
         ∑(real_tensor("h", 1, 2) * fermiondag(1, spin) * fermion(2, spin), 1:2)
-        for spin in [true, false]
+        for spin in (α, β)
     )
     g = 1 // 2 * sum(
         ∑(real_tensor("g", 1:4...) *
@@ -388,7 +388,7 @@ end
           fermiondag(3, spin2) *
           fermion(4, spin2) *
           fermion(2, spin1), 1:4)
-        for spin1 in [true, false], spin2 in [true, false]
+        for spin1 in (α, β), spin2 in (α, β)
     )
     H = h + g
     E_hf = simplify(wick_theorem(H))
