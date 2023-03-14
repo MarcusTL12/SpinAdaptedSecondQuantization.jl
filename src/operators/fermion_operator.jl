@@ -29,7 +29,7 @@ function get_all_indices(e::FermionOperator)
 end
 
 function Base.isless(a::FermionOperator, b::FermionOperator)
-    (a.dag, a.spin, a.p) < (b.dag, b.spin, b.p)
+    (b.dag, a.spin, a.p) < (a.dag, b.spin, b.p)
 end
 
 function Base.:(==)(a::FermionOperator, b::FermionOperator)

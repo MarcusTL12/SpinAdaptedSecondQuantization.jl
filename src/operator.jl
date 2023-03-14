@@ -26,5 +26,5 @@ end
 function reductive_commutator(a::A, b::B) where {A<:Operator,B<:Operator}
     Γ, c = reductive_commutator(b, a)
 
-    (Γ, Γ * c)
+    (Γ, -Γ * c)
 end
