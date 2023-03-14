@@ -44,7 +44,7 @@ end
 """
     E(p, q)
 
-
+Constructs an expression containing a single excitation operator.
 """
 E(p, q) = Expression(SingletExcitationOperator(p, q))
 

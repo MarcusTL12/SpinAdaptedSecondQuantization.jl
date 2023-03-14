@@ -46,16 +46,16 @@ but rather include a single zero term")
     t, rest = Iterators.peel(ex.terms)
 
     if t.scalar < 0
-        println(io, "- ", new_scalar(t, -t.scalar))
+        print(io, "- ", new_scalar(t, -t.scalar))
     else
-        println(io, t)
+        print(io, t)
     end
 
     for t in rest
         if t.scalar < 0
-            println(io, "- ", new_scalar(t, -t.scalar))
+            print(io, "\n- ", new_scalar(t, -t.scalar))
         else
-            println(io, "+ ", t)
+            print(io, "\n+ ", t)
         end
     end
 end
