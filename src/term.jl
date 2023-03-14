@@ -668,7 +668,7 @@ function permute_all_sum_indices(t::Term)
         for (i, (p, q)) in enumerate(zip(t.sum_indices, permuted_inds))
             mapping[i] = p => q
         end
-        min_t = min(min_t, exchange_indices(t, mapping))
+        min_t = min(min_t, sort_operators(exchange_indices(t, mapping)))
     end
     min_t
 end
@@ -686,7 +686,8 @@ function simplify(t::Term)
         lower_delta_indices |>
         simplify_summation_deltas |>
         lower_summation_indices |>
-        sort_summation_indices
+        sort_summation_indices |>
+        sort_operators
     end
 end
 
@@ -797,7 +798,7 @@ function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     Γ, e = reductive_commutator_fuse(a, b)
 
     if Γ == -1
-        e - 2 * b * a
+        e - Expression([2 * b * a])
     else
         e
     end
@@ -814,7 +815,7 @@ function anticommutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     Γ, e = reductive_commutator_fuse(a, b)
 
     if Γ == 1
-        e + 2 * b * a
+        e + Expression([2 * b * a])
     else
         e
     end
@@ -840,7 +841,7 @@ function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
 
     constraints = copy(a.constraints)
     if fuse_constraints!(constraints, b.constraints) == 0
-        return Expression(zero(promote_type(A, B)))
+        return (1, Expression(zero(promote_type(A, B))))
     end
 
     terms = Term{promote_type(A, B)}[]
