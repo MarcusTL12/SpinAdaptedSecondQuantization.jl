@@ -1,12 +1,6 @@
 module SpinAdaptedSecondQuantization
 
 export SASQ
-"""
-    SASQ = SpinAdaptedSecondQuantization
-
-Short acronym for accessing internals (like enable_/disable_color)
-since the full module name is a bit long.
-"""
 const SASQ = SpinAdaptedSecondQuantization
 
 using DataStructures

@@ -1,5 +1,10 @@
 export delta, δ
 
+"""
+    KroneckerDelta
+
+Type representing a Kronecker delta of two or more MO-indices.
+"""
 struct KroneckerDelta
     indices::Vector{Int}
 
@@ -34,10 +39,19 @@ function Base.print(io::IO, constraints::Constraints, d::KroneckerDelta)
     end
 end
 
-# Externally visible constructor
+"""
+    delta(indices...)
+
+Construct an expression consisting of a single Kronecker delta of the given
+indices.
+"""
 delta(indices...) = Expression(KroneckerDelta(indices...))
 
-# Simple unicode alias
+"""
+    δ(indices...)
+
+Unicode alias for [`delta`](@ref).
+"""
 δ(indices...) = delta(indices...)
 
 function Base.isless(d1::KroneckerDelta, d2::KroneckerDelta)

@@ -7,5 +7,5 @@ quantum chemistry methods, such as post Hartree-Fock methods.
 
 ```@autodocs
 Modules = [SpinAdaptedSecondQuantization]
-Order = [:function, :type, :constant]
+Order = [:module, :function, :type, :constant]
 ```
