@@ -1,5 +1,14 @@
 # Implement commutation relations here
 
+# To implement a commutation relation you implement the function
+# `reductive_commutator(a, b)` between the two operator types.
+# The function should return (∓1, [a, b]±), where the first integer should
+# be the sign change of commutation (1 for commutator, -1 for anticommutator)
+
+# When implementing a commutation relation between two different operator types
+# only one order is required, as a generic function takes care of the other
+# i.e. implement only [a, b]± and not also [b, a]±
+
 function reductive_commutator(
     a::SingletExcitationOperator,
     b::SingletExcitationOperator
