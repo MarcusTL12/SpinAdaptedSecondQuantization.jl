@@ -5,6 +5,7 @@ using Permutations
 
 const Constraints = SortedDict{Int,Type}
 include("orbital_spaces.jl")
+include("spin.jl")
 include("kronecker_delta.jl")
 include("operator.jl")
 include("tensor.jl")
