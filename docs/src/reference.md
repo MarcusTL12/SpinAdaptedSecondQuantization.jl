@@ -1,5 +1,7 @@
 # Reference/API
 
+Auto generated docs for all exported functions and types.
+
 ## Types
 ```@autodocs
 Modules = [SpinAdaptedSecondQuantization]
