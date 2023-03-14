@@ -827,43 +827,34 @@ function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
 
     terms = Term{promote_type(A, B)}[]
 
-    Γj = 1
-    for j in eachindex(b.operators)
-        γij = 1
-        start_ind = length(terms) + 1
-        for i in eachindex(a.operators)
-            δij, e = reductive_commutator(a.operators[i], b.operators[j])
-            γij *= δij
+    Γ = 1
+    for j in eachindex(b.operators), i in reverse(eachindex(a.operators))
+        δij, e = reductive_commutator(a.operators[i], b.operators[j])
 
-            lhs = Operator[a.operators[1:i-1]; b.operators[1:j-1]]
-            rhs = Operator[b.operators[j+1:end]; a.operators[i+1:end]]
+        lhs = Operator[a.operators[1:i-1]; b.operators[1:j-1]]
+        rhs = Operator[b.operators[j+1:end]; a.operators[i+1:end]]
 
-            for t in e.terms
-                constraints = copy(a.constraints)
-                fuse_constraints!(constraints, t.constraints)
-                fuse_constraints!(constraints, b.constraints)
+        for t in e.terms
+            constraints = copy(a.constraints)
+            fuse_constraints!(constraints, t.constraints)
+            fuse_constraints!(constraints, b.constraints)
 
-                fused = Term(
-                    γij * a.scalar * t.scalar * b.scalar,
-                    Int[a.sum_indices; t.sum_indices; b.sum_indices],
-                    KroneckerDelta[a.deltas; t.deltas; b.deltas],
-                    Tensor[a.tensors; t.tensors; b.tensors],
-                    Operator[lhs; t.operators; rhs],
-                    constraints
-                )
+            fused = Term(
+                Γ * a.scalar * t.scalar * b.scalar,
+                Int[a.sum_indices; t.sum_indices; b.sum_indices],
+                KroneckerDelta[a.deltas; t.deltas; b.deltas],
+                Tensor[a.tensors; t.tensors; b.tensors],
+                Operator[lhs; t.operators; rhs],
+                constraints
+            )
 
-                push!(terms, fused)
-            end
-        end
-        Γj *= γij
-        if Γj == -1
-            for k in start_ind:length(terms)
-                terms[k] *= -1
-            end
+            push!(terms, fused)
+
+            Γ *= δij
         end
     end
 
-    (Γj, Expression(terms))
+    (Γ, Expression(terms))
 end
 
 # Function to express all operators in an expression in terms of
