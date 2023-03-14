@@ -44,19 +44,15 @@ E(p, q) = Expression(SingletExcitationOperator(p, q))
 
 e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)
 
-# Commutation relations:
-
-function commutator(a::SingletExcitationOperator, b::SingletExcitationOperator)
-    p = a.p
-    q = a.q
-    r = b.p
-    s = b.q
-
-    δ(q, r) * E(p, s) - δ(p, s) * E(r, q)
-end
-
 function convert_to_elementary_operators(o::SingletExcitationOperator)
     Expression(
         [(fermiondag(o.p, spin)*fermion(o.q, spin))[1] for spin in false:true]
     )
+end
+
+function act_on_ket(op::SingletExcitationOperator)
+    p = op.p
+    q = op.q
+    E(p, q) * virtual(p) * occupied(q) +
+    2 * δ(p, q) * occupied(p, q)
 end
