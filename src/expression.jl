@@ -141,6 +141,11 @@ function Base.setindex!(ex::Expression, t::Term, i)
     ex.terms[i] = t
 end
 
+export scalar_type
+function scalar_type(::Expression{T}) where {T<:Number}
+    T
+end
+
 export summation, ∑
 
 function summation(e::Expression, sum_indices)
@@ -325,6 +330,11 @@ function simplify_heavy(ex::Expression)
     ex
 end
 
+export sort_operators
+function sort_operators(ex::Expression)
+    Expression([sort_operators(t) for t in ex.terms])
+end
+
 # Commutator:
 export commutator
 function commutator(a::Expression{A}, b::Expression{B}) where
@@ -333,6 +343,19 @@ function commutator(a::Expression{A}, b::Expression{B}) where
 
     for t1 in a.terms, t2 in b.terms
         append!(terms, commutator(t1, t2).terms)
+    end
+
+    Expression(terms)
+end
+
+# Commutator:
+export anticommutator
+function anticommutator(a::Expression{A}, b::Expression{B}) where
+{A<:Number,B<:Number}
+    terms = Term{promote_type(A, B)}[]
+
+    for t1 in a.terms, t2 in b.terms
+        append!(terms, anticommutator(t1, t2).terms)
     end
 
     Expression(terms)

@@ -668,7 +668,7 @@ function permute_all_sum_indices(t::Term)
         for (i, (p, q)) in enumerate(zip(t.sum_indices, permuted_inds))
             mapping[i] = p => q
         end
-        min_t = min(min_t, exchange_indices(t, mapping))
+        min_t = min(min_t, sort_operators(exchange_indices(t, mapping)))
     end
     min_t
 end
@@ -686,7 +686,8 @@ function simplify(t::Term)
         lower_delta_indices |>
         simplify_summation_deltas |>
         lower_summation_indices |>
-        sort_summation_indices
+        sort_summation_indices |>
+        sort_operators
     end
 end
 
@@ -726,6 +727,7 @@ function Base.:*(a::Term{A}, b::B) where {A<:Number,B<:Number}
     b * a
 end
 
+# Returns 0 if constraints produce 0 and 1 otherwise
 function fuse_constraints!(a::Constraints, b::Constraints)
     for (p, s) in b
         if haskey(a, p)
@@ -796,7 +798,24 @@ function commutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
     Γ, e = reductive_commutator_fuse(a, b)
 
     if Γ == -1
-        e - 2 * b * a
+        e - Expression([2 * b * a])
+    else
+        e
+    end
+end
+
+function anticommutator(a::Term{A}, b::Term{B}) where {A<:Number,B<:Number}
+    if isempty(a.operators) || isempty(b.operators)
+        return Expression(zero(promote_type(A, B)))
+    end
+
+    b = make_space_for_indices(b, get_all_indices(a))
+    a = make_space_for_indices(a, get_all_indices(b))
+
+    Γ, e = reductive_commutator_fuse(a, b)
+
+    if Γ == 1
+        e + Expression([2 * b * a])
     else
         e
     end
@@ -822,7 +841,7 @@ function reductive_commutator_fuse(a::Term{A}, b::Term{B}) where
 
     constraints = copy(a.constraints)
     if fuse_constraints!(constraints, b.constraints) == 0
-        return Expression(zero(promote_type(A, B)))
+        return (1, Expression(zero(promote_type(A, B))))
     end
 
     terms = Term{promote_type(A, B)}[]
@@ -867,4 +886,43 @@ function convert_to_elementary_operators(t::Term{T}) where {T<:Number}
     end
 
     ex
+end
+
+function sort_operators(t::Term)
+    t = copy(t)
+
+    s = 1
+    done = false
+    while !done
+        done = true
+        for i in 1:length(t.operators)-1
+            if t.operators[i] > t.operators[i+1]
+                Γ, e = reductive_commutator(t.operators[i], t.operators[i+1])
+
+                for i in eachindex(e.terms)
+                    et = e[i]
+                    e[i] = Term(
+                        et.scalar,
+                        et.sum_indices,
+                        et.deltas,
+                        et.tensors,
+                        et.operators,
+                        t.constraints
+                    )
+                end
+
+                e = Expression(e.terms)
+
+                if iszero(e)
+                    done = false
+                    s *= Γ
+                    tmp = t.operators[i]
+                    t.operators[i] = t.operators[i+1]
+                    t.operators[i+1] = tmp
+                end
+            end
+        end
+    end
+
+    s * t
 end
