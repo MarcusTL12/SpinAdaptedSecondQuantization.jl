@@ -39,7 +39,11 @@ function Base.isless(a::SingletExcitationOperator, b::SingletExcitationOperator)
     (a.p, a.q) < (b.p, b.q)
 end
 
-# Externally visible constructor
+"""
+    E(p, q)
+
+
+"""
 E(p, q) = Expression(SingletExcitationOperator(p, q))
 
 e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)

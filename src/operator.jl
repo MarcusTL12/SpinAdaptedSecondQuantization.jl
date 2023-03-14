@@ -1,4 +1,10 @@
 
+"""
+    Operator
+
+Abstact operator type which all concrete operator types (i.e. E_pq, a†_p)
+must extend.
+"""
 abstract type Operator end
 
 include("operators/singlet_excitation_operator.jl")

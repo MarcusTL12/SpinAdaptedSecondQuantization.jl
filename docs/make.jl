@@ -3,8 +3,14 @@ using SpinAdaptedSecondQuantization
 
 makedocs(
     sitename="SpinAdaptedSecondQuantization.jl",
+    authors="Marcus T. Lexander, Tor S. Haugland, Alexander C. Paul",
     format=Documenter.HTML(),
-    modules=[SpinAdaptedSecondQuantization]
+    modules=[SpinAdaptedSecondQuantization],
+    pages=[
+        "Home" => "index.md",
+        "Reference/API" => "reference.md",
+        "Internals" => "internals.md",
+    ]
 )
 
 deploydocs(
