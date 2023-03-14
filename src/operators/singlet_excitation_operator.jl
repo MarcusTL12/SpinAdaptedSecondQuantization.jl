@@ -50,7 +50,7 @@ e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)
 
 function convert_to_elementary_operators(o::SingletExcitationOperator)
     Expression(
-        [(fermiondag(o.p, spin)*fermion(o.q, spin))[1] for spin in false:true]
+        [(fermiondag(o.p, spin)*fermion(o.q, spin))[1] for spin in (α, β)]
     )
 end
 
