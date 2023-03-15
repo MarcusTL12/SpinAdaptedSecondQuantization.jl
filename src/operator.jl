@@ -20,8 +20,8 @@ include("operators/commutation_relations.jl")
 
 All typed extending `Operator` must overload this function.
 """
-function Base.print(::IO, ::Constraints, ::Operator)
-    throw("All operator types must overload Base.print(io, constraints, o)")
+function Base.print(::IO, ::Constraints, ::O) where {O<:Operator}
+    throw("Base.print(::IO, ::Constraints, ::$O) not implemented!")
 end
 
 """
@@ -31,8 +31,8 @@ All typed extending `Operator` must overload this function.
 It should return a new operator where all indices have been exchanged
 according to the `mapping`.
 """
-function exchange_indices(::Operator, mapping)
-    throw("All operator types must overload exchange_indices")
+function exchange_indices(::O, mapping) where {O<:Operator}
+    throw("exchange_indices(::$O, mapping) not implemented!")
 end
 
 """
@@ -42,8 +42,23 @@ All typed extending `Operator` must overload this function.
 It should return an iteratable over all the MO-indices contained in the operator
 in order.
 """
-function get_all_indices(::Operator)
-    throw("All operator types must overload get_all_indices")
+function get_all_indices(::O) where {O<:Operator}
+    throw("get_all_indices(::$O) not implemented!")
+end
+
+"""
+    act_on_ket(::Operator)
+
+All typed extending `Operator` must overload this function.
+It should return the expression you end up with after acting the operator on
+a normal RHF ket.
+
+Example:
+
+``E_{p q} |HF⟩ = (2 δ_{p q} C(p∈O,q∈O) + E_{p q} C(p∈V,q∈O)) |HF⟩``
+"""
+function act_on_ket(::O) where {O<:Operator}
+    throw("act_on_ket(::$O) not implemented!")
 end
 
 # Generic fallback functions to reduce number of required functions to overload
