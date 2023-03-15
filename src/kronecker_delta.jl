@@ -4,6 +4,10 @@ export delta, δ
     KroneckerDelta
 
 Type representing a Kronecker delta of two or more MO-indices.
+
+!!! note
+    When constructing a `KroneckerDelta` it will return the integer 1 if
+    the delta does not include two or more distinkt indices.
 """
 struct KroneckerDelta
     indices::Vector{Int}
@@ -62,10 +66,26 @@ function Base.:(==)(d1::KroneckerDelta, d2::KroneckerDelta)
     d1.indices == d2.indices
 end
 
+"""
+    exchange_indices(d::KroneckerDelta, mapping)
+
+Returns a new `KroneckerDelta` with indices exchanged according to the `mapping`
+"""
 function exchange_indices(d::KroneckerDelta, mapping)
     KroneckerDelta([exchange_index(p, mapping) for p in d.indices])
 end
 
+"""
+    compact_deltas(deltas::Vector{KroneckerDelta})
+
+Returns a new reduced `Vector{KroneckerDelta}` where there exists only one
+delta per group of equal indices.
+
+Example:
+```
+δ_pq δ_qr δ_st -> δ_pqr δst
+```
+"""
 function compact_deltas(deltas::Vector{KroneckerDelta})
     forest = DisjointSets{Int}()
 

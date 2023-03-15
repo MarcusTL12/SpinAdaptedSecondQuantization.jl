@@ -34,13 +34,13 @@ end
 
 Example:
 
-```@example 1
+```@repl 1
 E(1, 2) * occupied(2)
 ```
 
 Another example:
 
-```@example 1
+```@repl 1
 E(1, 2) * virtual(1)
 ```
 

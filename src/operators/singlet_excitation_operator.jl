@@ -48,6 +48,12 @@ Constructs an expression containing a single excitation operator.
 """
 E(p, q) = Expression(SingletExcitationOperator(p, q))
 
+"""
+    e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)
+
+Alias for the two electron singlet excitation operator.
+```
+"""
 e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)
 
 function convert_to_elementary_operators(o::SingletExcitationOperator)
