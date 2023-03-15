@@ -30,7 +30,7 @@ function exchange_indices(e::SingletExcitationOperator, mapping)
 end
 
 function get_all_indices(e::SingletExcitationOperator)
-    [e.p, e.q]
+    (e.p, e.q)
 end
 
 function Base.:(==)(a::SingletExcitationOperator, b::SingletExcitationOperator)
