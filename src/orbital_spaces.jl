@@ -143,6 +143,7 @@ Currently the coloring scheme is given by:
 """
 function enable_color()
     global index_color = true
+    nothing
 end
 
 """
@@ -155,6 +156,7 @@ Color is enabled by default.
 """
 function disable_color()
     global index_color = false
+    nothing
 end
 
 Base.isdisjoint(::Type{S1}, ::Type{S2}) where

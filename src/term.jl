@@ -143,7 +143,8 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
     end
 
     all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
-                          isempty(t.tensors) && isempty(t.operators)
+                          isempty(t.tensors) && isempty(t.operators) &&
+                          isempty(t.constraints)
 
     if !isone(t.scalar)
         if isone(-t.scalar)
