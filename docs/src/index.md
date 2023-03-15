@@ -43,3 +43,12 @@ Another example:
 ```@example 1
 E(1, 2) * virtual(1)
 ```
+
+Hartree-Fock energy expression:
+
+```@repl 1
+h = ∑(rsym_tensor("h", 1, 2) * E(1, 2), 1:2)
+g = simplify(∑(rsym_tensor("g", 1:4...) * e(1:4...), 1:4))
+H = h + g
+E_hf = simplify_heavy(act_on_ket(H, 0))
+```
