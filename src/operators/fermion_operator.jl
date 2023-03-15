@@ -24,7 +24,7 @@ function exchange_indices(a::FermionOperator, mapping)
 end
 
 function get_all_indices(e::FermionOperator)
-    [e.p]
+    (e.p,)
 end
 
 function Base.isless(a::FermionOperator, b::FermionOperator)
