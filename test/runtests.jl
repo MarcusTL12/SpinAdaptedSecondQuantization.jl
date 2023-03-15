@@ -1,7 +1,6 @@
 using Test
 
 using SpinAdaptedSecondQuantization
-import SpinAdaptedSecondQuantization as SASQ
 SASQ.disable_color()
 
 @testset "ortital spaces" begin

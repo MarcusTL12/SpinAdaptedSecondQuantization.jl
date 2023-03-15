@@ -59,7 +59,7 @@ The implementation for how it sorts among the same operator type should be
 implemented in the definition file for that operator type.
 
 The implementation for how the type sorts compared to other operator types
-should be added to the src/operators/sorting.jl file. These should be dummy
+should be added to the `src/operators/sorting.jl` file. These should be dummy
 routines that simply return true or false, and do not depend on the contents
 of the operators.
 
@@ -87,7 +87,23 @@ end
 """
     reductive_commutator(::Operator, ::Operator)
 
-Defines how operators commute; TODO: complete this
+Defines how operators commute. This will act as either a commutator or
+anticommutator depending on which reduces the rank of the resulting operators.
+
+Returns a `Tuple{Int,Expression}` which gives the type of commutator used
+and the resulting expression. The type is signaled by returning 1 or -1 as
+the first element of the tuple. This represents the sign change by commutation
+which is 1 for a normal commutator ``([A, B] = 0 ⇒ AB == BA)`` and -1 for an
+anticommutator ``([A, B]_+ = 0 ⇒ AB = -BA)``
+
+This should be implemented for all pairs of operators types that are expected
+to show up in the same expression. The implementations should be put in the
+`src/operators/commutation_relations.jl` file.
+
+!!! note
+    Only one order needs to be implemented, meaning if
+    `reductive_commutator(::A, ::B)` is implemented,
+    there is no need to also implement `reductive_commutator(::B, ::A)`
 """
 function reductive_commutator(a::Operator, b::Operator)
     Γ, c = reductive_commutator(b, a)
