@@ -131,7 +131,7 @@ are colored to indicate the constraints instead:
 a = E(1, 2) * virtual(1) * occupied(2)
 ```
 
-Where occupied orbitals are colored green and virtual are colored red.
+Where occupied orbitals are colored green and virtual are colored blue.
 If you would rather not have colored prints
 (printing to file, no color support in terminal, preferance, ...)
 you can easily turn this off:
