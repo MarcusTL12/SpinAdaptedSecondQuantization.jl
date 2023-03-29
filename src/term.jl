@@ -231,7 +231,8 @@ function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
         t.tensors,
         t.operators,
         t.constraints,
-        t.max_simplified
+        t.max_simplified,
+        true
     )
 end
 
