@@ -36,3 +36,21 @@ function reductive_commutator(e::SingletExcitationOperator, a::FermionOperator)
         -δ(p, r) * fermion(q, a.spin)
     end)
 end
+
+function reductive_commutator(a::BosonOperator, b::BosonOperator)
+    if a.dag && !b.dag
+        return (1, Expression(-1))
+    elseif !a.dag && b.dag
+        return (1, Expression(1))
+    else
+        return (1, zero(Expression{Int64}))
+    end
+end
+
+function reductive_commutator(a :: SingletExcitationOperator, b :: BosonOperator)
+    return (1, zero(Expression{Int64}))
+end
+
+function reductive_commutator(a :: FermionOperator, b :: BosonOperator)
+    return (1, zero(Expression{Int64}))
+end
