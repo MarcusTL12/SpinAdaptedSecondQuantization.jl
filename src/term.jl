@@ -19,6 +19,17 @@ struct Term{T<:Number}
     max_simplified::Bool
 
     function Term(scalar::T, sum_indices, deltas, tensors, operators,
+        constraints, max_simplified, nocheck) where {T<:Number}
+        if nocheck
+            new{T}(scalar, sum_indices, deltas, tensors, operators,
+                constraints, max_simplified)
+        else
+            Term(scalar, sum_indices, deltas, tensors, operators,
+                constraints, max_simplified)
+        end
+    end
+
+    function Term(scalar::T, sum_indices, deltas, tensors, operators,
         constraints, max_simplified) where {T<:Number}
         sort!(sum_indices)
         sort!(tensors)
@@ -98,7 +109,8 @@ Base.copy(t::Term) = Term(
     copy(t.tensors),
     copy(t.operators),
     copy(t.constraints),
-    t.max_simplified
+    t.max_simplified,
+    true
 )
 
 function noop_part(t::Term)
@@ -108,12 +120,15 @@ function noop_part(t::Term)
         t.deltas,
         t.tensors,
         Operator[],
-        t.constraints
+        t.constraints,
+        t.max_simplified,
+        true
     )
 end
 
 function Base.zero(::Type{Term{T}}) where {T<:Number}
-    Term(zero(T), Int[], KroneckerDelta[], Tensor[], Operator[])
+    Term(zero(T), Int[], KroneckerDelta[], Tensor[], Operator[],
+        Constraints(), true, true)
 end
 
 function Base.iszero(t::Term)
@@ -219,7 +234,8 @@ function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
         t.tensors,
         t.operators,
         t.constraints,
-        t.max_simplified
+        t.max_simplified,
+        true
     )
 end
 
@@ -700,6 +716,7 @@ function set_max_simplified(t::Term)
         t.tensors,
         t.operators,
         t.constraints,
+        true,
         true
     )
 end
