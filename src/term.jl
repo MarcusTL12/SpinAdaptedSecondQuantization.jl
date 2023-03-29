@@ -19,6 +19,17 @@ struct Term{T<:Number}
     max_simplified::Bool
 
     function Term(scalar::T, sum_indices, deltas, tensors, operators,
+        constraints, max_simplified, nocheck) where {T<:Number}
+        if nocheck
+            new{T}(scalar, sum_indices, deltas, tensors, operators,
+                constraints, max_simplified)
+        else
+            Term(scalar, sum_indices, deltas, tensors, operators,
+                constraints, max_simplified)
+        end
+    end
+
+    function Term(scalar::T, sum_indices, deltas, tensors, operators,
         constraints, max_simplified) where {T<:Number}
         sort!(sum_indices)
         sort!(tensors)
@@ -98,7 +109,8 @@ Base.copy(t::Term) = Term(
     copy(t.tensors),
     copy(t.operators),
     copy(t.constraints),
-    t.max_simplified
+    t.max_simplified,
+    true
 )
 
 function noop_part(t::Term)
