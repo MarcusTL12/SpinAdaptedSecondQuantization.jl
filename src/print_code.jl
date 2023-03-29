@@ -4,7 +4,7 @@ using Printf
 print_code(t :: Term) = print_code(t, "X")
 
 function print_code(t :: Term, symbol :: String)
-    # Print python code for Composite Term. Only works for F, h, g integrals.
+    # Print python np.einsum code
     scalar_str = @sprintf "%+12.8f" t.scalar
 
     external = prod(print_mo_index.(setdiff(get_all_indices(t), t.sum_indices)))
