@@ -5,12 +5,11 @@ export boson, bosondag
 
 The basic boson type operator.
 """
-
 struct BosonOperator <: Operator
     dag::Bool
 end
 
-function Base.print(io::IO, constraints::Constraints, b::BosonOperator)
+function Base.print(io::IO, ::Constraints, b::BosonOperator)
     dag = b.dag ? '†' : '⁻'
     print(io, 'b', dag)
 end
@@ -19,8 +18,8 @@ function exchange_indices(b::BosonOperator, mapping)
     b
 end
 
-function get_all_indices(b::BosonOperator)
-    []
+function get_all_indices(::BosonOperator)
+    ()
 end
 
 function Base.isless(a::BosonOperator, b::BosonOperator)
@@ -34,10 +33,6 @@ end
 # Externally visible constructor
 boson() = Expression(BosonOperator(false))
 bosondag() = Expression(BosonOperator(true))
-
-function Base.:(==)(a::BosonOperator, b::SingletExcitationOperator)
-    false
-end
 
 function act_on_ket(op::BosonOperator)
     (op.dag) * Expression(op)
