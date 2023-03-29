@@ -456,3 +456,16 @@ end
         1:2
     )
 end
+
+@testset "boson" begin
+    b = boson()
+    bdag = bosondag()
+    a = fermion(1, α)
+    adag = fermiondag(1, α)
+
+    @test act_on_ket(b * bdag) == SASQ.Expression(1)
+    @test act_on_ket(b * b * bdag * bdag) == SASQ.Expression(2)
+    @test act_on_ket(b * b * b * bdag * bdag * bdag) == SASQ.Expression(6)
+    @test act_on_ket(a * b * adag * bdag) == virtual(1)
+    @test simplify(a * b * bdag * adag * E(2,3)) == a * adag * E(2,3) * b * bdag
+end

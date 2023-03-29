@@ -35,14 +35,6 @@ end
 boson() = Expression(BosonOperator(false))
 bosondag() = Expression(BosonOperator(true))
 
-function Base.isless(a::BosonOperator, b::SingletExcitationOperator)
-    true
-end
-
-function Base.isless(a::SingletExcitationOperator, b::BosonOperator)
-    false
-end
-
 function Base.:(==)(a::BosonOperator, b::SingletExcitationOperator)
     false
 end
