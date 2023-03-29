@@ -73,9 +73,15 @@ function subscript(i)
     String(take!(io))
 end
 
-get_color(::Type{S}) where {S<:GeneralOrbital} = ""
-get_color(::Type{OccupiedOrbital}) = "\x1b[92m"
-get_color(::Type{VirtualOrbital}) = "\x1b[36m"
+default_color(::Type{GeneralOrbital}) = :nothing
+default_color(::Type{OccupiedOrbital}) = :light_green
+default_color(::Type{VirtualOrbital}) = :cyan
+
+colors::Dict{Type,Any} = Dict{Type,Union{Symbol,Int}}([
+    GeneralOrbital => default_color(GeneralOrbital),
+    OccupiedOrbital => default_color(OccupiedOrbital),
+    VirtualOrbital => default_color(VirtualOrbital),
+])
 
 function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
     names = getnames(S)
@@ -91,7 +97,7 @@ end
 function getname(io::IO, ::Type{S}, constraints::Constraints, i::Int) where
 {S<:GeneralOrbital}
     if index_color
-        print(io, get_color(constraints(i)))
+        print(io, Base.text_colors[get(colors, constraints(i), :nothing)])
     end
     getname(io, S, i)
     if index_color
@@ -131,15 +137,17 @@ end
 
 index_color::Bool = true
 
+export enable_color, disable_color, set_color
+
 """
     enable_color()
 
 Enables the coloring of MO-indices to indicate orbital space constraints.
 Color is enabled by default.
-Currently the coloring scheme is given by:
-    GeneralOrbital: colorless
-    OccupiedOrbital: green
-    VirtualOrbital: blue
+The default coloring scheme is given by:
+    GeneralOrbital: :nothing
+    OccupiedOrbital: :light_green
+    VirtualOrbital: :cyan
 """
 function enable_color()
     global index_color = true
@@ -147,15 +155,43 @@ function enable_color()
 end
 
 """
+    set_color(S, [color=default_color(S)])
+
+Sets the color of a given orbital space to the specified color, or the
+default if none is given. Allowed colors are given by the
+[Base.text_colors](https://github.com/JuliaLang/julia/blob/\
+17cfb8e65ead377bf1b4598d8a9869144142c84e/base/util.jl#L5-L34)
+dict. This includes integers in the range 0-255 which the corresponding colors
+can be found in this table on
+[wikipedia](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit).
+"""
+function set_color(::Type{S}, color=default_color(S)) where
+{S<:GeneralOrbital}
+    colors[S] = color
+    nothing
+end
+
+"""
     disable_color()
 
-Disables the coloring of MO-indices to indicate orbital space constraints.
-This will make all constraints be printed explicitly which can make some
-terms a bit long to read.
-Color is enabled by default.
+Disables the coloring of MO-indices to indicate orbital space constraints
+globally. This will make all constraints be printed explicitly which can make
+some terms a bit long to read. Color is enabled by default.
 """
 function disable_color()
     global index_color = false
+    nothing
+end
+
+"""
+    disable_color(S)
+
+Disables the coloring for a specific orbital space. This can be useful
+when dealing with a medium-large number of orbital spaces, and having
+distinguishable colors is infeasible.
+"""
+function disable_color(::Type{S}) where {S<:GeneralOrbital}
+    delete!(colors, S)
     nothing
 end
 
