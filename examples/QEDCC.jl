@@ -27,43 +27,6 @@ function cc_ket(H, T, n, order)
     return ex
 end
 
-function project(HT, order)
-    terms = HT[[length(t.operators) == order for t in HT.terms]]
-    if order > 1
-        for (i, t) = enumerate(terms)
-            terms[i] = SASQ.Term(
-            t.scalar,
-            t.sum_indices,
-            t.deltas,
-            vcat(t.tensors, SASQ.ParticleSymmetricTensor("A", collect(1:2*order))),
-            SASQ.Operator[],
-            t.constraints
-            )
-        end
-        ex = SASQ.Expression(terms)
-        terms = simplify_heavy(ex).terms
-    end
-    for (i, t) = enumerate(terms)
-        terms[i] = SASQ.Term(
-        t.scalar,
-        t.sum_indices[2*order+1:end],
-        t.deltas,
-        t.tensors,
-        SASQ.Operator[],
-        t.constraints
-        )
-    end
-    return simplify_heavy(SASQ.Expression(terms))
-end
-
-function cc_ket2(H, T, n, order)
-    # HT = e^-T H eT |HF>
-    HT = bch(H, T, n) |> act_on_ket |> simplify
-
-    # Return only terms of op_length = order
-    return project(HT, order)
-end
-
 # Define Hamiltonian in terms of F and g
 Φ = 1 // 2 * ∑(psym_tensor("g", 1,2,3,4) * e(1,2,3,4), 1:4) +
     ∑((-2 * psym_tensor("g", 1, 2, 3, 3) + psym_tensor("g", 1, 3, 3, 2)) *
