@@ -25,4 +25,6 @@ include("hf_expectation_value.jl")
 include("ket.jl")
 include("wick_theorem.jl")
 
+include("print_code.jl")
+
 end # module SpinAdaptedSecondQuantization
