@@ -120,12 +120,15 @@ function noop_part(t::Term)
         t.deltas,
         t.tensors,
         Operator[],
-        t.constraints
+        t.constraints,
+        t.max_simplified,
+        true
     )
 end
 
 function Base.zero(::Type{Term{T}}) where {T<:Number}
-    Term(zero(T), Int[], KroneckerDelta[], Tensor[], Operator[])
+    Term(zero(T), Int[], KroneckerDelta[], Tensor[], Operator[],
+        Constraints(), true, true)
 end
 
 function Base.iszero(t::Term)
@@ -713,6 +716,7 @@ function set_max_simplified(t::Term)
         t.tensors,
         t.operators,
         t.constraints,
+        true,
         true
     )
 end
