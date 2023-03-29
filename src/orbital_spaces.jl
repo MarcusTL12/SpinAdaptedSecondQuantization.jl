@@ -163,7 +163,7 @@ default if none is given. Allowed colors are given by the
 17cfb8e65ead377bf1b4598d8a9869144142c84e/base/util.jl#L5-L34)
 dict. This includes integers in the range 0-255 which the corresponding colors
 can be found in this table on
-[wikipedia](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit).
+[Wikipedia](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit).
 """
 function set_color(::Type{S}, color=default_color(S)) where
 {S<:GeneralOrbital}
