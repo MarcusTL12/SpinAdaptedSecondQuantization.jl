@@ -1,9 +1,9 @@
 export print_code
 using Printf
 
-print_code(t :: Term) = print_code(t, "X")
+print_code(t::Term) = print_code(t, "X")
 
-function print_code(t :: Term, symbol :: String)
+function print_code(t::Term, symbol::String)
     # Print python np.einsum code
     scalar_str = @sprintf "%+12.8f" t.scalar
 
