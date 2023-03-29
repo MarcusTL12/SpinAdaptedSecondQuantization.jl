@@ -203,6 +203,9 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
     end
 
     constraint_noprint = index_color ? get_non_constraint_indices(t) : Int[]
+    filter!(constraint_noprint) do x
+        haskey(colors, t.constraints(x))
+    end
     constraint_print = [i for (i, _) in t.constraints if i ∉ constraint_noprint]
 
     if !isempty(constraint_print)
