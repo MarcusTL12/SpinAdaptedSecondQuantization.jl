@@ -10,16 +10,11 @@ struct SingletExcitationOperator <: Operator
     q::Int
 end
 
-function Base.show(io::IO, e::SingletExcitationOperator)
-    print(io, "E_")
-    print_mo_index(io, e.p, e.q)
-end
-
 function Base.print(io::IO,
-    constraints::Constraints,
+    constraints::Constraints, translation::IndexTranslation,
     e::SingletExcitationOperator)
     print(io, "E_")
-    print_mo_index(io, constraints, e.p, e.q)
+    print_mo_index(io, constraints, translation, e.p, e.q)
 end
 
 function exchange_indices(e::SingletExcitationOperator, mapping)

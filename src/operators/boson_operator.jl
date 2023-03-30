@@ -9,7 +9,7 @@ struct BosonOperator <: Operator
     dag::Bool
 end
 
-function Base.print(io::IO, ::Constraints, b::BosonOperator)
+function Base.print(io::IO, ::Constraints, ::IndexTranslation, b::BosonOperator)
     dag = b.dag ? '†' : '⁻'
     print(io, 'b', dag)
 end

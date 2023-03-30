@@ -94,45 +94,35 @@ function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
     end
 end
 
-function getname(io::IO, ::Type{S}, constraints::Constraints, i::Int) where
-{S<:GeneralOrbital}
+const IndexTranslation = Dict{Int,Tuple{Type,Int}}
+
+function (translation::IndexTranslation)(p::Int)
+    get(translation, p, (GeneralOrbital, p))
+end
+
+function getname(io::IO, constraints::Constraints,
+    translation::IndexTranslation, i::Int)
     if index_color
         print(io, Base.text_colors[get(colors, constraints(i), :nothing)])
     end
-    getname(io, S, i)
+
+    getname(io, translation(i)...)
+
     if index_color
         print(io, "\x1b[39m")
     end
 end
 
-function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
-    io = IOBuffer()
-    getname(io, S, i)
-    String(take!(io))
+function print_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, p)
+    getname(io, constraints, translation, p)
 end
 
-function print_mo_index(io::IO, p)
-    getname(io, GeneralOrbital, p)
-end
-
-function print_mo_index(io::IO, constraints::Constraints, p)
-    getname(io, GeneralOrbital, constraints, p)
-end
-
-function print_mo_index(io::IO, indices...)
+function print_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, indices...)
     for p in indices
-        print_mo_index(io, p)
+        print_mo_index(io, constraints, translation, p)
     end
-end
-
-function print_mo_index(io::IO, constraints::Constraints, indices...)
-    for p in indices
-        print_mo_index(io, constraints, p)
-    end
-end
-
-function print_mo_index(p)
-    getname(GeneralOrbital, p)
 end
 
 index_color::Bool = true

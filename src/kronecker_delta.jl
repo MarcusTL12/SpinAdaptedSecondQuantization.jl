@@ -27,19 +27,12 @@ function KroneckerDelta(indices...)
     KroneckerDelta(collect(indices))
 end
 
-function Base.show(io::IO, d::KroneckerDelta)
+function Base.print(io::IO, constraints::Constraints,
+    translation::IndexTranslation, d::KroneckerDelta)
     print(io, "δ_")
 
     for p in d.indices
-        print_mo_index(io, p)
-    end
-end
-
-function Base.print(io::IO, constraints::Constraints, d::KroneckerDelta)
-    print(io, "δ_")
-
-    for p in d.indices
-        print_mo_index(io, constraints, p)
+        print_mo_index(io, constraints, translation, p)
     end
 end
 

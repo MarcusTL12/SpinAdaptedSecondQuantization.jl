@@ -12,10 +12,11 @@ struct FermionOperator <: Operator
     dag::Bool
 end
 
-function Base.print(io::IO, constraints::Constraints, a::FermionOperator)
+function Base.print(io::IO, constraints::Constraints,
+    translation::IndexTranslation, a::FermionOperator)
     dag = a.dag ? '†' : '⁻'
     print(io, 'a', dag, '_')
-    print_mo_index(io, constraints, a.p)
+    print_mo_index(io, constraints, translation, a.p)
     print(io, a.spin)
 end
 

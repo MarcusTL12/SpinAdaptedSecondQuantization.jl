@@ -3,8 +3,6 @@ function (constraints::Constraints)(p::Int)
     get(constraints, p, GeneralOrbital)
 end
 
-# TODO: make simple constructor that does not check indices
-# This would improve performance of copying/scaling etc...
 struct Term{T<:Number}
     scalar::T
     sum_indices::Vector{Int}
@@ -147,7 +145,7 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
-function Base.show(io::IO, t::Term{T}) where {T<:Number}
+function Base.show(io::IO, t::Term)
     sep = Ref(false)
 
     function printsep()
@@ -156,6 +154,8 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
         end
         sep[] = true
     end
+
+    translation = IndexTranslation()
 
     all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
                           isempty(t.tensors) && isempty(t.operators) &&
@@ -177,7 +177,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
         printsep()
         print(io, "∑_")
         for i in t.sum_indices
-            print_mo_index(io, t.constraints, i)
+            print_mo_index(io, t.constraints, translation, i)
         end
         print(io, '(')
         sep[] = false
@@ -185,17 +185,17 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
 
     for d in t.deltas
         printsep()
-        print(io, t.constraints, d)
+        print(io, t.constraints, translation, d)
     end
 
     for ten in t.tensors
         printsep()
-        print(io, t.constraints, ten)
+        print(io, t.constraints, translation, ten)
     end
 
     for op in t.operators
         printsep()
-        print(io, t.constraints, op)
+        print(io, t.constraints, translation, op)
     end
 
     if !isempty(t.sum_indices)
@@ -219,7 +219,7 @@ function Base.show(io::IO, t::Term{T}) where {T<:Number}
             if !isfirst
                 print(io, ", ")
             end
-            print_mo_index(io, i)
+            print_mo_index(io, t.constraints, translation, i)
             print(io, "∈", getshortname(t.constraints(i)))
             isfirst = false
         end
