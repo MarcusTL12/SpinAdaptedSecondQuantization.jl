@@ -147,6 +147,18 @@ end
 
 do_index_translation::Bool = true
 
+export enable_index_tranlation, disable_index_translation
+
+function enable_index_tranlation()
+    global do_index_translation = true
+    nothing
+end
+
+function disable_index_translation()
+    global do_index_translation = false
+    nothing
+end
+
 function make_index_translation(t::Term)
     translation = IndexTranslation()
 
