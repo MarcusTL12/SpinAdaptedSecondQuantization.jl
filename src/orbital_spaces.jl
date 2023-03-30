@@ -145,9 +145,9 @@ export enable_color, disable_color, set_color
 Enables the coloring of MO-indices to indicate orbital space constraints.
 Color is enabled by default.
 The default coloring scheme is given by:
-    GeneralOrbital: :nothing
-    OccupiedOrbital: :light_green
-    VirtualOrbital: :cyan
+- GeneralOrbital: :nothing
+- OccupiedOrbital: :light_green
+- VirtualOrbital: :cyan
 """
 function enable_color()
     global index_color = true
