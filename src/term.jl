@@ -729,6 +729,7 @@ function simplify_heavy(t::Term)
         lower_delta_indices |>
         simplify_summation_deltas |>
         lower_summation_indices |>
+        simplify_permute |>
         permute_all_sum_indices |>
         set_max_simplified
     end
@@ -943,4 +944,39 @@ function sort_operators(t::Term)
     end
 
     s * t
+end
+
+export simplify_permute
+
+# Function to do all permutations of the PermuteTensor and find the minimally-sorted term
+# P_aibj F_bj -> P_aibj F_ai
+function simplify_permute(t :: Term)
+    perm_tensors = filter(x -> typeof(x) == PermuteTensor, t.tensors)
+    if isempty(perm_tensors)
+        return t
+    end
+
+    min_t = t
+    for tensor in perm_tensors
+        # Preallocate relevant arrays
+        indices = get_indices(tensor)
+        permuted_inds = copy(indices)
+        mapping = [p => p for p in indices]
+        N_pairs = length(indices) ÷ 2
+
+        # Get all permutations of the pairs,
+        # but drop the identity permutation.
+        for perm in Iterators.drop(PermGen(N_pairs), 1)
+            for (i, new_i) = enumerate(perm.data)
+                permuted_inds[2new_i-1] = indices[2i-1]
+                permuted_inds[2new_i] = indices[2i]
+            end
+            for (i, (p, q)) in enumerate(zip(indices, permuted_inds))
+                mapping[i] = p => q
+            end
+            sorted_term = sort_operators(exchange_indices(t, mapping))
+            min_t = min(min_t, sorted_term)
+        end
+    end
+    return min_t
 end
