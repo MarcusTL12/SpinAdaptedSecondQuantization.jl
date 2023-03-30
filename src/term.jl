@@ -145,6 +145,30 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
+do_index_translation::Bool = true
+
+function make_index_translation(t::Term)
+    translation = IndexTranslation()
+
+    o_count = 0
+    v_count = 0
+
+    if do_index_translation
+        for p in t.sum_indices
+            S = t.constraints(p)
+            if S <: OccupiedOrbital
+                o_count += 1
+                translation[p] = (OccupiedOrbital, o_count)
+            elseif S <: VirtualOrbital
+                v_count += 1
+                translation[p] = (VirtualOrbital, v_count)
+            end
+        end
+    end
+
+    translation
+end
+
 function Base.show(io::IO, t::Term)
     sep = Ref(false)
 
@@ -155,7 +179,7 @@ function Base.show(io::IO, t::Term)
         sep[] = true
     end
 
-    translation = IndexTranslation()
+    translation = make_index_translation(t)
 
     all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
                           isempty(t.tensors) && isempty(t.operators) &&
