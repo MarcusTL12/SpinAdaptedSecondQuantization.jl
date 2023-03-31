@@ -102,13 +102,17 @@ end
 
 function getname(io::IO, constraints::Constraints,
     translation::IndexTranslation, i::Int)
-    if index_color
+    do_color = index_color &&
+               (is_strict_subspace(constraints(i), translation(i)[1]) ||
+                color_translated)
+
+    if do_color
         print(io, Base.text_colors[get(colors, constraints(i), :nothing)])
     end
 
     getname(io, translation(i)...)
 
-    if index_color
+    if do_color
         print(io, "\x1b[39m")
     end
 end
@@ -126,8 +130,10 @@ function print_mo_index(io::IO, constraints::Constraints,
 end
 
 index_color::Bool = true
+color_translated::Bool = false
 
-export enable_color, disable_color, set_color
+export enable_color, disable_color, set_color,
+    enable_color_translated, disable_color_translated
 
 """
     enable_color()
@@ -182,6 +188,16 @@ distinguishable colors is infeasible.
 """
 function disable_color(::Type{S}) where {S<:GeneralOrbital}
     delete!(colors, S)
+    nothing
+end
+
+function enable_color_translated()
+    global color_translated = true
+    nothing
+end
+
+function disable_color_translated()
+    global color_translated = false
     nothing
 end
 
