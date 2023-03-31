@@ -14,20 +14,13 @@ SASQ.disable_color()
     @test !SASQ.is_strict_subspace(GeneralOrbital, GeneralOrbital)
 end
 
-@testset "print indices" begin
-    @test SASQ.print_mo_index(1) == "p"
-    @test SASQ.print_mo_index(2) == "q"
-    @test SASQ.print_mo_index(9) == "p₁"
-    @test SASQ.print_mo_index(104) == "w₁₂"
-end
-
 @testset "kronecker delta" begin
-    dpp = SASQ.KroneckerDelta(1, 1)
-    dpq = SASQ.KroneckerDelta(1, 2)
+    dpp = δ(1, 1)
+    dpq = δ(1, 2)
 
     @test string(dpp) == "1"
     @test string(dpq) == "δ_pq"
-    @test dpp == 1
+    @test dpp == SASQ.Expression(1)
 end
 
 @testset "kronecker delta compact" begin
@@ -39,15 +32,15 @@ end
 end
 
 @testset "print singlet excitation operator" begin
-    Epq = SASQ.SingletExcitationOperator(1, 2)
+    Epq = E(1, 2)
     @test string(Epq) == "E_pq"
 end
 
 @testset "print real tensor" begin
-    hpq = SASQ.RealTensor("h", [1, 2])
+    hpq = real_tensor("h", 1, 2)
     @test string(hpq) == "h_pq"
 
-    gpqrs = SASQ.RealTensor("g", [1, 2, 3, 4])
+    gpqrs = real_tensor("g", 1, 2, 3, 4)
     @test string(gpqrs) == "g_pqrs"
 end
 
@@ -70,10 +63,10 @@ end
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
     )
 
-    @test string(t) == "3/5 ∑_rs(δ_pqs g_rsrr h_ps E_pq) C(p∈V, q∈V, r∈O, s∈V)"
+    @test string(t) == "3/5 ∑_ia(δ_pqa g_iaii h_pa E_pq) C(p∈V, q∈V)"
 
     t = SASQ.lower_delta_indices(t)
-    @test string(t) == "3/5 ∑_rs(δ_pqs g_rprr h_pp E_pp) C(p∈V, q∈V, r∈O, s∈V)"
+    @test string(t) == "3/5 ∑_ia(δ_pqa g_ipii h_pp E_pp) C(p∈V, q∈V)"
 
     t = SASQ.Term(
         3 // 5,
@@ -87,7 +80,7 @@ end
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
     )
 
-    @test string(t) == "3/5 ∑_rs(δ_ps g_rsrq h_ps E_pq) C(p∈V, r∈O, s∈V)"
+    @test string(t) == "3/5 ∑_ia(δ_pa g_iaiq h_pa E_pq) C(p∈V)"
 end
 
 @testset "term exchange_indices" begin

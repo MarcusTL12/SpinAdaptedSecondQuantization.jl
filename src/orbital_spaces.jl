@@ -77,7 +77,7 @@ default_color(::Type{GeneralOrbital}) = :nothing
 default_color(::Type{OccupiedOrbital}) = :light_green
 default_color(::Type{VirtualOrbital}) = :cyan
 
-colors::Dict{Type,Any} = Dict{Type,Union{Symbol,Int}}([
+colors::Dict{Type,Union{Symbol,Int}} = Dict{Type,Union{Symbol,Int}}([
     GeneralOrbital => default_color(GeneralOrbital),
     OccupiedOrbital => default_color(OccupiedOrbital),
     VirtualOrbital => default_color(VirtualOrbital),
@@ -94,50 +94,48 @@ function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
     end
 end
 
-function getname(io::IO, ::Type{S}, constraints::Constraints, i::Int) where
-{S<:GeneralOrbital}
-    if index_color
+const IndexTranslation = Dict{Int,Tuple{Type,Int}}
+
+function (translation::IndexTranslation)(p::Int)
+    get(translation, p, (GeneralOrbital, p))
+end
+
+function getname(io::IO, constraints::Constraints,
+    translation::IndexTranslation, i::Int)
+    do_color = index_color &&
+               (is_strict_subspace(constraints(i), translation(i)[1]) ||
+                color_translated)
+
+    if do_color
         print(io, Base.text_colors[get(colors, constraints(i), :nothing)])
     end
-    getname(io, S, i)
-    if index_color
+
+    getname(io, translation(i)...)
+
+    if do_color
         print(io, "\x1b[39m")
     end
 end
 
-function getname(::Type{S}, i::Int) where {S<:GeneralOrbital}
-    io = IOBuffer()
-    getname(io, S, i)
-    String(take!(io))
+function print_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, p)
+    getname(io, constraints, translation, p)
 end
 
-function print_mo_index(io::IO, p)
-    getname(io, GeneralOrbital, p)
-end
-
-function print_mo_index(io::IO, constraints::Constraints, p)
-    getname(io, GeneralOrbital, constraints, p)
-end
-
-function print_mo_index(io::IO, indices...)
+function print_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, indices...)
     for p in indices
-        print_mo_index(io, p)
+        print_mo_index(io, constraints, translation, p)
     end
-end
-
-function print_mo_index(io::IO, constraints::Constraints, indices...)
-    for p in indices
-        print_mo_index(io, constraints, p)
-    end
-end
-
-function print_mo_index(p)
-    getname(GeneralOrbital, p)
 end
 
 index_color::Bool = true
+color_translated::Bool = false
+do_index_translation::Bool = true
 
-export enable_color, disable_color, set_color
+export enable_color, disable_color, set_color,
+    enable_color_translated, disable_color_translated,
+    enable_index_tranlation, disable_index_translation
 
 """
     enable_color()
@@ -192,6 +190,57 @@ distinguishable colors is infeasible.
 """
 function disable_color(::Type{S}) where {S<:GeneralOrbital}
     delete!(colors, S)
+    nothing
+end
+
+"""
+    enable_index_translation()
+
+Enables the translation of summation indices over occupied and virtual to be
+printed as ijkl... and abcd... respectively instead of pqrs...
+
+By default translated indices lose their subspace coloring to reduce redundant
+information (unless the index is in an even stricter subspace which requires
+coloring nevertheless). To re-enable the coloring see
+[`enable_color_translated`](@ref).
+
+This is enabled by default.
+"""
+function enable_index_tranlation()
+    global do_index_translation = true
+    nothing
+end
+
+"""
+    disables_index_translation()
+
+Disables the translation of summation indices over occupied and virtual to be
+printed as ijkl... and abcd... respectively instead of pqrs...
+
+See [`enable_index_tranlation`](@ref)
+"""
+function disable_index_translation()
+    global do_index_translation = false
+    nothing
+end
+
+"""
+    enable_color_translated()
+
+Enables the coloring of indices that has been translated.
+"""
+function enable_color_translated()
+    global color_translated = true
+    nothing
+end
+
+"""
+    disable_color_translated()
+
+Disables the coloring of indices that has been translated.
+"""
+function disable_color_translated()
+    global color_translated = false
     nothing
 end
 

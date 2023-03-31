@@ -21,7 +21,7 @@ include("operators/commutation_relations.jl")
 
 All typed extending `Operator` must overload this function.
 """
-function Base.print(::IO, ::Constraints, ::O) where {O<:Operator}
+function Base.print(::IO, ::Constraints, ::IndexTranslation, ::Operator)
     throw("Base.print(::IO, ::Constraints, ::$O) not implemented!")
 end
 
@@ -32,7 +32,7 @@ All typed extending `Operator` must overload this function.
 It should return a new operator where all indices have been exchanged
 according to the `mapping`.
 """
-function exchange_indices(::O, mapping) where {O<:Operator}
+function exchange_indices(::Operator, mapping)
     throw("exchange_indices(::$O, mapping) not implemented!")
 end
 
@@ -43,7 +43,7 @@ All typed extending `Operator` must overload this function.
 It should return an iteratable over all the MO-indices contained in the operator
 in order.
 """
-function get_all_indices(::O) where {O<:Operator}
+function get_all_indices(::Operator)
     throw("get_all_indices(::$O) not implemented!")
 end
 
@@ -58,7 +58,7 @@ Example:
 
 ``E_{p q} |HF⟩ = (2 δ_{p q} C(p∈O,q∈O) + E_{p q} C(p∈V,q∈O)) |HF⟩``
 """
-function act_on_ket(::O) where {O<:Operator}
+function act_on_ket(::Operator)
     throw("act_on_ket(::$O) not implemented!")
 end
 
@@ -83,7 +83,7 @@ of the operators.
     Only one order needs to be implemented, meaning if `isless(::A, ::B)`
     is implemented, there is no need to also implement `isless(::B, ::A)`
 """
-function Base.isless(a::A, b::B) where {A<:Operator,B<:Operator}
+function Base.isless(a::Operator, b::Operator)
     !(b < a)
 end
 
