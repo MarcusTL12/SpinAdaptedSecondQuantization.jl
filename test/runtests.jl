@@ -462,3 +462,10 @@ end
     @test act_on_ket(a * b * adag * bdag) == virtual(1)
     @test simplify(a * b * bdag * adag * E(2,3)) == a * adag * E(2,3) * b * bdag
 end
+
+@testset "PermuteTensor" begin
+    @test permute_tensor(1, 2, 3, 4) == permute_tensor(3, 4, 1, 2)
+    eq1 = permute_tensor(1,2,3,4) * real_tensor("h", 3, 4)
+    eq2 = permute_tensor(1,2,3,4) * real_tensor("h", 1, 2)
+    @test simplify_heavy(eq1) == eq2
+end
