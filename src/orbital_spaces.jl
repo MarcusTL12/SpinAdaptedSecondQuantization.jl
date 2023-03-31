@@ -193,21 +193,52 @@ function disable_color(::Type{S}) where {S<:GeneralOrbital}
     nothing
 end
 
+"""
+    enable_index_translation()
+
+Enables the translation of summation indices over occupied and virtual to be
+printed as ijkl... and abcd... respectively instead of pqrs...
+
+By default translated indices lose their subspace coloring to reduce redundant
+information (unless the index is in an even stricter subspace which requires
+coloring nevertheless). To re-enable the coloring see
+[`enable_color_translated`](@ref).
+
+This is enabled by default.
+"""
 function enable_index_tranlation()
     global do_index_translation = true
     nothing
 end
 
+"""
+    disables_index_translation()
+
+Disables the translation of summation indices over occupied and virtual to be
+printed as ijkl... and abcd... respectively instead of pqrs...
+
+See [`enable_index_tranlation`](@ref)
+"""
 function disable_index_translation()
     global do_index_translation = false
     nothing
 end
 
+"""
+    enable_color_translated()
+
+Enables the coloring of indices that has been translated.
+"""
 function enable_color_translated()
     global color_translated = true
     nothing
 end
 
+"""
+    disable_color_translated()
+
+Disables the coloring of indices that has been translated.
+"""
 function disable_color_translated()
     global color_translated = false
     nothing
