@@ -131,9 +131,11 @@ end
 
 index_color::Bool = true
 color_translated::Bool = false
+do_index_translation::Bool = true
 
 export enable_color, disable_color, set_color,
-    enable_color_translated, disable_color_translated
+    enable_color_translated, disable_color_translated,
+    enable_index_tranlation, disable_index_translation
 
 """
     enable_color()
@@ -188,6 +190,16 @@ distinguishable colors is infeasible.
 """
 function disable_color(::Type{S}) where {S<:GeneralOrbital}
     delete!(colors, S)
+    nothing
+end
+
+function enable_index_tranlation()
+    global do_index_translation = true
+    nothing
+end
+
+function disable_index_translation()
+    global do_index_translation = false
     nothing
 end
 
