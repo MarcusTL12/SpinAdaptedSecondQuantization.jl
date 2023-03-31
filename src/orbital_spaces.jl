@@ -77,7 +77,7 @@ default_color(::Type{GeneralOrbital}) = :nothing
 default_color(::Type{OccupiedOrbital}) = :light_green
 default_color(::Type{VirtualOrbital}) = :cyan
 
-colors::Dict{Type,Any} = Dict{Type,Union{Symbol,Int}}([
+colors::Dict{Type,Union{Symbol,Int}} = Dict{Type,Union{Symbol,Int}}([
     GeneralOrbital => default_color(GeneralOrbital),
     OccupiedOrbital => default_color(OccupiedOrbital),
     VirtualOrbital => default_color(VirtualOrbital),
