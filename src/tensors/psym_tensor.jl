@@ -12,18 +12,6 @@ end
 get_symbol(t::ParticleSymmetricTensor) = t.symbol
 get_indices(t::ParticleSymmetricTensor) = t.indices
 
-# function get_indices_permutations(t::ParticleSymmetricTensor)
-#     n_pairs = length(t.indices) ÷ 2
-#     if n_pairs == 1
-#         return [t.indices]
-#     elseif n_pairs == 2
-#         ind = copy(t.indices)
-#         return [t.indices, permute!(ind, [3,4,1,2])]
-#     else
-#         throw("not implemented PSymmTensor nPairs = $n_pairs")
-#     end
-# end
-
 function sort_psym_indices!(indices)
     sort!(reinterpret(NTuple{2,Int}, indices))
 end
