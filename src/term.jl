@@ -229,6 +229,9 @@ function Base.show(io::IO, t::Term)
         haskey(colors, t.constraints(x))
     end
     constraint_print = [i for (i, _) in t.constraints if i ∉ constraint_noprint]
+    filter!(constraint_print) do x
+        is_strict_subspace(t.constraints(x), translation(x)[1])
+    end
 
     if !isempty(constraint_print)
         printsep()
