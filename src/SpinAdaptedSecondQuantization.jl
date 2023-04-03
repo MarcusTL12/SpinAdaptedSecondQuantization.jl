@@ -26,4 +26,6 @@ include("wick_theorem.jl")
 
 include("print_code.jl")
 
+include("snoopprecompile.jl")
+
 end # module SpinAdaptedSecondQuantization
