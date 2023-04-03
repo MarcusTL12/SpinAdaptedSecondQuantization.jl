@@ -47,3 +47,6 @@ function act_on_ket(t::Term{A}, max_ops) where {A<:Number}
 
     Expression(terms)
 end
+
+export hf_expectation_value
+hf_expectation_value(ex::Expression) = act_on_ket(ex, 0)
