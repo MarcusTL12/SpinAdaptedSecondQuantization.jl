@@ -180,7 +180,7 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
     for (p, (S, _)) in translation
         Sc = t.constraints(p)
         if !(Sc <: S)
-            @warn "Printing index $p as $S, but it is only constrained to $Sc"
+            @warn "Printing index $p as $S, but it is constrained to $Sc"
         end
     end
 
