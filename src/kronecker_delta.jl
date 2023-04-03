@@ -27,8 +27,10 @@ function KroneckerDelta(indices...)
     KroneckerDelta(collect(indices))
 end
 
-function Base.print(io::IO, constraints::Constraints,
-    translation::IndexTranslation, d::KroneckerDelta)
+function Base.show(io::IO,
+    (
+        d, constraints, translation
+    )::Tuple{KroneckerDelta,Constraints,IndexTranslation})
     print(io, "δ_")
 
     for p in d.indices

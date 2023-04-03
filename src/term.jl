@@ -145,11 +145,24 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
+# TODO: Make this more subspace agnostic
 function update_index_translation(t::Term, translation::IndexTranslation)
     translation = copy(translation)
 
-    o_count = count(x -> x[1] == OccupiedOrbital, values(translation))
-    v_count = count(x -> x[1] == VirtualOrbital, values(translation))
+    all_inds = get_all_indices(t)
+
+    o_count = 0
+    v_count = 0
+
+    for (p, (S, _)) in translation
+        if p ∈ all_inds
+            if S <: OccupiedOrbital
+                o_count += 1
+            elseif S <: VirtualOrbital
+                v_count += 1
+            end
+        end
+    end
 
     if do_index_translation
         for p in t.sum_indices
@@ -216,17 +229,17 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
 
     for d in t.deltas
         printsep()
-        print(io, t.constraints, translation, d)
+        print(io, (d, t.constraints, translation))
     end
 
     for ten in t.tensors
         printsep()
-        print(io, t.constraints, translation, ten)
+        print(io, (ten, t.constraints, translation))
     end
 
     for op in t.operators
         printsep()
-        print(io, t.constraints, translation, op)
+        print(io, (op, t.constraints, translation))
     end
 
     if !isempty(t.sum_indices)

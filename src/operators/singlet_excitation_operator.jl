@@ -10,9 +10,10 @@ struct SingletExcitationOperator <: Operator
     q::Int
 end
 
-function Base.print(io::IO,
-    constraints::Constraints, translation::IndexTranslation,
-    e::SingletExcitationOperator)
+function Base.show(io::IO,
+    (
+        e, constraints, translation
+    )::Tuple{SingletExcitationOperator,Constraints,IndexTranslation})
     print(io, "E_")
     print_mo_index(io, constraints, translation, e.p, e.q)
 end

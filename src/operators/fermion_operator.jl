@@ -12,8 +12,10 @@ struct FermionOperator <: Operator
     dag::Bool
 end
 
-function Base.print(io::IO, constraints::Constraints,
-    translation::IndexTranslation, a::FermionOperator)
+function Base.show(io::IO,
+    (
+        a, constraints, translation
+    )::Tuple{FermionOperator,Constraints,IndexTranslation})
     dag = a.dag ? '†' : '⁻'
     print(io, 'a', dag, '_')
     print_mo_index(io, constraints, translation, a.p)
