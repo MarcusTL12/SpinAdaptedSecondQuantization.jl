@@ -177,6 +177,13 @@ function Base.show(io::IO, t::Term)
 
     translation = make_index_translation(t)
 
+    for (p, (S, _)) in translation
+        Sc = t.constraints(p)
+        if is_strict_subspace(S, Sc)
+            @warn "Printing index $p as $S, but it is only constrained to $Sc"
+        end
+    end
+
     all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
                           isempty(t.tensors) && isempty(t.operators) &&
                           isempty(t.constraints)

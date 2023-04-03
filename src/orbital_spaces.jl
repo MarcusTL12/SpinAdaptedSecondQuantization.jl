@@ -110,12 +110,6 @@ function getname(io::IO, constraints::Constraints,
         print(io, Base.text_colors[get(colors, constraints(i), :nothing)])
     end
 
-    if is_strict_subspace(translation(i)[1], constraints(i))
-        St = translation(i)[1]
-        Sc = constraints(i)
-        @warn "Printing index $i as $St, but it is only constrained to $Sc"
-    end
-
     getname(io, translation(i)...)
 
     if do_color
