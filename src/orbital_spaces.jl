@@ -100,6 +100,21 @@ function (translation::IndexTranslation)(p::Int)
     get(translation, p, (GeneralOrbital, p))
 end
 
+export translate
+function translate(translations...)
+    counts = Dict{Type,Int}()
+    translation = IndexTranslation()
+
+    for (S, inds) in translations
+        for p in inds
+            counts[S] = get(counts, S, 0) + 1
+            translation[p] = (S, counts[S])
+        end
+    end
+
+    translation
+end
+
 function getname(io::IO, constraints::Constraints,
     translation::IndexTranslation, i::Int)
     do_color = index_color &&

@@ -145,7 +145,9 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
-function make_index_translation(t::Term, translation=IndexTranslation())
+function update_index_translation(t::Term, translation::IndexTranslation)
+    translation = copy(translation)
+
     o_count = count(x -> x[1] == OccupiedOrbital, values(translation))
     v_count = count(x -> x[1] == VirtualOrbital, values(translation))
 
@@ -165,7 +167,7 @@ function make_index_translation(t::Term, translation=IndexTranslation())
     translation
 end
 
-function Base.show(io::IO, t::Term)
+function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
     sep = Ref(false)
 
     function printsep()
@@ -175,14 +177,14 @@ function Base.show(io::IO, t::Term)
         sep[] = true
     end
 
-    translation = make_index_translation(t)
-
     for (p, (S, _)) in translation
         Sc = t.constraints(p)
-        if is_strict_subspace(S, Sc)
+        if !(Sc <: S)
             @warn "Printing index $p as $S, but it is only constrained to $Sc"
         end
     end
+
+    translation = update_index_translation(t, translation)
 
     all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
                           isempty(t.tensors) && isempty(t.operators) &&
