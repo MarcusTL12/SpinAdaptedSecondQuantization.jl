@@ -177,9 +177,11 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         sep[] = true
     end
 
+    all_inds = get_all_indices(t)
+
     for (p, (S, _)) in translation
         Sc = t.constraints(p)
-        if !(Sc <: S)
+        if p ∈ all_inds && !(Sc <: S)
             @warn "Printing index $p as $S, but it is constrained to $Sc"
         end
     end
