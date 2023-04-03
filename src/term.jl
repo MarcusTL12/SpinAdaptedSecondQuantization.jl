@@ -149,13 +149,13 @@ end
 function update_index_translation(t::Term, translation::IndexTranslation)
     translation = copy(translation)
 
-    all_inds = get_all_indices(t)
+    ex_inds = get_external_indices(t)
 
     o_count = 0
     v_count = 0
 
     for (p, (S, _)) in translation
-        if p ∈ all_inds
+        if p ∈ ex_inds
             if S <: OccupiedOrbital
                 o_count += 1
             elseif S <: VirtualOrbital
@@ -190,11 +190,11 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         sep[] = true
     end
 
-    all_inds = get_all_indices(t)
+    ex_inds = get_external_indices(t)
 
     for (p, (S, _)) in translation
         Sc = t.constraints(p)
-        if p ∈ all_inds && !(Sc <: S)
+        if p ∈ ex_inds && !(Sc <: S)
             @warn "Printing index $p as $S, but it is constrained to $Sc"
         end
     end
@@ -437,6 +437,11 @@ function get_all_indices(t::Term)
 
     sort!(indices)
     unique!(indices)
+end
+
+function get_external_indices(t::Term)
+    all_inds = get_all_indices(t)
+    sort!(setdiff!(all_inds, t.sum_indices))
 end
 
 # This returns the sum indices of a term
