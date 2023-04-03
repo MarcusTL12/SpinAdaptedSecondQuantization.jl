@@ -145,11 +145,9 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
-function make_index_translation(t::Term)
-    translation = IndexTranslation()
-
-    o_count = 0
-    v_count = 0
+function make_index_translation(t::Term, translation=IndexTranslation())
+    o_count = count(x -> x[1] == OccupiedOrbital, values(translation))
+    v_count = count(x -> x[1] == VirtualOrbital, values(translation))
 
     if do_index_translation
         for p in t.sum_indices
@@ -978,7 +976,7 @@ export simplify_permute
 
 # Function to do all permutations of the PermuteTensor and find the minimally-sorted term
 # P_aibj F_bj -> P_aibj F_ai
-function simplify_permute(t :: Term)
+function simplify_permute(t::Term)
     perm_tensors = filter(x -> typeof(x) == PermuteTensor, t.tensors)
     if isempty(perm_tensors)
         return t
