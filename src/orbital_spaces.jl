@@ -115,7 +115,7 @@ function translate(translations...)
     translation
 end
 
-function getname(io::IO, constraints::Constraints,
+function print_mo_index(io::IO, constraints::Constraints,
     translation::IndexTranslation, i::Int)
     do_color = index_color &&
                (is_strict_subspace(constraints(i), translation(i)[1]) ||
@@ -133,20 +133,29 @@ function getname(io::IO, constraints::Constraints,
 end
 
 function print_mo_index(io::IO, constraints::Constraints,
-    translation::IndexTranslation, p)
-    getname(io, constraints, translation, p)
-end
-
-function print_mo_index(io::IO, constraints::Constraints,
     translation::IndexTranslation, indices...)
     for p in indices
         print_mo_index(io, constraints, translation, p)
     end
 end
 
+function print_latex_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, p::Int)
+    getname(io, translation(p)...)
+end
+
+function print_latex_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, indices...)
+    for p in indices
+        print_latex_mo_index(io, constraints, translation, p)
+    end
+end
+
 index_color::Bool = true
 color_translated::Bool = false
 do_index_translation::Bool = true
+
+index_color_latex::Bool = false
 
 export enable_color, disable_color, set_color,
     enable_color_translated, disable_color_translated,

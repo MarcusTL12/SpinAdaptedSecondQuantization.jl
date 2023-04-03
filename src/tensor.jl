@@ -21,6 +21,15 @@ function Base.show(io::IO,
     end
 end
 
+function print_latex(io::IO,
+    (t, constraints, translation)::Tuple{Tensor,Constraints,IndexTranslation})
+    print(io, get_symbol(t), "_{")
+    for ind in get_indices(t)
+        print_latex_mo_index(io, constraints, translation, ind)
+    end
+    print(io, '}')
+end
+
 function Base.:(==)(a::A, b::B) where {A<:Tensor,B<:Tensor}
     (get_symbol(a), get_indices(a)) == (get_symbol(b), get_indices(b))
 end

@@ -38,6 +38,19 @@ function Base.show(io::IO,
     end
 end
 
+function print_latex(io::IO,
+    (
+        d, constraints, translation
+    )::Tuple{KroneckerDelta,Constraints,IndexTranslation})
+    print(io, "\\delta_{")
+
+    for p in d.indices
+        print_latex_mo_index(io, constraints, translation, p)
+    end
+
+    print(io, '}')
+end
+
 """
     delta(indices...)
 
