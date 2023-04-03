@@ -145,11 +145,24 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
-function make_index_translation(t::Term)
-    translation = IndexTranslation()
+# TODO: Make this more subspace agnostic
+function update_index_translation(t::Term, translation::IndexTranslation)
+    translation = copy(translation)
+
+    ex_inds = get_external_indices(t)
 
     o_count = 0
     v_count = 0
+
+    for (p, (S, _)) in translation
+        if p ∈ ex_inds
+            if S <: OccupiedOrbital
+                o_count += 1
+            elseif S <: VirtualOrbital
+                v_count += 1
+            end
+        end
+    end
 
     if do_index_translation
         for p in t.sum_indices
@@ -167,7 +180,7 @@ function make_index_translation(t::Term)
     translation
 end
 
-function Base.show(io::IO, t::Term)
+function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
     sep = Ref(false)
 
     function printsep()
@@ -177,7 +190,16 @@ function Base.show(io::IO, t::Term)
         sep[] = true
     end
 
-    translation = make_index_translation(t)
+    ex_inds = get_external_indices(t)
+
+    for (p, (S, _)) in translation
+        Sc = t.constraints(p)
+        if p ∈ ex_inds && !(Sc <: S)
+            @warn "Printing index $p as $S, but it is constrained to $Sc"
+        end
+    end
+
+    translation = update_index_translation(t, translation)
 
     all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
                           isempty(t.tensors) && isempty(t.operators) &&
@@ -207,17 +229,17 @@ function Base.show(io::IO, t::Term)
 
     for d in t.deltas
         printsep()
-        print(io, t.constraints, translation, d)
+        print(io, (d, t.constraints, translation))
     end
 
     for ten in t.tensors
         printsep()
-        print(io, t.constraints, translation, ten)
+        print(io, (ten, t.constraints, translation))
     end
 
     for op in t.operators
         printsep()
-        print(io, t.constraints, translation, op)
+        print(io, (op, t.constraints, translation))
     end
 
     if !isempty(t.sum_indices)
@@ -415,6 +437,11 @@ function get_all_indices(t::Term)
 
     sort!(indices)
     unique!(indices)
+end
+
+function get_external_indices(t::Term)
+    all_inds = get_all_indices(t)
+    sort!(setdiff!(all_inds, t.sum_indices))
 end
 
 # This returns the sum indices of a term
@@ -978,7 +1005,7 @@ export simplify_permute
 
 # Function to do all permutations of the PermuteTensor and find the minimally-sorted term
 # P_aibj F_bj -> P_aibj F_ai
-function simplify_permute(t :: Term)
+function simplify_permute(t::Term)
     perm_tensors = filter(x -> typeof(x) == PermuteTensor, t.tensors)
     if isempty(perm_tensors)
         return t

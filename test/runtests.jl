@@ -63,10 +63,12 @@ end
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
     )
 
-    @test string(t) == "3/5 ∑_ia(δ_pqa g_iaii h_pa E_pq) C(p∈V, q∈V)"
+    @test string(SASQ.Expression([t])) ==
+          "3/5 ∑_ia(δ_pqa g_iaii h_pa E_pq) C(p∈V, q∈V)"
 
     t = SASQ.lower_delta_indices(t)
-    @test string(t) == "3/5 ∑_ia(δ_pqa g_ipii h_pp E_pp) C(p∈V, q∈V)"
+    @test string(SASQ.Expression([t])) ==
+          "3/5 ∑_ia(δ_pqa g_ipii h_pp E_pp) C(p∈V, q∈V)"
 
     t = SASQ.Term(
         3 // 5,
@@ -80,7 +82,8 @@ end
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
     )
 
-    @test string(t) == "3/5 ∑_ia(δ_pa g_iaiq h_pa E_pq) C(p∈V)"
+    @test string(SASQ.Expression([t])) ==
+          "3/5 ∑_ia(δ_pa g_iaiq h_pa E_pq) C(p∈V)"
 end
 
 @testset "term exchange_indices" begin
@@ -102,19 +105,22 @@ end
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
     )
 
-    @test string(t) == "3/7 δ_pqr g_stsq h_pt E_pq C(s∈O, t∈V)"
+    @test string(SASQ.Expression([t])) ==
+          "3/7 δ_pqr g_stsq h_pt E_pq C(s∈O, t∈V)"
 
     t = SASQ.lower_delta_indices(t)
 
-    @test string(t) == "3/7 δ_pqr g_stsp h_pt E_pp C(s∈O, t∈V)"
+    @test string(SASQ.Expression([t])) ==
+          "3/7 δ_pqr g_stsp h_pt E_pp C(s∈O, t∈V)"
 
     t2 = SASQ.exchange_indices(t, [p => q])
 
-    @test string(t2) == "3/7 δ_qr g_stsq h_qt E_qq C(s∈O, t∈V)"
+    @test string(SASQ.Expression([t2])) ==
+          "3/7 δ_qr g_stsq h_qt E_qq C(s∈O, t∈V)"
 
     t3 = SASQ.exchange_indices(t2, [q => r])
 
-    @test string(t3) == "3/7 g_stsr h_rt E_rr C(s∈O, t∈V)"
+    @test string(SASQ.Expression([t3])) == "3/7 g_stsr h_rt E_rr C(s∈O, t∈V)"
 end
 
 @testset "term summation delta" begin
@@ -460,12 +466,12 @@ end
     @test act_on_ket(b * b * bdag * bdag) == SASQ.Expression(2)
     @test act_on_ket(b * b * b * bdag * bdag * bdag) == SASQ.Expression(6)
     @test act_on_ket(a * b * adag * bdag) == virtual(1)
-    @test simplify(a * b * bdag * adag * E(2,3)) == a * adag * E(2,3) * b * bdag
+    @test simplify(a * b * bdag * adag * E(2, 3)) == a * adag * E(2, 3) * b * bdag
 end
 
 @testset "PermuteTensor" begin
     @test permute_tensor(1, 2, 3, 4) == permute_tensor(3, 4, 1, 2)
-    eq1 = permute_tensor(1,2,3,4) * real_tensor("h", 3, 4)
-    eq2 = permute_tensor(1,2,3,4) * real_tensor("h", 1, 2)
+    eq1 = permute_tensor(1, 2, 3, 4) * real_tensor("h", 3, 4)
+    eq2 = permute_tensor(1, 2, 3, 4) * real_tensor("h", 1, 2)
     @test simplify_heavy(eq1) == eq2
 end

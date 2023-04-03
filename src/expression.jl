@@ -38,6 +38,11 @@ struct Expression{T<:Number}
 end
 
 function Base.show(io::IO, ex::Expression)
+    show(io, (ex, IndexTranslation()))
+end
+
+function Base.show(io::IO,
+    (ex, translation)::Tuple{Expression,IndexTranslation})
     if isempty(ex.terms)
         throw("Expressions should not be empty,\
 but rather include a single zero term")
@@ -46,16 +51,16 @@ but rather include a single zero term")
     t, rest = Iterators.peel(ex.terms)
 
     if t.scalar < 0
-        print(io, "- ", new_scalar(t, -t.scalar))
+        print(io, "- ", (new_scalar(t, -t.scalar), translation))
     else
-        print(io, t)
+        print(io, (t, translation))
     end
 
     for t in rest
         if t.scalar < 0
-            print(io, "\n- ", new_scalar(t, -t.scalar))
+            print(io, "\n- ", (new_scalar(t, -t.scalar), translation))
         else
-            print(io, "\n+ ", t)
+            print(io, "\n+ ", (t, translation))
         end
     end
 end

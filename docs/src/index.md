@@ -8,7 +8,7 @@ quantum chemistry methods, such as post Hartree-Fock methods.
 To install the package, run
 
 ```julia
-(v1.8) pkg> add https://github.com/MarcusTL12/SpinAdaptedSecondQuantization.jl
+(v1.8) pkg> add SpinAdaptedSecondQuantization
 ```
 
 Julia version 1.8 or higher is required.

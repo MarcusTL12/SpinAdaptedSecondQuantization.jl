@@ -17,12 +17,13 @@ include("operators/commutation_relations.jl")
 # Required methods for all Operators to overload:
 
 """
-    Base.print(::IO, ::Constraints, ::Operator)
+    Base.show(::IO, ::Tuple{Operator,Constraints,IndexTranslation})
 
 All typed extending `Operator` must overload this function.
 """
-function Base.print(::IO, ::Constraints, ::IndexTranslation, ::Operator)
-    throw("Base.print(::IO, ::Constraints, ::$O) not implemented!")
+function Base.show(::IO, ::Tuple{Operator,Constraints,IndexTranslation})
+    throw("Base.show(::IO, ::Tuple{$O,Constraints,IndexTranslation}) \
+    not implemented!")
 end
 
 """

@@ -12,9 +12,9 @@ get_indices_permutations(::T) where {T<:Tensor} =
     throw("get_indices_permutations not implemented for Tensor type $(T)!")
 
 
-# Base.print is overridable if wanted (typically for cluster amplitudes)
-function Base.print(io::IO, constraints::Constraints,
-    translation::IndexTranslation, t::Tensor)
+# Base.show is overridable if wanted (typically for cluster amplitudes)
+function Base.show(io::IO,
+    (t, constraints, translation)::Tuple{Tensor,Constraints,IndexTranslation})
     print(io, get_symbol(t), '_')
     for ind in get_indices(t)
         print_mo_index(io, constraints, translation, ind)

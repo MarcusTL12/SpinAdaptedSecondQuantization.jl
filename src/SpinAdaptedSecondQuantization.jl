@@ -21,11 +21,12 @@ include("tensor.jl")
 include("term.jl")
 include("expression.jl")
 
-include("hf_expectation_value.jl")
 include("ket.jl")
 include("wick_theorem.jl")
 
 include("print_latex.jl")
 include("print_code.jl")
+
+include("snoopprecompile.jl")
 
 end # module SpinAdaptedSecondQuantization
