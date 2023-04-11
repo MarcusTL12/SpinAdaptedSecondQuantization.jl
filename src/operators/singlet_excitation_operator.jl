@@ -64,3 +64,7 @@ function act_on_ket(op::SingletExcitationOperator)
     E(p, q) * virtual(p) * occupied(q) +
     2 * δ(p, q) * occupied(p, q)
 end
+
+function Base.adjoint(op::SingletExcitationOperator)
+    SingletExcitationOperator(op.q, op.p)
+end

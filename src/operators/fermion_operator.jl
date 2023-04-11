@@ -49,3 +49,7 @@ function act_on_ket(op::FermionOperator)
         occupied(op.p)
     end
 end
+
+function Base.adjoint(op::FermionOperator)
+    FermionOperator(op.p, op.spin, !op.dag)
+end

@@ -1035,3 +1035,15 @@ function simplify_permute(t::Term)
     end
     return min_t
 end
+
+function Base.adjoint(t::Term)
+    Term(
+        t.scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        [o' for o in Iterators.reverse(t.operators)],
+        t.constraints,
+        false
+    )
+end
