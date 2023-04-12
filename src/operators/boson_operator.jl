@@ -38,3 +38,7 @@ bosondag() = Expression(BosonOperator(true))
 function act_on_ket(op::BosonOperator)
     (op.dag) * Expression(op)
 end
+
+function Base.adjoint(op::BosonOperator)
+    BosonOperator(!op.dag)
+end

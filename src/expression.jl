@@ -398,3 +398,7 @@ function convert_to_elementary_operators(ex::Expression{T}) where {T<:Number}
 
     Expression(terms)
 end
+
+function Base.adjoint(ex::Expression)
+    Expression([t' for t in ex.terms])
+end
