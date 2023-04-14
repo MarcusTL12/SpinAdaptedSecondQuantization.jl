@@ -15,9 +15,13 @@ get_indices_permutations(::T) where {T<:Tensor} =
 # Base.show is overridable if wanted (typically for cluster amplitudes)
 function Base.show(io::IO,
     (t, constraints, translation)::Tuple{Tensor,Constraints,IndexTranslation})
-    print(io, get_symbol(t), '_')
-    for ind in get_indices(t)
-        print_mo_index(io, constraints, translation, ind)
+    print(io, get_symbol(t))
+    inds = get_indices(t)
+    if !isempty(inds)
+        print(io, '_')
+        for ind in inds
+            print_mo_index(io, constraints, translation, ind)
+        end
     end
 end
 
