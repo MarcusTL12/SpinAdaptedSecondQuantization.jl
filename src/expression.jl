@@ -402,3 +402,15 @@ end
 function Base.adjoint(ex::Expression)
     Expression([t' for t in ex.terms])
 end
+
+function Base.:(^)(ex::Expression{T}, n::Integer) where {T<:Number}
+    if n < 0
+        throw("Negative powers for expressions are not supported!")
+    end
+
+    ex2 = Expression(one(T))
+    for _ in 1:n
+        ex2 *= ex
+    end
+    ex2
+end
