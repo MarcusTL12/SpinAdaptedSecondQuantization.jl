@@ -50,6 +50,8 @@ F = ∑(real_tensor("F", 1, 2) * E(1, 2), 1:2)
 
 H = F + Φ
 
+trans = translate(OccupiedOrbital => 1:2:10, VirtualOrbital => 2:2:10)
+
 # Solve CCSDT equations (~2 min / 8 threads)
 # Note: external symmetries ai<->bj<->ck is not found
 T = Tn(2) + Tn(3)
@@ -57,3 +59,5 @@ Ecorr = cc_ket(H, T, 1, 0)
 omega_ai = cc_ket(H, T, 2, 1)
 omega_aibj = cc_ket(H, T, 2, 2)
 omega_aibjck = cc_ket(H, T, 2, 3)
+
+println("With translated external indices:\n", (omega_ai, trans))
