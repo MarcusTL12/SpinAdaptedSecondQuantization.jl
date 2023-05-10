@@ -3,21 +3,21 @@ using SpinAdaptedSecondQuantization
 function cc_projection(order)
     # Biorthogonal projection operators
     El(i,a) = E(i,a) * virtual(a) * occupied(i)
-    i = 1; j = 3; k = 5
-    a = 2; b = 4; c = 6
+    a = 1; b = 3; c = 5
+    i = 2; j = 4; k = 6
     if order == 0
         P = SASQ.Expression(1)
     elseif order == 1
-        P = 1//2 * El(1,2)
+        P = 1//2 * El(i,a)
     elseif order == 2
-        P = 1//6 * (2 * El(1,2) * El(3,4) + El(3,2) * El(1,4))
+        P = 1//6 * (2 * El(i,a) * El(j,b) + El(i,b) * El(j,a))
     elseif order == 3
-        P = 1//24 * (3 * El(i, a) * El(j, b) * El(k, c)
-                   + 1 * El(i, a) * El(j, c) * El(k, b)
-                   + 1 * El(i, b) * El(j, a) * El(k, c)
-                   - 1 * El(i, b) * El(j, c) * El(k, a)
-                   - 1 * El(i, c) * El(j, a) * El(k, b)
-                   - 3 * El(i, c) * El(j, b) * El(k, a) )
+        P = 1//120 * (17 * El(i, a) * El(j, b) * El(k, c)
+                     - 1 * El(i, a) * El(j, c) * El(k, b)
+                     - 1 * El(i, b) * El(j, a) * El(k, c)
+                     - 7 * El(i, b) * El(j, c) * El(k, a)
+                     - 7 * El(i, c) * El(j, a) * El(k, b)
+                     - 1 * El(i, c) * El(j, b) * El(k, a) )
     else
         throw("order not supported")
     end
@@ -50,7 +50,7 @@ F = ∑(real_tensor("F", 1, 2) * E(1, 2), 1:2)
 
 H = F + Φ
 
-trans = translate(OccupiedOrbital => 1:2:10, VirtualOrbital => 2:2:10)
+trans = translate(VirtualOrbital => 1:2:10, OccupiedOrbital => 2:2:10)
 
 # Solve CCSDT equations (~2 min / 8 threads)
 # Note: external symmetries ai<->bj<->ck is not found
@@ -60,4 +60,7 @@ omega_ai = cc_ket(H, T, 2, 1)
 omega_aibj = cc_ket(H, T, 2, 2)
 omega_aibjck = cc_ket(H, T, 2, 3)
 
-println("With translated external indices:\n", (omega_ai, trans))
+println("CC Energy:\n", (Ecorr, trans))
+println("Ω_ai:\n", (omega_ai, trans))
+println("Ω_aibj:\n", (omega_aibj, trans))
+println("Ω_aibjck:\n", (omega_aibjck, trans))
