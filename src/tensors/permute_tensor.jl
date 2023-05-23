@@ -13,6 +13,10 @@ struct PermuteTensor <: Tensor
     indices::Vector{Int}
 end
 
+function Base.isless(a::PermuteTensor, b::PermuteTensor)
+    a.indices < b.indices
+end
+
 function Base.isless(a::A, b::B) where {A<:PermuteTensor,B<:Tensor}
     true
 end
