@@ -36,7 +36,8 @@ function print_code(t::Term, symbol::String)
 
     println("$(symbol)_$(external) += $scalar_str * np.einsum($einsum_str$tensor_str, optimize=\"optimal\");")
 end
-
+""" Used with https://github.com/alexancp/einsumpath-to-eT to generate Fortran subroutines for eT.
+"""
 function print_eT_code(t :: Term, symbol, translation, routine_name)
     prefactor = @sprintf "%+12.8f" t.scalar
     translation = update_index_translation(t, translation)
