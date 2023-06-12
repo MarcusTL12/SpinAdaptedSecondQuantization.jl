@@ -64,3 +64,29 @@ println("CC Energy:\n", (Ecorr, trans))
 println("Ω_ai:\n", (omega_ai, trans))
 println("Ω_aibj:\n", (omega_aibj, trans))
 println("Ω_aibjck:\n", (omega_aibjck, trans))
+
+c1 = ∑(psym_tensor("c", 1, 2) * τ(1), 1:2)
+c3 = ∑(psym_tensor("c", 1, 2, 3, 4, 5, 6) * τ(3), 1:6)
+c_21 = cc_ket(commutator(H, c1), T, 2, 2) - cc_ket(commutator(H, c1), Tn(2), 2, 2)
+c_23 = cc_ket(commutator(H, c3), T, 2, 2)
+
+a = 1; i = 2; b = 3; j = 4;
+#cc_21_aibj = expand_P(c_21)
+cc_21_aibj = c_21
+cc_21_ajbi = SASQ.Expression([SASQ.exchange_indices(t, [a => b, b => a]) for t in cc_21_aibj.terms])
+
+cc_21 = 2 * cc_21_aibj - cc_21_ajbi |> simplify_heavy
+
+P2 = cc_projection(2)
+#cc_21 = act_on_ket(E(i,a) * E(j,b) * commutator(commutator(H, Tn(3)), c1), 0) |> simplify_heavy
+cc_21 = act_on_ket(P2 * commutator(commutator(H, Tn(3)), c1), 0) |> simplify_heavy
+
+a = 1; i = 2; b = 3; j = 4;
+left = E(i,a) * E(j,b) * occupied(i,j) * virtual(a,b)
+right = E(a,i) * E(b,j)
+left * right |> act_on_ket |> simplify_heavy
+
+a = 1; i = 2; b = 3; j = 4; c = 5; k = 6;
+left = E(i,a) * E(j,b) * E(k,c) * occupied(i,j,k) * virtual(a,b,c)
+right = E(a,i) * E(b,j) * E(c,k)
+left * right |> act_on_ket |> simplify_heavy
