@@ -1003,13 +1003,19 @@ end
 
 export simplify_permute
 
-# Function to do all permutations of the PermuteTensor and find the minimally-sorted term
+# Function to do all permutations of the PermuteTensor and find the
+# minimally-sorted term
 # P_aibj F_bj -> P_aibj F_ai
 function simplify_permute(t::Term)
-    perm_tensors = filter(x -> typeof(x) == PermuteTensor, t.tensors)
+    perm_tensors = filter(x -> x isa PermuteTensor, t.tensors)
     if isempty(perm_tensors)
         return t
     end
+
+    t = copy(t)
+
+    sum_inds = copy(t.sum_indices)
+    empty!(t.sum_indices)
 
     min_t = t
     for tensor in perm_tensors
@@ -1033,6 +1039,9 @@ function simplify_permute(t::Term)
             min_t = min(min_t, sorted_term)
         end
     end
+
+    append!(min_t.sum_indices, sum_inds)
+
     return min_t
 end
 
