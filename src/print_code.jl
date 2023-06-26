@@ -1,23 +1,34 @@
 export print_code
 using Printf
 
-print_code(t::Term) = print_code(t, "X")
+""" Print term to numpy's einsum routine
+"""
+print_code(t::Term, translation) = print_code(t, "X", translation)
 
-function print_code(t::Term, symbol::String)
+""" Print term to numpy's einsum routine
+"""
+function print_code(t::Term, symbol::String, translation)
     # Print python np.einsum code
     scalar_str = @sprintf "%+12.8f" t.scalar
+    translation = update_index_translation(t, translation)
 
-    external = get_external_indices(t)
+    external_int = get_external_indices(t)
+    external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
+
+    temp_color = index_color
+    disable_color()
 
     # Make einsum_str
     einsum_str = "\""
     for a in t.tensors
-        for b in get_indices(a)
-            einsum_str *= print_mo_index(b)
-        end
+        einsum_str *= sprint(SASQ.print_mo_index, t.constraints, translation, get_indices(a)...)
         einsum_str *= ","
     end
     einsum_str = einsum_str[begin:end-1] * "->" * external * "\""
+
+    if (temp_color)
+        enable_color()
+    end
 
     # Make tensor_str
     tensor_str = ""
@@ -36,6 +47,7 @@ function print_code(t::Term, symbol::String)
 
     println("$(symbol)_$(external) += $scalar_str * np.einsum($einsum_str$tensor_str, optimize=\"optimal\");")
 end
+
 """ Used with https://github.com/alexancp/einsumpath-to-eT to generate Fortran subroutines for eT.
 """
 function print_eT_code(t :: Term, symbol, translation, routine_name)
