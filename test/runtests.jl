@@ -477,7 +477,6 @@ end
 end
 
 @testset "print code" begin
-    using Printf
     equation = summation(real_tensor("h", 1, 2) * real_tensor("g", 2, 1, 3) * occupied(1) * virtual(2,3), 1:2)
     trans = translate(VirtualOrbital => [3])
 
