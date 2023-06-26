@@ -1,9 +1,5 @@
-export print_code
+export print_code, print_eT_code
 using Printf
-
-""" Print term to numpy's einsum routine
-"""
-print_code(t::Term, translation) = print_code(t, "X", translation)
 
 """ Print term to numpy's einsum routine
 """
@@ -45,7 +41,7 @@ function print_code(t::Term, symbol::String, translation)
         end
     end
 
-    println("$(symbol)_$(external) += $scalar_str * np.einsum($einsum_str$tensor_str, optimize=\"optimal\");")
+    "$(symbol)_$(external) += $scalar_str * np.einsum($einsum_str$tensor_str, optimize=\"optimal\");"
 end
 
 """ Used with https://github.com/alexancp/einsumpath-to-eT to generate Fortran subroutines for eT.
