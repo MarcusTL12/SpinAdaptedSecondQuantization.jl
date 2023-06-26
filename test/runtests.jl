@@ -475,3 +475,16 @@ end
     eq2 = permute_tensor(1, 2, 3, 4) * real_tensor("h", 1, 2)
     @test simplify_heavy(eq1) == eq2
 end
+
+@testset "print code" begin
+    equation = summation(real_tensor("h", 1, 2) * real_tensor("g", 2, 1, 3) * occupied(1) * virtual(2,3), 1:2)
+    trans = translate(VirtualOrbital => [3])
+
+    code = print_code(equation.terms[1], "omega", trans)
+    expected_code = """omega_a +=  +1.00000000 * np.einsum("bia,ib->a", g_vov, h_ov, optimize="optimal");"""
+    @test code == expected_code
+
+    code_eT = print_eT_code(equation.terms[1], "omega", trans, "test")
+    expected_code_eT = """print(generate_eT_code_from_einsum(\n    routine_name=\"test\",\n    prefactor= +1.00000000,\n    contraction_string=\"bia,ib->a\",\n    arrays=[g_vov, h_ov, omega],\n    symbols=[\"g_vov\", \"h_ov\", \"omega\"],\n), end='!\\n!\\n')"""
+    @test code_eT == expected_code_eT
+end
