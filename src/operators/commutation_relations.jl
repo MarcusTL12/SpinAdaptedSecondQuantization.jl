@@ -54,3 +54,43 @@ end
 function reductive_commutator(::FermionOperator, ::BosonOperator)
     return (1, zero(Expression{Int64}))
 end
+
+function reductive_commutator(::TripletExcitationOperator, ::BosonOperator)
+    return (1, zero(Expression{Int64}))
+end
+
+function reductive_commutator(t::TripletExcitationOperator,
+    e::SingletExcitationOperator)
+
+    p = t.p
+    q = t.q
+
+    r = e.p
+    s = e.q
+
+    (1, δ(r, q) * τ(p, s) - δ(p, s) * τ(r, q))
+end
+
+function reductive_commutator(t1::TripletExcitationOperator,
+    t2::TripletExcitationOperator)
+
+    p = t1.p
+    q = t1.q
+
+    r = t2.p
+    s = t2.q
+
+    (1, δ(r, q) * E(p, s) - δ(p, s) * E(r, q))
+end
+
+function reductive_commutator(e::TripletExcitationOperator, a::FermionOperator)
+    p = e.p
+    q = e.q
+    r = a.p
+
+    (1, if a.dag
+        δ(q, r) * fermiondag(p, a.spin)
+    else
+        -δ(p, r) * fermion(q, a.spin)
+    end * (a.spin == α ? 1 : -1))
+end
