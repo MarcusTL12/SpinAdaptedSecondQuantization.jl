@@ -151,15 +151,24 @@ function update_index_translation(t::Term, translation::IndexTranslation)
 
     ex_inds = get_external_indices(t)
 
-    o_count = 0
-    v_count = 0
+    function find_first_free!(s)
+        for i in Iterators.countfrom(1)
+            if i ∉ s
+                push!(s, i)
+                return i
+            end
+        end
+    end
 
-    for (p, (S, _)) in translation
+    seen_o = Set{Int}()
+    seen_v = Set{Int}()
+
+    for (p, (S, q)) in translation
         if p ∈ ex_inds
             if S <: OccupiedOrbital
-                o_count += 1
+                push!(seen_o, q)
             elseif S <: VirtualOrbital
-                v_count += 1
+                push!(seen_v, q)
             end
         end
     end
@@ -168,11 +177,9 @@ function update_index_translation(t::Term, translation::IndexTranslation)
         for p in t.sum_indices
             S = t.constraints(p)
             if S <: OccupiedOrbital
-                o_count += 1
-                translation[p] = (OccupiedOrbital, o_count)
+                translation[p] = (OccupiedOrbital, find_first_free!(seen_o))
             elseif S <: VirtualOrbital
-                v_count += 1
-                translation[p] = (VirtualOrbital, v_count)
+                translation[p] = (VirtualOrbital, find_first_free!(seen_v))
             end
         end
     end
