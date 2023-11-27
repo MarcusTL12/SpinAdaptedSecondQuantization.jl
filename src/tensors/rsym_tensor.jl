@@ -31,3 +31,9 @@ function rsym_tensor(symbol, indices...)
     sort_rsym_indices!(ind)
     Expression(RealSymmetricTensor(symbol, ind))
 end
+
+function reorder_indices(t::RealSymmetricTensor, permutation)
+    ind = t.indices[permutation]
+    sort_rsym_indices!(ind)
+    RealSymmetricTensor(t.symbol, ind)
+end
