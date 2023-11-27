@@ -36,8 +36,8 @@ function do_tensor_replacement(t::Term, transformer)
                 t.constraints
             )
 
-            push!(new_terms, new_term)
-            push!(other_terms, other_term)
+            push!(new_terms, simplify_heavy(new_term))
+            push!(other_terms, simplify_heavy(other_term))
         end
     end
 
