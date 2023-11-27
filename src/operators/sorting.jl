@@ -2,26 +2,30 @@
 
 # current sorting is: T, E, a, b
 
-function Base.isless(::FermionOperator, ::SingletExcitationOperator)
+function Base.isless(::A, ::B) where {A<:Operator,B<:Operator}
+    A < B
+end
+
+function Base.isless(::Type{FermionOperator}, ::Type{SingletExcitationOperator})
     false
 end
 
-function Base.isless(::BosonOperator, ::SingletExcitationOperator)
+function Base.isless(::Type{BosonOperator}, ::Type{SingletExcitationOperator})
     false
 end
 
-function Base.isless(::BosonOperator, ::FermionOperator)
+function Base.isless(::Type{BosonOperator}, ::Type{FermionOperator})
     false
 end
 
-function Base.isless(::SingletExcitationOperator, ::TripletExcitationOperator)
+function Base.isless(::Type{SingletExcitationOperator}, ::Type{TripletExcitationOperator})
     false
 end
 
-function Base.isless(::FermionOperator, ::TripletExcitationOperator)
+function Base.isless(::Type{FermionOperator}, ::Type{TripletExcitationOperator})
     false
 end
 
-function Base.isless(::BosonOperator, ::TripletExcitationOperator)
+function Base.isless(::Type{BosonOperator}, ::Type{TripletExcitationOperator})
     false
 end

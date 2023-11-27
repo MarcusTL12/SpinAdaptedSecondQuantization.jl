@@ -85,8 +85,8 @@ of the operators.
     Only one order needs to be implemented, meaning if `isless(::A, ::B)`
     is implemented, there is no need to also implement `isless(::B, ::A)`
 """
-function Base.isless(a::Operator, b::Operator)
-    !(b < a)
+function Base.isless(::Type{A}, ::Type{B}) where {A<:Operator,B<:Operator}
+    !(B < A)
 end
 
 """
