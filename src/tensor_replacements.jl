@@ -1,4 +1,4 @@
-export look_for_tensor_replacements
+export look_for_tensor_replacements, make_exchange_transformer
 
 function do_tensor_replacement(t::Term, transformer)
     old_tensors = t.tensors
@@ -44,15 +44,17 @@ function do_tensor_replacement(t::Term, transformer)
     new_terms, other_terms
 end
 
+function make_exchange_transformer(from, to)
+    function g2L_transformer(t::T) where {T<:Tensor}
+        if length(get_indices(t)) != 4 || get_symbol(t) != from
+            return
+        end
 
-function g2L_transformer(t::T) where {T<:Tensor}
-    if length(get_indices(t)) != 4 || get_symbol(t) != "g"
-        return
+        -1 // 2, reorder_indices(t, [1, 4, 3, 2]), 1 // 2, T(to, get_indices(t))
     end
 
-    -1 // 2, reorder_indices(t, [1, 4, 3, 2]), 1 // 2, T("L", get_indices(t))
+    g2L_transformer
 end
-
 
 function look_for_tensor_replacements(ex::Expression, transformer)
     is_done = false
