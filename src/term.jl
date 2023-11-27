@@ -326,17 +326,23 @@ end
 
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
+    operatortypes_a = [typeof(e) for e in a.operators]
+    operatortypes_b = [typeof(e) for e in b.operators]
+
+    tensorstrings_a = [get_symbol(t) for t in a.tensors]
+    tensorstrings_b = [get_symbol(t) for t in b.tensors]
+
     (
-        length(a.operators), a.operators,
+        length(a.operators), operatortypes_a, a.operators,
         length(a.sum_indices), a.sum_indices,
-        length(a.tensors), a.tensors,
+        length(a.tensors), tensorstrings_a, a.tensors,
         length(a.deltas), a.deltas,
         a.constraints,
         b.scalar
     ) < (
-        length(b.operators), b.operators,
+        length(b.operators), operatortypes_b, b.operators,
         length(b.sum_indices), b.sum_indices,
-        length(b.tensors), b.tensors,
+        length(b.tensors), tensorstrings_b, b.tensors,
         length(b.deltas), b.deltas,
         b.constraints,
         a.scalar
