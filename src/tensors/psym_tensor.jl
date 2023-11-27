@@ -27,3 +27,9 @@ function psym_tensor(symbol, indices...)
     sort_psym_indices!(ind)
     Expression(ParticleSymmetricTensor(symbol, ind))
 end
+
+function reorder_indices(t::ParticleSymmetricTensor, permutation)
+    ind = t.indices[permutation]
+    sort_psym_indices!(ind)
+    ParticleSymmetricTensor(t.symbol, ind)
+end

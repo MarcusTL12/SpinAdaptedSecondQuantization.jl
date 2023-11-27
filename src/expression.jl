@@ -37,6 +37,24 @@ struct Expression{T<:Number}
     end
 end
 
+function Expression(terms::AbstractVector{Term})
+    first_term, rest = Iterators.peel(terms)
+
+    T = typeof(first_term.scalar)
+
+    for t in rest
+        T = promote_type(T, typeof(t.scalar))
+    end
+
+    new_terms = Term{T}[]
+
+    for t in terms
+        push!(new_terms, new_scalar(t, T(t.scalar)))
+    end
+
+    Expression(new_terms)
+end
+
 function Base.show(io::IO, ex::Expression)
     show(io, (ex, IndexTranslation()))
 end

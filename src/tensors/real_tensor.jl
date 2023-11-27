@@ -16,3 +16,7 @@ end
 
 real_tensor(symbol, indices...) =
     Expression(RealTensor(symbol, collect(indices)))
+
+function reorder_indices(t::RealTensor, permutation)
+    RealTensor(t.symbol, t.indices[permutation])
+end
