@@ -1,6 +1,6 @@
-using SnoopPrecompile
+using PrecompileTools
 
-@precompile_all_calls begin
+@compile_workload begin
     # Covering Epq and realtensor
     h = ∑(real_tensor("h", 1, 2) * E(1, 2), 1:2)
     g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...), 1:4) |> simplify

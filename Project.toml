@@ -6,11 +6,11 @@ version = "0.6.1"
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Permutations = "2ae35dd2-176d-5d53-8349-f30d82d94d4f"
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-SnoopPrecompile = "66db9d55-30c0-4569-8b51-7e840670fc0c"
 
 [compat]
 DataStructures = "0.18"
 Permutations = "0.4"
-SnoopPrecompile = "1.0"
+PrecompileTools = "1.2"
 julia = "1.8"
