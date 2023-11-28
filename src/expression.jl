@@ -6,7 +6,16 @@ struct Expression{T<:Number}
     function Expression(terms::AbstractVector{Term{T}}) where {T<:Number}
         terms = sort(terms)
 
-        # Collect equal terms
+        # Collect equal termsif isempty(terms)
+        if isempty(terms)
+            return new{T}([Term(
+                zero(T),
+                Int[],
+                KroneckerDelta[],
+                Tensor[],
+                Operator[]
+            )])
+        end
 
         first_term, rest = Iterators.peel(terms)
         terms = Term{T}[first_term]

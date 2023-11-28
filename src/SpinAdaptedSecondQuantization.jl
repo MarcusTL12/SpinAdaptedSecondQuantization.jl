@@ -28,6 +28,8 @@ include("print_code.jl")
 
 include("tensor_replacements.jl")
 
+include("desymmetrization.jl")
+
 include("precompile.jl")
 
 end # module SpinAdaptedSecondQuantization
