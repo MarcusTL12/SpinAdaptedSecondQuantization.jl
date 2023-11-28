@@ -28,6 +28,6 @@ include("print_code.jl")
 
 include("tensor_replacements.jl")
 
-include("snoopprecompile.jl")
+include("precompile.jl")
 
 end # module SpinAdaptedSecondQuantization
