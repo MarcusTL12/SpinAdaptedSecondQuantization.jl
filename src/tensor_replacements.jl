@@ -1,4 +1,5 @@
-export look_for_tensor_replacements, make_exchange_transformer
+export look_for_tensor_replacements, make_exchange_transformer,
+    look_for_tensor_replacements_smart
 
 function do_tensor_replacement(t::Term, transformer)
     old_tensors = t.tensors
@@ -97,4 +98,62 @@ function look_for_tensor_replacements(ex::Expression, transformer)
     end
 
     ex
+end
+
+function look_for_tensor_replacements_smart(ex::Expression, transformer)
+    if iszero(ex)
+        return ex
+    end
+
+    nth = Threads.nthreads()
+
+    new_things_th = [Pair{NTuple{2,Int},Term}[] for _ in 1:nth]
+
+    for th_id in 1:nth
+        for i in th_id:nth:length(ex.terms)
+            replacements, other_replacements =
+                do_tensor_replacement(ex[i], transformer)
+
+            for (replacement, other_replacement) in
+                zip(replacements, other_replacements)
+                for j in eachindex(ex.terms)
+                    if i != j && possibly_equal(ex[j], replacement)
+                        simple_replacement = simplify_heavy(replacement)
+                        if ex[j] == simple_replacement
+                            push!(new_things_th[th_id],
+                                (i, j) => simplify_heavy(other_replacement))
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    new_things, rest = Iterators.peel(new_things_th)
+
+    for new_things2 in rest
+        append!(new_things, new_things2)
+    end
+
+    actually_removing = Int[]
+    new_terms = Term[]
+
+    for ((i, j), t) in new_things
+        if i ∉ actually_removing && j ∉ actually_removing
+            push!(actually_removing, i)
+            push!(actually_removing, j)
+
+            push!(new_terms, t)
+        end
+    end
+
+    extra_expression = look_for_tensor_replacements_smart(
+        Expression(new_terms), transformer
+    )
+
+    old_terms = Expression(
+        [t for (i, t) in enumerate(ex.terms) if i ∉ actually_removing]
+    )
+
+    old_terms + extra_expression
 end

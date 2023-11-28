@@ -47,6 +47,10 @@ struct Expression{T<:Number}
 end
 
 function Expression(terms::AbstractVector{Term})
+    if isempty(terms)
+        return zero(Expression{Int})
+    end
+
     first_term, rest = Iterators.peel(terms)
 
     T = typeof(first_term.scalar)
