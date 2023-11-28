@@ -100,14 +100,14 @@ function Term(scalar::T, sum_indices, deltas, tensors, operators) where
     Term(scalar, sum_indices, deltas, tensors, operators, Constraints())
 end
 
-Base.copy(t::Term) = Term(
+Base.copy(t::Term, max_simplified=t.max_simplified) = Term(
     copy(t.scalar),
     copy(t.sum_indices),
     copy(t.deltas),
     copy(t.tensors),
     copy(t.operators),
     copy(t.constraints),
-    t.max_simplified,
+    max_simplified,
     true
 )
 
@@ -363,7 +363,7 @@ function exchange_indices(t::Term{T}, mapping) where {T<:Number}
         return t
     end
 
-    t = copy(t)
+    t = copy(t, false)
 
     for (i, old_ind) in enumerate(t.sum_indices)
         t.sum_indices[i] = exchange_index(old_ind, mapping)
@@ -834,6 +834,7 @@ function simplify_heavy(t::Term)
         lower_summation_indices |>
         permute_all_sum_indices |>
         simplify_permute |>
+        sort_operators |>
         set_max_simplified
     end
 end
