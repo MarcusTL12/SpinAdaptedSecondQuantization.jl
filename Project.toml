@@ -1,7 +1,7 @@
 name = "SpinAdaptedSecondQuantization"
 uuid = "07861ef0-4e5e-45a9-88ac-f5a78d3027be"
 authors = ["MarcusTL12 <marcuspaafjellet@gmail.com>", "torhaugl <tor.s.haugland@ntnu.no>"]
-version = "0.6.2"
+version = "0.7.0"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
