@@ -3,7 +3,7 @@ export desymmetrize, make_permutation_mappings
 function make_permutation_mappings(index_groups)
     mappings = Vector{Pair{Int,Int}}[]
 
-    for perm in Iterators.drop(PermGen(length(index_groups)), 1)
+    for perm in PermGen(length(index_groups))
         pd = perm.data
         mapping = Pair{Int,Int}[]
 
@@ -19,7 +19,7 @@ function make_permutation_mappings(index_groups)
     mappings
 end
 
-function desymmetrize(ex::Expression{T}, mappings) where {T <: Number}
+function desymmetrize(ex::Expression{T}, mappings) where {T<:Number}
     accounted_for = Set{Int}()
 
     non_symmetric = Term{T}[]
@@ -31,31 +31,31 @@ function desymmetrize(ex::Expression{T}, mappings) where {T <: Number}
             continue
         end
 
-        other_inds = Int[]
+        other_inds = Dict{Int,Int}()
         for mapping in mappings
             other_term = simplify_heavy(exchange_indices(t, mapping))
             if other_term == t
-                push!(other_inds, i)
+                other_inds[i] = get(other_inds, i, 0) + 1
             else
                 for (j, t2) in enumerate(ex.terms)
-                    if j ∉ other_inds && other_term == t2
-                        push!(other_inds, j)
+                    if other_term == t2
+                        other_inds[j] = get(other_inds, j, 0) + 1
                         break
                     end
                 end
             end
         end
 
-        if length(other_inds) < length(mappings)
-            push!(non_symmetric, t)
-            push!(accounted_for, i)
-        elseif all(==(i), other_inds)
+        if all(==(i), keys(other_inds))
             push!(self_symmetric, t)
             push!(accounted_for, i)
-        else
-            push!(symmetrize, t)
+        elseif allequal(values(other_inds))
+            push!(symmetrize, t * (1 // first(values(other_inds))))
             push!(accounted_for, i)
-            union!(accounted_for, other_inds)
+            union!(accounted_for, keys(other_inds))
+        else
+            push!(non_symmetric, t)
+            push!(accounted_for, i)
         end
     end
 
