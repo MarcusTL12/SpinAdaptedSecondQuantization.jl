@@ -411,10 +411,12 @@ function bch(A, B, n)
     # Baker-Campbell-Haussdorf expansion,
     # e^-B A e^B = A + 1/1! [A,B] + 1/2! [[A,B],B] + ... + 1/n! [A,B]_n
     X = A
+    Y = A
     for i = 1:n
-        X += commutator(A, B, i) // factorial(i)
+        Y = 1//i * commutator(Y, B)
+        X += Y
     end
-    return X
+    X
 end
 
 # Function to express all operators in an expression in terms of
