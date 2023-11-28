@@ -1,4 +1,23 @@
-export desymmetrize
+export desymmetrize, make_permutation_mappings
+
+function make_permutation_mappings(index_groups)
+    mappings = Vector{Pair{Int,Int}}[]
+
+    for perm in Iterators.drop(PermGen(length(index_groups)), 1)
+        pd = perm.data
+        mapping = Pair{Int,Int}[]
+
+        for (i, j) in enumerate(pd)
+            for (from, to) in zip(index_groups[i], index_groups[j])
+                push!(mapping, from => to)
+            end
+        end
+
+        push!(mappings, mapping)
+    end
+
+    mappings
+end
 
 function desymmetrize(ex::Expression{T}, mappings) where {T <: Number}
     accounted_for = Set{Int}()
