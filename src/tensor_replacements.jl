@@ -36,8 +36,8 @@ function do_tensor_replacement(t::Term, transformer)
                 t.constraints
             )
 
-            push!(new_terms, simplify_heavy(new_term))
-            push!(other_terms, simplify_heavy(other_term))
+            push!(new_terms, new_term)
+            push!(other_terms, other_term)
         end
     end
 
@@ -70,13 +70,16 @@ function look_for_tensor_replacements(ex::Expression, transformer)
                 zip(replacements, other_replacements)
                 for j in eachindex(ex.terms)
                     if i != j
-                        if ex[j] == replacement
-                            is_done = false
+                        if possibly_equal(ex[j], replacement)
+                            simple_replacement = simplify_heavy(replacement)
+                            if ex[j] == simple_replacement
+                                is_done = false
 
-                            new_terms = copy(ex.terms)
-                            new_terms[i] = other_replacement
-                            deleteat!(new_terms, j)
-                            ex = Expression(new_terms)
+                                new_terms = copy(ex.terms)
+                                new_terms[i] = simplify_heavy(other_replacement)
+                                deleteat!(new_terms, j)
+                                ex = Expression(new_terms)
+                            end
                         end
                     end
                     if !is_done

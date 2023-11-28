@@ -682,6 +682,28 @@ function non_constraint_non_scalar_equal(a::Term, b::Term)
     (b.tensors, b.operators, b.deltas, b.sum_indices)
 end
 
+function possibly_equal(a::Term, b::Term)
+    if (a.scalar, length(a.deltas), length(a.sum_indices)) !=
+       (b.scalar, length(b.deltas), length(b.sum_indices))
+        return false
+    end
+
+    if length(a.operators) != length(b.operators) ||
+       !all(typeof(oa) == typeof(ob) for (oa, ob) in
+            zip(a.operators, b.operators))
+        return false
+    end
+
+    if length(a.tensors) != length(b.tensors) ||
+       !all((get_symbol(ta), length(get_indices(ta))) ==
+            (get_symbol(tb), length(get_indices(tb)))
+            for (ta, tb) in zip(a.tensors, b.tensors))
+        return false
+    end
+
+    true
+end
+
 # Compares two sets of constraints. If they differ by only one constraint,
 # it will return this index. Otherwise, if they are equal, do not contain
 # the same set of indices, or differ by more than one constraint, it will
