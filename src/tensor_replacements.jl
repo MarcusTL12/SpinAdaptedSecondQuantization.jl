@@ -109,7 +109,7 @@ function look_for_tensor_replacements_smart(ex::Expression, transformer)
 
     new_things_th = [Pair{NTuple{2,Int},Term}[] for _ in 1:nth]
 
-    for th_id in 1:nth
+    Threads.@threads for th_id in 1:nth
         for i in th_id:nth:length(ex.terms)
             replacements, other_replacements =
                 do_tensor_replacement(ex[i], transformer)
