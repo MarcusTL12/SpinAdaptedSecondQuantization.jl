@@ -404,7 +404,7 @@ end
         )) * E(1, 2),
         1:2
     )
-    g = 1 // 2 * ∑(psym_tensor("g", 1:4...) * e(1:4...), 1:4) |> simplify
+    g = 1 // 2 * ∑(psym_tensor("g", 1:4...) * eE(1:4...), 1:4) |> simplify
 
     HF = simplify(hF + g)
 
