@@ -51,9 +51,9 @@ function Base.isless(a::SingletDoubleExcitationOperator, b::SingletDoubleExcitat
 end
 
 """
-    e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)
+    e(p, q, r, s)
 
-Alias for the two electron singlet excitation operator.
+    Constructs an expression containing a double excitation operator.
 ```
 """
 e(p, q, r, s) = Expression(SingletDoubleExcitationOperator(p, q, r, s))
