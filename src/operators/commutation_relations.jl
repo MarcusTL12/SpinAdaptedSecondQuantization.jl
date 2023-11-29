@@ -9,6 +9,8 @@
 # only one order is required, as a generic function takes care of the other
 # i.e. implement only [a, b]± and not also [b, a]±
 
+# E_pq
+
 function reductive_commutator(
     a::SingletExcitationOperator,
     b::SingletExcitationOperator
@@ -20,6 +22,8 @@ function reductive_commutator(
 
     (1, δ(q, r) * E(p, s) - δ(p, s) * E(r, q))
 end
+
+# a_p, a†_p
 
 function reductive_commutator(a::FermionOperator, b::FermionOperator)
     (-1, δ(a.p, b.p) * (a.spin == b.spin) * (a.dag != b.dag))
@@ -37,27 +41,31 @@ function reductive_commutator(e::SingletExcitationOperator, a::FermionOperator)
     end)
 end
 
-function reductive_commutator(a::BosonOperator, b::BosonOperator)
-    if a.dag && !b.dag
-        return (1, Expression(-1))
-    elseif !a.dag && b.dag
-        return (1, Expression(1))
-    else
-        return (1, zero(Expression{Int64}))
-    end
+# e_pqrs
+
+function reductive_commutator(
+    a::SingletExcitationOperator,
+    b::SingletDoubleExcitationOperator
+)
+    m, n = a.p, a.q
+    p, q, r, s = b.p, b.q, b.r, b.s
+
+    (1,
+        δ(p, n) * e(m, q, r, s) - δ(m, q) * e(p, n, r, s) +
+        δ(r, n) * e(p, q, m, s) - δ(s, q) * e(p, q, r, n)
+    )
 end
 
-function reductive_commutator(::SingletExcitationOperator, ::BosonOperator)
-    return (1, zero(Expression{Int64}))
+function reductive_commutator(
+    a::SingletDoubleExcitationOperator,
+    b::SingletDoubleExcitationOperator
+)
+    t, u, v, w = b.p, b.q, b.r, b.s
+
+    1, commutator(Expression(a), eE(t, u, v, w))
 end
 
-function reductive_commutator(::FermionOperator, ::BosonOperator)
-    return (1, zero(Expression{Int64}))
-end
-
-function reductive_commutator(::TripletExcitationOperator, ::BosonOperator)
-    return (1, zero(Expression{Int64}))
-end
+# T_pq
 
 function reductive_commutator(t::TripletExcitationOperator,
     e::SingletExcitationOperator)
@@ -93,4 +101,28 @@ function reductive_commutator(e::TripletExcitationOperator, a::FermionOperator)
     else
         -δ(p, r) * fermion(q, a.spin)
     end * (a.spin == α ? 1 : -1))
+end
+
+# b, b†
+
+function reductive_commutator(a::BosonOperator, b::BosonOperator)
+    if a.dag && !b.dag
+        return (1, Expression(-1))
+    elseif !a.dag && b.dag
+        return (1, Expression(1))
+    else
+        return (1, zero(Expression{Int64}))
+    end
+end
+
+function reductive_commutator(::SingletExcitationOperator, ::BosonOperator)
+    return (1, zero(Expression{Int64}))
+end
+
+function reductive_commutator(::FermionOperator, ::BosonOperator)
+    return (1, zero(Expression{Int64}))
+end
+
+function reductive_commutator(::TripletExcitationOperator, ::BosonOperator)
+    return (1, zero(Expression{Int64}))
 end

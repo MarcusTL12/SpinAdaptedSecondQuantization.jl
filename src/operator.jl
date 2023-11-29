@@ -8,6 +8,7 @@ must extend.
 abstract type Operator end
 
 include("operators/singlet_excitation_operator.jl")
+include("operators/singlet_double_excitation_operator.jl")
 include("operators/triplet_excitation_operator.jl")
 include("operators/fermion_operator.jl")
 include("operators/boson_operator.jl")
@@ -22,7 +23,7 @@ include("operators/commutation_relations.jl")
 
 All typed extending `Operator` must overload this function.
 """
-function Base.show(::IO, ::Tuple{Operator,Constraints,IndexTranslation})
+function Base.show(::IO, ::Tuple{O,Constraints,IndexTranslation}) where {O<:Operator}
     throw("Base.show(::IO, ::Tuple{$O,Constraints,IndexTranslation}) \
     not implemented!")
 end
@@ -34,7 +35,7 @@ All typed extending `Operator` must overload this function.
 It should return a new operator where all indices have been exchanged
 according to the `mapping`.
 """
-function exchange_indices(::Operator, mapping)
+function exchange_indices(::O, mapping) where {O<:Operator}
     throw("exchange_indices(::$O, mapping) not implemented!")
 end
 
@@ -45,7 +46,7 @@ All typed extending `Operator` must overload this function.
 It should return an iteratable over all the MO-indices contained in the operator
 in order.
 """
-function get_all_indices(::Operator)
+function get_all_indices(::O) where {O<:Operator}
     throw("get_all_indices(::$O) not implemented!")
 end
 
@@ -60,7 +61,7 @@ Example:
 
 ``E_{p q} |HF⟩ = (2 δ_{p q} C(p∈O,q∈O) + E_{p q} C(p∈V,q∈O)) |HF⟩``
 """
-function act_on_ket(::Operator)
+function act_on_ket(::O) where {O<:Operator}
     throw("act_on_ket(::$O) not implemented!")
 end
 
