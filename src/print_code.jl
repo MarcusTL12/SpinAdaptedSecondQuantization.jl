@@ -1,4 +1,4 @@
-export print_code, print_eT_code
+export print_code, print_eT_code, print_latex
 using Printf
 
 """ Print term to numpy's einsum routine
@@ -16,7 +16,7 @@ function print_code(t::Term, symbol::String, translation)
 
     # Make einsum_str
     einsum_str = "\""
-    for a in t.tensors
+    for a in t.tensorscd
         einsum_str *= sprint(SASQ.print_mo_index, t.constraints, translation, get_indices(a)...)
         einsum_str *= ","
     end
@@ -46,7 +46,7 @@ end
 
 """ Used with https://github.com/alexancp/einsumpath-to-eT to generate Fortran subroutines for eT.
 """
-function print_eT_code(t :: Term, symbol, translation, routine_name)
+function print_eT_code(t::Term, symbol, translation, routine_name)
     prefactor = @sprintf "%+12.8f" t.scalar
     translation = update_index_translation(t, translation)
 
@@ -110,4 +110,76 @@ function print_eT_code(t :: Term, symbol, translation, routine_name)
         arrays=[$tensor_str, $symbol],
         symbols=[$symbol_str, "$symbol"],
     ), end='!\\n!\\n')"""
+end
+
+# Print term in latex form
+# TODO: Add possibility of changing tensors names
+function print_latex(t::Term, translation)
+    line = IOBuffer()
+    # Sign
+    if t.scalar > 0
+        print(line, "+ ")
+    else
+        print(line, "- ")
+    end
+    # Prefactor
+    if typeof(t.scalar) == Rational{Int64} && !isone(denominator(t.scalar)) 
+        print(line, "\\frac{", string(abs(numerator(t.scalar))), "}{" , string(denominator(t.scalar)) , "} ")
+    elseif isone(t.scalar)
+    else
+        print(line, string(t.scalar) * " ")
+    end
+
+    translation = update_index_translation(t, translation)     # I have no idea if this line is needed or not. 
+    # Sum
+    if !isempty(t.sum_indices)
+        print(line, "\\sum_{")
+        for i in t.sum_indices
+            print_mo_index(line, t.constraints, translation, i)
+        end
+        print(line, "} ")
+    end
+    # Deltas
+    for d in t.deltas
+        print(line, "\\delta_{")
+        for p in d.indices
+            print_mo_index(line, t.constraints, translation, p)
+        end
+        print(line, "} ")
+    end
+    # Tensors
+    i = 1
+    while i <= length(t.tensors)
+        done = false
+        j = 1
+        while !done
+            done = true
+            if length(t.tensors) >= i+j && t.tensors[i+j] == t.tensors[i]
+                j += 1
+                done = false
+            end
+        end
+        print(line, get_symbol(t.tensors[i]))
+        inds = get_indices(t.tensors[i])
+        if !isempty(inds)
+            print(line, "_{")
+            for ind in inds
+                print_mo_index(line, t.constraints, translation, ind)
+            end
+        end
+        if j > 1
+            print(line, "}^{", string(j))
+            i += j
+        else
+            i += 1
+        end
+        print(line, "} ")
+    end
+    # Operators ##### LIMITED TO SINGLET EXCITATIONS OPERATORS
+    for e in t.operators
+        print(line, "E_{")
+        print_mo_index(line, t.constraints, translation, e.p, e.q)
+        print(line, "} ")
+    end
+    return String(take!(line))
 end
