@@ -16,7 +16,7 @@ function print_code(t::Term, symbol::String, translation)
 
     # Make einsum_str
     einsum_str = "\""
-    for a in t.tensorscd
+    for a in t.tensors
         einsum_str *= sprint(SASQ.print_mo_index, t.constraints, translation, get_indices(a)...)
         einsum_str *= ","
     end
