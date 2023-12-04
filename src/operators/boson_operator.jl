@@ -17,7 +17,7 @@ end
 
 function print_latex(io::IO,
     (b, _, _)::Tuple{BosonOperator,Constraints,IndexTranslation})
-    dag = a.dag ? "^{\\dagger}" : "^{-}"
+    dag = b.dag ? "^{\\dagger}" : "^{-}"
     print(io, 'b', dag)
 end
 
