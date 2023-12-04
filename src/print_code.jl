@@ -123,8 +123,8 @@ function print_latex(t::Term, translation)
         print(line, "- ")
     end
     # Prefactor
-    if typeof(t.scalar) == Rational{Int64} && !isone(denominator(t.scalar)) 
-        print(line, "\\frac{", string(abs(numerator(t.scalar))), "}{" , string(denominator(t.scalar)) , "} ")
+    if typeof(t.scalar) == Rational{Int64} && !isone(denominator(t.scalar))
+        print(line, "\\frac{", string(abs(numerator(t.scalar))), "}{", string(denominator(t.scalar)), "} ")
     elseif isone(t.scalar)
     else
         print(line, string(t.scalar) * " ")
@@ -154,7 +154,7 @@ function print_latex(t::Term, translation)
         j = 1
         while !done
             done = true
-            if length(t.tensors) >= i+j && t.tensors[i+j] == t.tensors[i]
+            if length(t.tensors) >= i + j && t.tensors[i+j] == t.tensors[i]
                 j += 1
                 done = false
             end
@@ -166,14 +166,15 @@ function print_latex(t::Term, translation)
             for ind in inds
                 print_mo_index(line, t.constraints, translation, ind)
             end
+            print(line, "}")
         end
         if j > 1
-            print(line, "}^{", string(j))
+            print(line, "^{", string(j), "} ")
             i += j
         else
+            print(line, " ")
             i += 1
         end
-        print(line, "} ")
     end
     # Operators ##### LIMITED TO SINGLET EXCITATIONS OPERATORS
     for e in t.operators
