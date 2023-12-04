@@ -114,7 +114,7 @@ end
 
 # Print term in latex form
 # TODO: Add possibility of changing tensors names
-function print_latex(t::Term, translation)
+function print_latex(t::Term, translation, renaming)
     line = IOBuffer()
     # Sign
     if t.scalar > 0
@@ -164,7 +164,13 @@ function print_latex(t::Term, translation)
                 done = false
             end
         end
-        print(line, get_symbol(t.tensors[i]))
+        symb = get_symbol(t.tensors[i])
+        for i in eachindex(renaming)
+            if symb == renaming[i][1]
+                symb = renaming[i][2]
+            end
+        end
+        print(line, symb)
         inds = get_indices(t.tensors[i])
         if !isempty(inds)
             print(line, "_{")
