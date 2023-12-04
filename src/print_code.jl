@@ -123,11 +123,16 @@ function print_latex(t::Term, translation)
         print(line, "- ")
     end
     # Prefactor
-    if typeof(t.scalar) == Rational{Int64} && !isone(denominator(t.scalar))
-        print(line, "\\frac{", string(abs(numerator(t.scalar))), "}{", string(denominator(t.scalar)), "} ")
-    elseif isone(t.scalar)
-    else
-        print(line, string(t.scalar) * " ")
+    if typeof(t.scalar) == Rational{Int64}
+        if isone(denominator(t.scalar))
+            if !isone(abs(numerator(t.scalar)))
+                print(line, string(abs(numerator(t.scalar))) * " ")
+            end
+        else
+            print(line, "\\frac{", string(abs(numerator(t.scalar))), "}{", string(denominator(t.scalar)), "} ")
+        end
+    elseif !isone(t.scalar)
+        print(line, abs(string(t.scalar)) * " ")
     end
 
     translation = update_index_translation(t, translation)     # I have no idea if this line is needed or not. 
