@@ -145,6 +145,18 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
+function printlatexscalar(io::IO, s::T) where {T<:Number}
+    print(io, abs(s))
+end
+
+function printlatexscalar(io::IO, s::Rational{T}) where {T}
+    if isone(denominator(s))
+        print(io, abs(numerator(s)))
+    else
+        print(io, "\\frac{", abs(numerator(s)), "}{", denominator(s), "}")
+    end
+end
+
 # TODO: Make this more subspace agnostic
 function update_index_translation(t::Term, translation::IndexTranslation)
     translation = copy(translation)
@@ -186,6 +198,119 @@ function update_index_translation(t::Term, translation::IndexTranslation)
 
     translation
 end
+
+function print_latex(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
+    sep = Ref(false)
+
+    function printsep()
+        if sep[]
+            print(io, ' ')
+        end
+        sep[] = true
+    end
+
+    ex_inds = get_external_indices(t)
+
+    for (p, (S, _)) in translation
+        Sc = t.constraints(p)
+        if p ∈ ex_inds && !(Sc <: S)
+            @warn "Printing index $p as $S, but it is constrained to $Sc"
+        end
+    end
+
+    translation = update_index_translation(t, translation)
+
+    all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
+                          isempty(t.tensors) && isempty(t.operators) &&
+                          isempty(t.constraints)
+
+    if t.scalar > 0
+        print(io, " + ")
+    else
+        print(io, " - ")
+    end
+
+    if !isone(abs(t.scalar))
+        printlatexscalar(io, t.scalar)
+        sep[] = true
+    elseif all_nonscalar_empty
+        printscalar(io, '1')
+        sep[] = true
+    end
+
+    if !isempty(t.sum_indices)
+        printsep()
+        print(io, "\\sum_{")
+        for i in t.sum_indices
+            print_mo_index(io, t.constraints, translation, i)
+        end
+        print(io, '}')
+        sep[] = true
+    end
+
+    for d in t.deltas
+        printsep()
+        print_latex(io, (d, t.constraints, translation))
+    end
+
+    # Tensors
+    i = 1
+    while i <= length(t.tensors)
+        done = false
+        j = 1
+        while !done
+            done = true
+            if length(t.tensors) >= i + j && t.tensors[i+j] == t.tensors[i]
+                j += 1
+                done = false
+            end
+        end
+        
+        printsep()
+        print_latex(io, (t.tensors[i], t.constraints, translation))
+
+        if j > 1
+            print(io, "^{", string(j), "}")
+            i += j
+        else
+            i += 1
+        end
+    end
+
+    for op in t.operators
+        printsep()
+        print_latex(io, (op, t.constraints, translation))
+    end
+
+    constraint_noprint = index_color ? get_non_constraint_indices(t) : Int[]
+    filter!(constraint_noprint) do x
+        haskey(colors, t.constraints(x))
+    end
+    constraint_print = [i for (i, _) in t.constraints if i ∉ constraint_noprint]
+    filter!(constraint_print) do x
+        is_strict_subspace(t.constraints(x), translation(x)[1])
+    end
+
+    if !isempty(constraint_print)
+        printsep()
+
+        print(io, "C(")
+
+        isfirst = true
+
+        for i in constraint_print
+            if !isfirst
+                print(io, ", ")
+            end
+            print_mo_index(io, t.constraints, translation, i)
+            print(io, "\\in", getshortname(t.constraints(i)))
+            isfirst = false
+        end
+
+        print(io, ')')
+    end
+end
+
 
 function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
     sep = Ref(false)
