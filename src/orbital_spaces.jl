@@ -77,10 +77,20 @@ default_color(::Type{GeneralOrbital}) = :nothing
 default_color(::Type{OccupiedOrbital}) = :light_green
 default_color(::Type{VirtualOrbital}) = :cyan
 
+default_latex_color(::Type{GeneralOrbital}) = ""
+default_latex_color(::Type{OccupiedOrbital}) = "\\textcolor{green}{"
+default_latex_color(::Type{VirtualOrbital}) = "\\textcolor{cyan}{"
+
 colors::Dict{Type,Union{Symbol,Int}} = Dict{Type,Union{Symbol,Int}}([
     GeneralOrbital => default_color(GeneralOrbital),
     OccupiedOrbital => default_color(OccupiedOrbital),
     VirtualOrbital => default_color(VirtualOrbital),
+])
+
+latex_colors::Dict{Type,String} = Dict{Type,String}([
+    GeneralOrbital => default_latex_color(GeneralOrbital),
+    OccupiedOrbital => default_latex_color(OccupiedOrbital),
+    VirtualOrbital => default_latex_color(VirtualOrbital),
 ])
 
 function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
@@ -115,6 +125,23 @@ function translate(translations...)
     translation
 end
 
+function getname_latex(io::IO, constraints::Constraints,
+    translation::IndexTranslation, i::Int)
+    do_color = index_color &&
+               (is_strict_subspace(constraints(i), translation(i)[1]) ||
+                color_translated)
+
+    if do_color
+        print(io, get(latex_colors, constraints(i), :nothing))
+    end
+
+    getname(io, translation(i)...)
+
+    if do_color
+        print(io, "}")
+    end
+end
+
 function getname(io::IO, constraints::Constraints,
     translation::IndexTranslation, i::Int)
     do_color = index_color &&
@@ -144,13 +171,27 @@ function print_mo_index(io::IO, constraints::Constraints,
     end
 end
 
+function print_latex_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, p)
+    getname_latex(io, constraints, translation, p)
+end
+
+function print_latex_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, indices...)
+    for p in indices
+        print_latex_mo_index(io, constraints, translation, p)
+    end
+end
+
+
+
 index_color::Bool = true
 color_translated::Bool = false
 do_index_translation::Bool = true
 
 export enable_color, disable_color, set_color,
     enable_color_translated, disable_color_translated,
-    enable_index_tranlation, disable_index_translation
+    enable_index_translation, disable_index_translation
 
 """
     enable_color()
@@ -221,7 +262,7 @@ coloring nevertheless). To re-enable the coloring see
 
 This is enabled by default.
 """
-function enable_index_tranlation()
+function enable_index_translation()
     global do_index_translation = true
     nothing
 end
@@ -232,7 +273,7 @@ end
 Disables the translation of summation indices over occupied and virtual to be
 printed as ijkl... and abcd... respectively instead of pqrs...
 
-See [`enable_index_tranlation`](@ref)
+See [`enable_index_translation`](@ref)
 """
 function disable_index_translation()
     global do_index_translation = false

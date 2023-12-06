@@ -26,6 +26,24 @@ function Base.show(io::IO,
     end
 end
 
+function print_latex(io::IO,
+    (t, constraints, translation)::Tuple{Tensor,Constraints,IndexTranslation}, renaming::Dict{String, String})
+    symb = get_symbol(t)
+    if haskey(renaming, symb)
+        print(io, renaming[symb])
+    else
+        print(io, symb)
+    end
+    inds = get_indices(t)
+    if !isempty(inds)
+        print(io, "_{")
+        for ind in inds
+            print_latex_mo_index(io, constraints, translation, ind)
+        end
+        print(io, '}')
+    end
+end
+
 function Base.:(==)(a::A, b::B) where {A<:Tensor,B<:Tensor}
     (get_symbol(a), get_indices(a)) == (get_symbol(b), get_indices(b))
 end

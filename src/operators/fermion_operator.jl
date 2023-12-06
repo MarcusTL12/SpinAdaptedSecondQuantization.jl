@@ -22,6 +22,17 @@ function Base.show(io::IO,
     print(io, a.spin)
 end
 
+function print_latex(io::IO,
+    (
+        a, constraints, translation
+    )::Tuple{FermionOperator,Constraints,IndexTranslation})
+    dag = a.dag ? "^{\\dagger}" : "^{-}"
+    print(io, 'a', dag, "_{")
+    print_latex_mo_index(io, constraints, translation, a.p)
+    sp = a.spin == α ? "\\alpha}" : "\\beta}"
+    print(io, sp)
+end
+
 function exchange_indices(a::FermionOperator, mapping)
     FermionOperator(exchange_index(a.p, mapping), a.spin, a.dag)
 end

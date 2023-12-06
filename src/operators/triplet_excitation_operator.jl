@@ -18,6 +18,15 @@ function Base.show(io::IO,
     print_mo_index(io, constraints, translation, e.p, e.q)
 end
 
+function print_latex(io::IO,
+    (
+        e, constraints, translation
+    )::Tuple{TripletExcitationOperator,Constraints,IndexTranslation})
+    print(io, "T_{")
+    print_latex_mo_index(io, constraints, translation, e.p, e.q)
+    print(io, "}")
+end
+
 function exchange_indices(e::TripletExcitationOperator, mapping)
     TripletExcitationOperator(
         exchange_index(e.p, mapping),

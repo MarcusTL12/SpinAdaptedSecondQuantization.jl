@@ -15,6 +15,12 @@ function Base.show(io::IO,
     print(io, 'b', dag)
 end
 
+function print_latex(io::IO,
+    (b, _, _)::Tuple{BosonOperator,Constraints,IndexTranslation})
+    dag = b.dag ? "^{\\dagger}" : "^{-}"
+    print(io, 'b', dag)
+end
+
 function exchange_indices(b::BosonOperator, mapping)
     b
 end
