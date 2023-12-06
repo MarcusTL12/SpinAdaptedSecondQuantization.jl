@@ -87,7 +87,7 @@ colors::Dict{Type,Union{Symbol,Int}} = Dict{Type,Union{Symbol,Int}}([
     VirtualOrbital => default_color(VirtualOrbital),
 ])
 
-latex_colors::Dict{Type,Union{String}} = Dict{Type,Union{String}}([
+latex_colors::Dict{Type,String} = Dict{Type,String}([
     GeneralOrbital => default_latex_color(GeneralOrbital),
     OccupiedOrbital => default_latex_color(OccupiedOrbital),
     VirtualOrbital => default_latex_color(VirtualOrbital),
@@ -191,7 +191,7 @@ do_index_translation::Bool = true
 
 export enable_color, disable_color, set_color,
     enable_color_translated, disable_color_translated,
-    enable_index_tranlation, disable_index_translation
+    enable_index_translation, disable_index_translation
 
 """
     enable_color()
@@ -262,7 +262,7 @@ coloring nevertheless). To re-enable the coloring see
 
 This is enabled by default.
 """
-function enable_index_tranlation()
+function enable_index_translation()
     global do_index_translation = true
     nothing
 end
@@ -273,7 +273,7 @@ end
 Disables the translation of summation indices over occupied and virtual to be
 printed as ijkl... and abcd... respectively instead of pqrs...
 
-See [`enable_index_tranlation`](@ref)
+See [`enable_index_translation`](@ref)
 """
 function disable_index_translation()
     global do_index_translation = false

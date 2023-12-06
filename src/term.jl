@@ -203,7 +203,53 @@ function print_latex(io::IO, t::Term)
     print_latex(io, (t, IndexTranslation()))
 end
 
+function print_latex(io::IO, t::Term, renaming::Dict{String,String})
+    print_latex(io, (t, IndexTranslation()), renaming)
+end
+
+default_renaming::Dict{String,String} = Dict{String,String}(
+    "α" => "\\alpha",
+    "β" => "\\beta",
+    "γ" => "\\gamma",
+    "δ" => "\\delta",
+    "ε" => "\\epsilon",
+    "ζ" => "\\zeta",
+    "η" => "\\eta",
+    "θ" => "\\theta",
+    "ι" => "\\iota",
+    "κ" => "\\kappa",
+    "λ" => "\\lambda",
+    "μ" => "\\mu",
+    "ν" => "\\nu",
+    "ξ" => "\\xi",
+    "ο" => "\\omicron",
+    "π" => "\\pi",
+    "ρ" => "\\rho",
+    "σ" => "\\sigma",
+    "τ" => "\\tau",
+    "υ" => "\\upsilon",
+    "φ" => "\\phi",
+    "χ" => "\\chi",
+    "ψ" => "\\psi",
+    "ω" => "\\omega",
+    "Γ" => "\\Gamma",
+    "Δ" => "\\Delta",
+    "Θ" => "\\Theta",
+    "Λ" => "\\Lambda",
+    "Ξ" => "\\Xi",
+    "Π" => "\\Pi",
+    "Σ" => "\\Sigma",
+    "Φ" => "\\Phi",
+    "Ψ" => "\\Psi",
+    "Ω" => "\\Omega"
+)
+
 function print_latex(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
+    print_latex(io, (t, translation), default_renaming)
+end
+
+function print_latex(io::IO, (t, translation)::Tuple{Term,IndexTranslation}, renaming::Dict{String, String})
+    renaming = merge(default_renaming, renaming)
     sep = Ref(false)
 
     function printsep()
@@ -271,7 +317,7 @@ function print_latex(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         end
         
         printsep()
-        print_latex(io, (t.tensors[i], t.constraints, translation))
+        print_latex(io, (t.tensors[i], t.constraints, translation), renaming)
 
         if j > 1
             print(io, "^{", string(j), "}")

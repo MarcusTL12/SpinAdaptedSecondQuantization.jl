@@ -27,8 +27,13 @@ function Base.show(io::IO,
 end
 
 function print_latex(io::IO,
-    (t, constraints, translation)::Tuple{Tensor,Constraints,IndexTranslation})
-    print(io, get_symbol(t))
+    (t, constraints, translation)::Tuple{Tensor,Constraints,IndexTranslation}, renaming::Dict{String, String})
+    symb = get_symbol(t)
+    if haskey(renaming, symb)
+        print(io, renaming[symb])
+    else
+        print(io, symb)
+    end
     inds = get_indices(t)
     if !isempty(inds)
         print(io, "_{")
