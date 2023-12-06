@@ -28,7 +28,7 @@ function print_latex(io::IO,
     )::Tuple{FermionOperator,Constraints,IndexTranslation})
     dag = a.dag ? "^{\\dagger}" : "^{-}"
     print(io, 'a', dag, "_{")
-    print_mo_index(io, constraints, translation, a.p)
+    print_latex_mo_index(io, constraints, translation, a.p)
     sp = a.spin == α ? "\\alpha}" : "\\beta}"
     print(io, sp)
 end

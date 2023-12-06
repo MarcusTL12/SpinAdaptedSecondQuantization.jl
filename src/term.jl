@@ -199,6 +199,10 @@ function update_index_translation(t::Term, translation::IndexTranslation)
     translation
 end
 
+function print_latex(io::IO, t::Term)
+    print_latex(io, (t, IndexTranslation()))
+end
+
 function print_latex(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
     sep = Ref(false)
 
@@ -242,7 +246,7 @@ function print_latex(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         printsep()
         print(io, "\\sum_{")
         for i in t.sum_indices
-            print_mo_index(io, t.constraints, translation, i)
+            print_latex_mo_index(io, t.constraints, translation, i)
         end
         print(io, '}')
         sep[] = true
@@ -302,7 +306,7 @@ function print_latex(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
             if !isfirst
                 print(io, ", ")
             end
-            print_mo_index(io, t.constraints, translation, i)
+            print_latex_mo_index(io, t.constraints, translation, i)
             print(io, "\\in", getshortname(t.constraints(i)))
             isfirst = false
         end

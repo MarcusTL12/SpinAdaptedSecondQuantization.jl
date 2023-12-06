@@ -45,7 +45,7 @@ function print_latex(io::IO,
     print(io, "\\delta_{")
 
     for p in d.indices
-        print_mo_index(io, constraints, translation, p)
+        print_latex_mo_index(io, constraints, translation, p)
     end
 
     print(io, "}")

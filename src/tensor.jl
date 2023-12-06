@@ -33,7 +33,7 @@ function print_latex(io::IO,
     if !isempty(inds)
         print(io, "_{")
         for ind in inds
-            print_mo_index(io, constraints, translation, ind)
+            print_latex_mo_index(io, constraints, translation, ind)
         end
         print(io, '}')
     end

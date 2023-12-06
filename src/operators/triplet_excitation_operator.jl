@@ -23,7 +23,7 @@ function print_latex(io::IO,
         e, constraints, translation
     )::Tuple{TripletExcitationOperator,Constraints,IndexTranslation})
     print(io, "T_{")
-    print_mo_index(io, constraints, translation, e.p, e.q)
+    print_latex_mo_index(io, constraints, translation, e.p, e.q)
     print(io, "}")
 end
 
