@@ -1,6 +1,8 @@
 export GeneralOrbital, OccupiedOrbital, VirtualOrbital
 export general, isoccupied, isvirtual
 
+abstract type Orbital end
+
 # Note: perhaps redefine this as Union{OccupiedOrbital,VirtualOrbital}
 """
     GeneralOrbital
@@ -8,7 +10,7 @@ export general, isoccupied, isvirtual
 Top level supertype of all orbital spaces.
 Any orbital subspace is a subtype of this type.
 """
-abstract type GeneralOrbital end
+abstract type GeneralOrbital <: Orbital end
 
 """
     OccupiedOrbital
@@ -27,13 +29,13 @@ abstract type VirtualOrbital <: GeneralOrbital end
 # Defining relations to sort indices
 
 # A space is not less than itself
-Base.isless(::Type{S}, ::Type{S}) where {S<:GeneralOrbital} = false
+Base.isless(::Type{S}, ::Type{S}) where {S<:Orbital} = false
 Base.isless(::Type{S1}, ::Type{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital} = !(S2 < S1)
+{S1<:Orbital,S2<:Orbital} = !(S2 < S1)
 
 # A subspace of a space is considered "greater" than the parent space
 # making it come later when sorting
-Base.isless(::Type{S1}, ::Type{S2}) where {S2<:GeneralOrbital,S1<:S2} = false
+Base.isless(::Type{S1}, ::Type{S2}) where {S2<:Orbital,S1<:S2} = false
 # Base.isless(::Type{S1}, ::Type{S2}) where {S1<:GeneralOrbital,S2<:S1} = true
 
 # Defining occupied orbitals to come before virtuals.
@@ -45,11 +47,11 @@ Base.isless(::Type{VirtualOrbital}, ::Type{OccupiedOrbital}) = false
 # Base.isless(::Type{OccupiedOrbital}, ::Type{VirtualOrbital}) = true
 
 function is_strict_subspace(::Type{S1}, ::Type{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital}
+{S1<:Orbital,S2<:Orbital}
     S1 != S2 && S1 <: S2
 end
 
-function getnames(::Type{S}) where {S<:GeneralOrbital}
+function getnames(::Type{S}) where {S<:Orbital}
     throw("getnames not implemented for space $S")
 end
 
@@ -83,7 +85,7 @@ colors::Dict{Type,Union{Symbol,Int}} = Dict{Type,Union{Symbol,Int}}([
     VirtualOrbital => default_color(VirtualOrbital),
 ])
 
-function getname(io::IO, ::Type{S}, i::Int) where {S<:GeneralOrbital}
+function getname(io::IO, ::Type{S}, i::Int) where {S<:Orbital}
     names = getnames(S)
 
     print(io, names[(i-1)%length(names)+1])
@@ -179,7 +181,7 @@ can be found in this table on
 [Wikipedia](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit).
 """
 function set_color(::Type{S}, color=default_color(S)) where
-{S<:GeneralOrbital}
+{S<:Orbital}
     colors[S] = color
     nothing
 end
@@ -260,7 +262,7 @@ function disable_color_translated()
 end
 
 Base.isdisjoint(::Type{S1}, ::Type{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital} = typeintersect(S1, S2) == Union{}
+{S1<:Orbital,S2<:Orbital} = typeintersect(S1, S2) == Union{}
 
 function exchange_index(p::Int, mapping)
     for (old, new) in mapping
@@ -286,7 +288,7 @@ end
 
 # by default spaces can not be added together to form a new space
 function add_spaces(::Type{S1}, ::Type{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital}
+{S1<:Orbital,S2<:Orbital}
     nothing
 end
 
@@ -300,7 +302,7 @@ end
 
 # By default taking the difference of spaces does not form a new space
 function diff_spaces(::Type{S1}, ::Type{S2}) where
-{S1<:GeneralOrbital,S2<:GeneralOrbital}
+{S1<:Orbital,S2<:Orbital}
     nothing
 end
 
