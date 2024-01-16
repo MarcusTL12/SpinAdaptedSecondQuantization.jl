@@ -24,7 +24,7 @@ include("expression.jl")
 include("ket.jl")
 include("wick_theorem.jl")
 
-include("print_code.jl")
+include("code_generation.jl")
 
 include("tensor_replacements.jl")
 

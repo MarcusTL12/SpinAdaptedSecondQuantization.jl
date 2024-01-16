@@ -57,9 +57,9 @@ getnames(::Type{GeneralOrbital}) = "pqrstuvw"
 getnames(::Type{OccupiedOrbital}) = "ijklmno"
 getnames(::Type{VirtualOrbital}) = "abcdefg"
 
-getshortname(::Type{GeneralOrbital}) = "G"
-getshortname(::Type{OccupiedOrbital}) = "O"
-getshortname(::Type{VirtualOrbital}) = "V"
+getshortname(::Type{GeneralOrbital}) = "g"
+getshortname(::Type{OccupiedOrbital}) = "o"
+getshortname(::Type{VirtualOrbital}) = "v"
 
 function subscript(io::IO, i)
     for d in reverse!(digits(i))
