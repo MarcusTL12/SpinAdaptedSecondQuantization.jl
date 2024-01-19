@@ -29,16 +29,26 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
         GeneralOrbital => "g",
     ])
 
-    function make_param_def(name, spaces, isinput=false)
+    function make_param_def(julianame, name, spaces, io)
         io = IOBuffer()
         if isempty(spaces)
-            if isinput && name ∉ noinput_tensors
-                print(io, "$name = input_scalar(\"$name\")")
+            funcname = if io == :I && name ∉ noinput_tensors
+                "input_scalar"
+            elseif io == :O
+                "output_scalar"
             else
-                print(io, "$name = Sym(\"$name\")")
+                "Sym"
             end
+            print(io, "$julianame = $funcname(\"$name\")")
         else
-            print(io, "$name = \"$name\" => (")
+            funcname = if io == :I && name ∉ noinput_tensors
+                "input_tensor"
+            elseif io == :O
+                "output_tensor"
+            else
+                "noio_tensor"
+            end
+            print(io, "$julianame = $funcname(\"$name\" => (")
             isfirst = true
             for space in spaces
                 if isfirst
@@ -49,7 +59,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
                 print(io, '"', space_dim_dict[space], '"')
             end
 
-            print(io, ") => (1:$(length(spaces))...,)")
+            print(io, "))")
         end
 
         String(take!(io))
@@ -138,9 +148,10 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             spaces = [t.constraints(p) for p in inds]
 
             tens_name = get_tensor_name(get_symbol(tens), length(inds))
+            julia_name = get_block_name(get_symbol(tens), spaces)
             block_name = get_block_name(tens_name, spaces)
 
-            param_def = make_param_def(block_name, spaces, true)
+            param_def = make_param_def(julia_name, block_name, spaces, :I)
 
             if param_def ∉ parameters
                 push!(parameters, param_def)
@@ -168,7 +179,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
 
     println(func_body, "reset_state()")
 
-    println(func_body, make_param_def(symbol, outspaces))
+    println(func_body, make_param_def(symbol, symbol, outspaces, :O))
 
     for param in parameters
         println(func_body, param)
