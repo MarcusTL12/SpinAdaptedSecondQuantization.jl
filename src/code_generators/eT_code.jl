@@ -29,10 +29,14 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
         GeneralOrbital => "g",
     ])
 
-    function make_param_def(name, spaces)
+    function make_param_def(name, spaces, isinput=false)
         io = IOBuffer()
         if isempty(spaces)
-            print(io, "$name = input_scalar(\"$name\")")
+            if isinput
+                print(io, "$name = input_scalar(\"$name\")")
+            else
+                print(io, "$name = Sym(\"$name\")")
+            end
         else
             print(io, "$name = \"$name\" => (")
             isfirst = true
@@ -136,7 +140,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             tens_name = get_tensor_name(get_symbol(tens), length(inds))
             block_name = get_block_name(tens_name, spaces)
 
-            param_def = make_param_def(block_name, spaces)
+            param_def = make_param_def(block_name, spaces, true)
 
             if param_def ∉ parameters
                 push!(parameters, param_def)
