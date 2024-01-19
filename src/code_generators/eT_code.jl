@@ -1,12 +1,12 @@
-export print_julia_function
+export print_eT_function_generator
 
 """
-print_julia_function(name, ex, symbol, indices, translation,
-                    [tensor_translation], [explicit_tensor_blocks])
+print_eT_function_generator(name, ex, symbol, indices, translation,
+                    [wf_type], [tensor_translation])
 
 """
-function print_julia_function(name, ex::Expression, symbol, indices, translation,
-    tensor_translation=Dict(), explicit_tensor_blocks=String[])
+function print_eT_function_generator(name, ex::Expression, symbol, indices,
+    translation, wf_type="ccs", tensor_translation=Dict())
     function get_tensor_name(t, n)
         get(tensor_translation, (t, n), get(tensor_translation, t, t))
     end
@@ -20,50 +20,35 @@ function print_julia_function(name, ex::Expression, symbol, indices, translation
         String(take!(io))
     end
 
-    parameters = ["no", "nv"]
-
     space_dim_dict = Dict([
-        OccupiedOrbital => "no",
-        VirtualOrbital => "nv",
-        GeneralOrbital => "nao",
-    ])
-
-    space_range_dict = Dict([
         OccupiedOrbital => "o",
         VirtualOrbital => "v",
-        GeneralOrbital => ":",
+        GeneralOrbital => "g",
     ])
 
-    out_dims = [space_dim_dict[translation(p)[1]] for p in indices]
-
-    func_body = IOBuffer()
-
-    print(
-        func_body,
-        """
-nao = no + nv
-o = 1:no
-v = no+1:nao
-
-$symbol = """)
-
-    if isempty(out_dims)
-        println(func_body, "0.0")
-    else
+    function make_param_def(name, spaces)
+        io = IOBuffer()
+        print(io, "$name = \"$name\" => (")
         isfirst = true
-        for d in out_dims
+        for space in spaces
             if isfirst
                 isfirst = false
-                print(func_body, "zeros(")
             else
-                print(func_body, ", ")
+                print(io, ", ")
             end
-            print(func_body, "$d")
+            print(io, '"', space_dim_dict[space], '"')
         end
-        println(func_body, ")")
+
+        print(io, ") => (1:$(length(spaces))...,)")
+
+        String(take!(io))
     end
 
-    tensor_blocks = Dict()
+    parameters = []
+
+    outspaces = [translation(p)[1] for p in indices]
+
+    func_body = IOBuffer()
 
     index_names = String[]
     io = IOBuffer()
@@ -107,19 +92,17 @@ $symbol = """)
         end
 
         print(tensor_body, "    $symbol")
-        if !isempty(index_names)
-            isfirst = true
-            for x in index_names
-                if isfirst
-                    isfirst = false
-                    print(tensor_body, "[")
-                else
-                    print(tensor_body, ",")
-                end
-                print(tensor_body, "$x")
+        isfirst = true
+        print(tensor_body, "[")
+        for x in index_names
+            if isfirst
+                isfirst = false
+            else
+                print(tensor_body, ",")
             end
-            print(tensor_body, "]")
+            print(tensor_body, "$x")
         end
+        print(tensor_body, "]")
 
         print(tensor_body, " += ")
 
@@ -146,20 +129,8 @@ $symbol = """)
             tens_name = get_tensor_name(get_symbol(tens), length(inds))
             block_name = get_block_name(tens_name, spaces)
 
-            if tens_name ∈ explicit_tensor_blocks
-                if block_name ∉ parameters
-                    push!(parameters, block_name)
-                end
-            else
-                if tens_name ∉ parameters
-                    push!(parameters, tens_name)
-                end
-
-                blocks = get(tensor_blocks, tens_name, [])
-                if spaces ∉ blocks
-                    push!(blocks, spaces)
-                end
-                tensor_blocks[tens_name] = blocks
+            if block_name ∉ parameters
+                push!(parameters, make_param_def(block_name, spaces))
             end
 
             print(tensor_body, block_name)
@@ -182,27 +153,17 @@ $symbol = """)
         println(tensor_body, "")
     end
 
-    for (tens_name, blocks) in tensor_blocks
-        for spaces in blocks
-            print(func_body, get_block_name(tens_name, spaces))
-            print(func_body, " = @view ", tens_name)
-            isfirst = true
-            for space in spaces
-                if isfirst
-                    isfirst = false
-                    print(func_body, "[")
-                else
-                    print(func_body, ",")
-                end
-                print(func_body, space_range_dict[space])
-            end
-            println(func_body, "]")
-        end
+    println(func_body, "reset_state()")
+
+    println(func_body, make_param_def(symbol, outspaces))
+
+    for param in parameters
+        println(func_body, param)
     end
 
     all_index_names = sort!(collect(all_index_names))
 
-    print(func_body, "@tensoropt (")
+    print(func_body, "@tensor opt=(")
     isfirst = true
     for (n, f) in all_index_names
         if isfirst
@@ -216,30 +177,21 @@ $symbol = """)
         end
         print(func_body, "χ")
     end
-    println(func_body, ") begin")
+    println(func_body, ") backend=eTbackend begin")
 
     print(func_body, String(take!(tensor_body)))
-    print(func_body, "end")
+    println(func_body, "end")
+
+    print(func_body, "finalize_eT_function(\"$name\", \"$wf_type\")")
 
     io = IOBuffer()
 
-    print(io, "function ", name)
-    isfirst = true
-    for param in parameters
-        if isfirst
-            isfirst = false
-            print(io, "(")
-        else
-            print(io, ", ")
-        end
-        print(io, param)
-    end
-    println(io, ")")
+    println(io, "let")
 
     for l in eachsplit(String(take!(func_body)), "\n")
         println(io, "    ", l)
     end
 
-    println(io, "    $symbol\nend")
+    println(io, "end")
     String(take!(io))
 end
