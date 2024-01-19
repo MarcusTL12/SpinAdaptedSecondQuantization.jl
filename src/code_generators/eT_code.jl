@@ -13,9 +13,12 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
 
     function get_block_name(n, spaces)
         io = IOBuffer()
-        print(io, "$(n)_")
-        for s in spaces
-            print(io, getshortname(s))
+        print(io, "$(n)")
+        if !isempty(spaces)
+            print(io, "_")
+            for s in spaces
+                print(io, getshortname(s))
+            end
         end
         String(take!(io))
     end
@@ -129,25 +132,25 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             tens_name = get_tensor_name(get_symbol(tens), length(inds))
             block_name = get_block_name(tens_name, spaces)
 
-            if block_name ∉ parameters
-                push!(parameters, make_param_def(block_name, spaces))
+            param_def = make_param_def(block_name, spaces)
+
+            if param_def ∉ parameters
+                push!(parameters, param_def)
             end
 
             print(tensor_body, block_name)
 
             isfirstinner = true
+            print(tensor_body, "[")
             for p in inds
                 if isfirstinner
                     isfirstinner = false
-                    print(tensor_body, "[")
                 else
                     print(tensor_body, ",")
                 end
                 print_mo_index(tensor_body, t.constraints, local_trans, p)
             end
-            if !isfirstinner
-                print(tensor_body, "]")
-            end
+            print(tensor_body, "]")
         end
 
         println(tensor_body, "")
