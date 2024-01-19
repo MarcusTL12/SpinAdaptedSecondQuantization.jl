@@ -29,21 +29,21 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
         GeneralOrbital => "g",
     ])
 
-    function make_param_def(julianame, name, spaces, io)
+    function make_param_def(julianame, name, spaces, flag)
         io = IOBuffer()
         if isempty(spaces)
-            funcname = if io == :I && name ∉ noinput_tensors
+            funcname = if flag == :I && name ∉ noinput_tensors
                 "input_scalar"
-            elseif io == :O
+            elseif flag == :O
                 "output_scalar"
             else
                 "Sym"
             end
             print(io, "$julianame = $funcname(\"$name\")")
         else
-            funcname = if io == :I && name ∉ noinput_tensors
+            funcname = if flag == :I && name ∉ noinput_tensors
                 "input_tensor"
-            elseif io == :O
+            elseif flag == :O
                 "output_tensor"
             else
                 "noio_tensor"
