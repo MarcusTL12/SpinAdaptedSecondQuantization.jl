@@ -29,10 +29,10 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
         GeneralOrbital => "g",
     ])
 
-    function make_param_def(tens_symb, julianame, name, spaces, flag)
+    function make_param_def(julianame, name, spaces, flag)
         io = IOBuffer()
         if isempty(spaces)
-            funcname = if flag == :I && tens_symb ∉ noinput_tensors
+            funcname = if flag == :I && julianame ∉ noinput_tensors
                 "input_scalar"
             elseif flag == :O
                 "output_scalar"
@@ -41,7 +41,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             end
             print(io, "$julianame = $funcname(\"$name\")")
         else
-            funcname = if flag == :I && tens_symb ∉ noinput_tensors
+            funcname = if flag == :I && julianame ∉ noinput_tensors
                 "input_tensor"
             elseif flag == :O
                 "output_tensor"
@@ -151,7 +151,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             julia_name = get_block_name(get_symbol(tens), spaces)
             block_name = get_block_name(tens_name, spaces)
 
-            param_def = make_param_def(get_symbol(tens), julia_name, block_name, spaces, :I)
+            param_def = make_param_def(julia_name, block_name, spaces, :I)
 
             if param_def ∉ parameters
                 push!(parameters, param_def)
@@ -179,7 +179,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
 
     println(func_body, "reset_state()")
 
-    println(func_body, make_param_def(symbol, symbol, symbol, outspaces, :O))
+    println(func_body, make_param_def(symbol, symbol, outspaces, :O))
 
     for param in parameters
         println(func_body, param)
