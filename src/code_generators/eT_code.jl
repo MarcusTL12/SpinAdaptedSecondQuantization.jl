@@ -32,7 +32,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
     function make_param_def(name, spaces)
         io = IOBuffer()
         if isempty(spaces)
-            print(io, "$name = Sym(\"$name\")")
+            print(io, "$name = input_scalar(\"$name\")")
         else
             print(io, "$name = \"$name\" => (")
             isfirst = true
