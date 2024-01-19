@@ -31,18 +31,22 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
 
     function make_param_def(name, spaces)
         io = IOBuffer()
-        print(io, "$name = \"$name\" => (")
-        isfirst = true
-        for space in spaces
-            if isfirst
-                isfirst = false
-            else
-                print(io, ", ")
+        if isempty(spaces)
+            print(io, "$name = Sym(\"$name\")")
+        else
+            print(io, "$name = \"$name\" => (")
+            isfirst = true
+            for space in spaces
+                if isfirst
+                    isfirst = false
+                else
+                    print(io, ", ")
+                end
+                print(io, '"', space_dim_dict[space], '"')
             end
-            print(io, '"', space_dim_dict[space], '"')
-        end
 
-        print(io, ") => (1:$(length(spaces))...,)")
+            print(io, ") => (1:$(length(spaces))...,)")
+        end
 
         String(take!(io))
     end
@@ -141,16 +145,18 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             print(tensor_body, block_name)
 
             isfirstinner = true
-            print(tensor_body, "[")
             for p in inds
                 if isfirstinner
+                    print(tensor_body, "[")
                     isfirstinner = false
                 else
                     print(tensor_body, ",")
                 end
                 print_mo_index(tensor_body, t.constraints, local_trans, p)
             end
-            print(tensor_body, "]")
+            if !isfirstinner
+                print(tensor_body, "]")
+            end
         end
 
         println(tensor_body, "")
