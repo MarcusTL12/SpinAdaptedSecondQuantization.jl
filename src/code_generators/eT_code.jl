@@ -157,7 +157,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
                 push!(parameters, param_def)
             end
 
-            print(tensor_body, block_name)
+            print(tensor_body, julia_name)
 
             isfirstinner = true
             for p in inds
