@@ -2,11 +2,11 @@ export print_eT_function_generator
 
 """
 print_eT_function_generator(name, ex, symbol, indices, translation,
-                    [wf_type], [tensor_translation])
+                    [wf_type], [tensor_translation], [noinput_tensors])
 
 """
 function print_eT_function_generator(name, ex::Expression, symbol, indices,
-    translation, wf_type="ccs", tensor_translation=Dict())
+    translation, wf_type="ccs", tensor_translation=Dict(), noinput_tensors=String[])
     function get_tensor_name(t, n)
         get(tensor_translation, (t, n), get(tensor_translation, t, t))
     end
@@ -32,7 +32,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
     function make_param_def(name, spaces, isinput=false)
         io = IOBuffer()
         if isempty(spaces)
-            if isinput
+            if isinput && name ∉ noinput_tensors
                 print(io, "$name = input_scalar(\"$name\")")
             else
                 print(io, "$name = Sym(\"$name\")")
