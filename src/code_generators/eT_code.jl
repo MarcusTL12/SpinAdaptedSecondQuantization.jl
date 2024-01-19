@@ -109,18 +109,18 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
 
         print(tensor_body, " += ")
 
-        isfirst = true
+        isfirst2 = true
 
         if isone(-t.scalar)
             print(tensor_body, "-")
         elseif !isone(t.scalar)
             printscalar(tensor_body, t.scalar)
-            isfirst = false
+            isfirst2 = false
         end
 
         for tens in t.tensors
-            if isfirst
-                isfirst = false
+            if isfirst2
+                isfirst2 = false
             else
                 print(tensor_body, "*")
             end
