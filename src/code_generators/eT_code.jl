@@ -48,7 +48,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             else
                 "noio_tensor"
             end
-            print(io, "$julianame = $funcname(\"$name\" => (")
+            print(io, "$julianame = $funcname(\"$name\", (")
             isfirst = true
             for space in spaces
                 if isfirst
@@ -147,11 +147,11 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
 
             spaces = [t.constraints(p) for p in inds]
 
-            tens_name = get_tensor_name(get_symbol(tens), length(inds))
+            block_name = get_block_name(get_symbol(tens), spaces)
+            tens_name = get_tensor_name(block_name, length(inds))
             julia_name = get_block_name(get_symbol(tens), spaces)
-            block_name = get_block_name(tens_name, spaces)
 
-            param_def = make_param_def(julia_name, block_name, spaces, :I)
+            param_def = make_param_def(julia_name, tens_name, spaces, :I)
 
             if param_def ∉ parameters
                 push!(parameters, param_def)
