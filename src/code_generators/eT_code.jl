@@ -6,7 +6,8 @@ print_eT_function_generator(name, ex, symbol, indices, translation,
 
 """
 function print_eT_function_generator(name, ex::Expression, symbol, indices,
-    translation, wf_type="ccs", tensor_translation=Dict(), noinput_tensors=String[])
+    translation, wf_type="ccs", tensor_translation=Dict(), noinput_tensors=String[],
+    outperms=nothing)
     function get_tensor_name(t, n)
         get(tensor_translation, (t, n), get(tensor_translation, t, t))
     end
@@ -23,16 +24,18 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
         String(take!(io))
     end
 
-    space_dim_dict = Dict([
-        OccupiedOrbital => "o",
-        VirtualOrbital => "v",
-        GeneralOrbital => "g",
-    ])
+    function make_param_def(julianame, name, tens)
+        perms = get_permutations(tens)
 
-    function make_param_def(julianame, name)
+        print_perms = length(perms) > 1 || !issorted(only(perms))
+
         is_inp = julianame ∉ noinput_tensors
         io = IOBuffer()
-        print(io, "$julianame = (\"$name\", $is_inp)")
+        if print_perms
+            print(io, "$julianame = (\"$name\", $is_inp, $perms)")
+        else
+            print(io, "$julianame = (\"$name\", $is_inp)")
+        end
         String(take!(io))
     end
 
@@ -45,6 +48,10 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
     func_body = IOBuffer()
 
     println(func_body, "func = FortranFunction((\"$symbol\", $outdims))")
+
+    if !isnothing(outperms)
+        println(func_body, "outperms = $outperms")
+    end
 
     index_names = String[]
     io = IOBuffer()
@@ -88,7 +95,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             tens_name = get_tensor_name(block_name, length(inds))
             julia_name = get_block_name(get_symbol(tens), spaces)
 
-            param_def = make_param_def(julia_name, tens_name)
+            param_def = make_param_def(julia_name, tens_name, tens)
 
             if param_def ∉ parameters
                 push!(parameters, param_def)
@@ -109,8 +116,14 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
 
         print(tensor_list, "]")
 
-        println(tensor_body, "\", ", t.scalar,
-            ", ", String(take!(tensor_list)), ")")
+        print(tensor_body, "\", ", t.scalar,
+            ", ", String(take!(tensor_list)))
+        
+        if !isnothing(outperms)
+            print(tensor_body, ", outperms")
+        end
+
+        println(tensor_body, ")")
     end
 
     for param in parameters

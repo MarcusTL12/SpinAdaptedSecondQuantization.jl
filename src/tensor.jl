@@ -34,6 +34,10 @@ function Base.isless(a::A, b::B) where {A<:Tensor,B<:Tensor}
     (get_symbol(a), get_indices(a)) < (get_symbol(b), get_indices(b))
 end
 
+function get_permutations(t::Tensor)
+    [collect(1:length(get_indices(t)))]
+end
+
 include("tensors/real_tensor.jl")
 include("tensors/psym_tensor.jl")
 include("tensors/rsym_tensor.jl")
