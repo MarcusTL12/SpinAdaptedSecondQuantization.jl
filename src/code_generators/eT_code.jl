@@ -24,8 +24,12 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
         String(take!(io))
     end
 
-    function make_param_def(julianame, name, tens)
+    function make_param_def(julianame, name, tens, spaces)
         perms = get_permutations(tens)
+
+        filter!(perms) do perm
+            permute!(copy(spaces), perm) == spaces
+        end
 
         print_perms = length(perms) > 1 || !issorted(only(perms))
 
@@ -95,7 +99,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
             tens_name = get_tensor_name(block_name, length(inds))
             julia_name = get_block_name(get_symbol(tens), spaces)
 
-            param_def = make_param_def(julia_name, tens_name, tens)
+            param_def = make_param_def(julia_name, tens_name, tens, spaces)
 
             if param_def ∉ parameters
                 push!(parameters, param_def)
@@ -118,7 +122,7 @@ function print_eT_function_generator(name, ex::Expression, symbol, indices,
 
         print(tensor_body, "\", ", t.scalar,
             ", ", String(take!(tensor_list)))
-        
+
         if !isnothing(outperms)
             print(tensor_body, ", outperms")
         end
