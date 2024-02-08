@@ -160,6 +160,7 @@ function update_index_translation(t::Term, translation::IndexTranslation)
         end
     end
 
+    seen_g = Set{Int}()
     seen_o = Set{Int}()
     seen_v = Set{Int}()
 
@@ -180,6 +181,8 @@ function update_index_translation(t::Term, translation::IndexTranslation)
                 translation[p] = (OccupiedOrbital, find_first_free!(seen_o))
             elseif S <: VirtualOrbital
                 translation[p] = (VirtualOrbital, find_first_free!(seen_v))
+            elseif S == GeneralOrbital
+                translation[p] = (GeneralOrbital, find_first_free!(seen_g))
             end
         end
     end
