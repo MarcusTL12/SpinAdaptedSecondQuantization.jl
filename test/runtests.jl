@@ -64,11 +64,11 @@ end
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ia(δ_pqa g_iaii h_pa E_pq) C(p∈V, q∈V)"
+          "3/5 ∑_ia(δ_pqa g_iaii h_pa E_pq) C(p∈v, q∈v)"
 
     t = SASQ.lower_delta_indices(t)
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ia(δ_pqa g_ipii h_pp E_pp) C(p∈V, q∈V)"
+          "3/5 ∑_ia(δ_pqa g_ipii h_pp E_pp) C(p∈v, q∈v)"
 
     t = SASQ.Term(
         3 // 5,
@@ -83,7 +83,7 @@ end
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ia(δ_pa g_iaiq h_pa E_pq) C(p∈V)"
+          "3/5 ∑_ia(δ_pa g_iaiq h_pa E_pq) C(p∈v)"
 end
 
 @testset "term exchange_indices" begin
@@ -106,21 +106,21 @@ end
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/7 δ_pqr g_stsq h_pt E_pq C(s∈O, t∈V)"
+          "3/7 δ_pqr g_stsq h_pt E_pq C(s∈o, t∈v)"
 
     t = SASQ.lower_delta_indices(t)
 
     @test string(SASQ.Expression([t])) ==
-          "3/7 δ_pqr g_stsp h_pt E_pp C(s∈O, t∈V)"
+          "3/7 δ_pqr g_stsp h_pt E_pp C(s∈o, t∈v)"
 
     t2 = SASQ.exchange_indices(t, [p => q])
 
     @test string(SASQ.Expression([t2])) ==
-          "3/7 δ_qr g_stsq h_qt E_qq C(s∈O, t∈V)"
+          "3/7 δ_qr g_stsq h_qt E_qq C(s∈o, t∈v)"
 
     t3 = SASQ.exchange_indices(t2, [q => r])
 
-    @test string(SASQ.Expression([t3])) == "3/7 g_stsr h_rt E_rr C(s∈O, t∈V)"
+    @test string(SASQ.Expression([t3])) == "3/7 g_stsr h_rt E_rr C(s∈o, t∈v)"
 end
 
 @testset "term summation delta" begin

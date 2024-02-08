@@ -37,3 +37,21 @@ function reorder_indices(t::RealSymmetricTensor, permutation)
     sort_rsym_indices!(ind)
     RealSymmetricTensor(t.symbol, ind)
 end
+
+function get_permutations(t::RealSymmetricTensor)
+    n = length(get_indices(t)) ÷ 2
+
+    pair_perms = [p.data for p in PermGen(n)]
+
+    function pair_perm_to_perm(pperm, swap_ind)
+        perm = Int[]
+        for i in pperm
+            do_swap = swap_ind & 1 != 0
+            swap_ind >>= 1
+            append!(perm, do_swap ? (2i, 2i - 1) : (2i - 1, 2i))
+        end
+        perm
+    end
+
+    [pair_perm_to_perm(pp, si) for pp in pair_perms for si in 0:2^n - 1]
+end

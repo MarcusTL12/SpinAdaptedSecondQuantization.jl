@@ -24,6 +24,7 @@ end
 
 function psym_tensor(symbol, indices...)
     ind = collect(indices)
+    @assert iseven(length(ind)) "psym tensors must have an even number of indices"
     sort_psym_indices!(ind)
     Expression(ParticleSymmetricTensor(symbol, ind))
 end
@@ -32,4 +33,20 @@ function reorder_indices(t::ParticleSymmetricTensor, permutation)
     ind = t.indices[permutation]
     sort_psym_indices!(ind)
     ParticleSymmetricTensor(t.symbol, ind)
+end
+
+function get_permutations(t::ParticleSymmetricTensor)
+    n = length(get_indices(t)) ÷ 2
+
+    pair_perms = [p.data for p in PermGen(n)]
+
+    function pair_perm_to_perm(pperm)
+        perm = Int[]
+        for i in pperm
+            append!(perm, (2i - 1, 2i))
+        end
+        perm
+    end
+
+    map(pair_perm_to_perm, pair_perms)
 end
