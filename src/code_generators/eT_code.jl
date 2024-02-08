@@ -2,7 +2,7 @@ export print_eT_function_generator
 
 """
 print_eT_function_generator(name, ex, symbol, indices, translation,
-                    [wf_type], [tensor_translation], [noinput_tensors])
+                    [wf_type], [tensor_translation], [noinput_tensors], [outperms])
 
 """
 function print_eT_function_generator(name, ex::Expression, symbol, indices,
