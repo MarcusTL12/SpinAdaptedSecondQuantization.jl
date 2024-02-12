@@ -164,12 +164,20 @@ function update_index_translation(t::Term, translation::IndexTranslation)
     seen_o = Set{Int}()
     seen_v = Set{Int}()
 
+    for p in ex_inds
+        if !haskey(translation, p)
+            push!(seen_g, p)
+        end
+    end
+
     for (p, (S, q)) in translation
         if p ∈ ex_inds
             if S <: OccupiedOrbital
                 push!(seen_o, q)
             elseif S <: VirtualOrbital
                 push!(seen_v, q)
+            elseif S == GeneralOrbital
+                push!(seen_g, q)
             end
         end
     end
