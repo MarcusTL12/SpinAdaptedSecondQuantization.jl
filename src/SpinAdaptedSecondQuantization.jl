@@ -6,30 +6,23 @@ const SASQ = SpinAdaptedSecondQuantization
 using DataStructures
 using Permutations
 
-"""
-    Constraints = SortedDict{Int,Type}
+include("index_spaces.jl")
+# include("spin.jl")
+# include("kronecker_delta.jl")
+# include("operator.jl")
+# include("tensor.jl")
+# include("term.jl")
+# include("expression.jl")
 
-Type alias for container of MO-Index constraints
-"""
-const Constraints = SortedDict{Int,Type}
+# include("ket.jl")
+# include("wick_theorem.jl")
 
-include("orbital_spaces.jl")
-include("spin.jl")
-include("kronecker_delta.jl")
-include("operator.jl")
-include("tensor.jl")
-include("term.jl")
-include("expression.jl")
+# include("code_generation.jl")
 
-include("ket.jl")
-include("wick_theorem.jl")
+# include("tensor_replacements.jl")
 
-include("code_generation.jl")
+# include("desymmetrization.jl")
 
-include("tensor_replacements.jl")
-
-include("desymmetrization.jl")
-
-include("precompile.jl")
+# include("precompile.jl")
 
 end # module SpinAdaptedSecondQuantization
