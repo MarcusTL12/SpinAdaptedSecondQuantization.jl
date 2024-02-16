@@ -6,7 +6,7 @@ Auto generated docs for all exported functions and types.
 ```@autodocs
 Modules = [SpinAdaptedSecondQuantization]
 Order = [:type]
-Filter = t -> !(t <: GeneralOrbital)
+Filter = t -> !(t ⊆ GeneralOrbital)
 Private = false
 ```
 
@@ -21,6 +21,6 @@ Private = false
 ```@autodocs
 Modules = [SpinAdaptedSecondQuantization]
 Order = [:type]
-Filter = t -> t <: GeneralOrbital
+Filter = t -> t ⊆ GeneralOrbital
 Private = false
 ```
