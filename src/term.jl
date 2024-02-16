@@ -44,11 +44,11 @@ struct Term{T<:Number}
         for d in deltas
             firstind, rest = Iterators.peel(d.indices)
             for p in rest
-                s = typeintersect(constraints(firstind), constraints(p))
-                if s == Union{}
+                s = intersect(constraints(firstind), constraints(p))
+                if isnothing(s)
                     return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
                         Operator[], Constraints(), true)
-                elseif is_strict_subspace(s, GeneralOrbital)
+                elseif s ⊊ GeneralOrbital
                     constraints[firstind] = s
                 end
                 push!(nonfirst_delta_indices, (p, firstind))
@@ -167,9 +167,9 @@ function update_index_translation(t::Term, translation::IndexTranslation)
 
     for (p, (S, q)) in translation
         if p ∈ ex_inds
-            if S <: OccupiedOrbital
+            if S ⊆ OccupiedOrbital
                 push!(seen_o, q)
-            elseif S <: VirtualOrbital
+            elseif S ⊆ VirtualOrbital
                 push!(seen_v, q)
             elseif S == GeneralOrbital
                 push!(seen_g, q)
@@ -180,9 +180,9 @@ function update_index_translation(t::Term, translation::IndexTranslation)
     if do_index_translation
         for p in t.sum_indices
             S = t.constraints(p)
-            if S <: OccupiedOrbital
+            if S ⊆ OccupiedOrbital
                 translation[p] = (OccupiedOrbital, find_first_free!(seen_o))
-            elseif S <: VirtualOrbital
+            elseif S ⊆ VirtualOrbital
                 translation[p] = (VirtualOrbital, find_first_free!(seen_v))
             elseif S == GeneralOrbital
                 translation[p] = (GeneralOrbital, find_first_free!(seen_g))
@@ -207,7 +207,7 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
 
     for (p, (S, _)) in translation
         Sc = t.constraints(p)
-        if p ∈ ex_inds && !(Sc <: S)
+        if p ∈ ex_inds && !(Sc ⊆ S)
             @warn "Printing index $p as $S, but it is constrained to $Sc"
         end
     end
@@ -265,7 +265,7 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
     end
     constraint_print = [i for (i, _) in t.constraints if i ∉ constraint_noprint]
     filter!(constraint_print) do x
-        is_strict_subspace(t.constraints(x), translation(x)[1])
+        t.constraints(x) ⊊ translation(x)[1]
     end
 
     if !isempty(constraint_print)
@@ -761,7 +761,7 @@ function try_add_constraints(a::Term, b::Term)
             a.operators, new_constraints), true
     end
 
-    if is_strict_subspace(s1, s2)
+    if s1 ⊊ s2
         s1, s2 = s2, s1
         a, b = b, a
     end
@@ -863,7 +863,7 @@ function fuse_constraints!(a::Constraints, b::Constraints)
             if isdisjoint(a[p], s)
                 return 0
             else
-                a[p] = typeintersect(a[p], s)
+                a[p] = intersect(a[p], s)
             end
         else
             a[p] = s

@@ -3,15 +3,15 @@ using Test
 using SpinAdaptedSecondQuantization
 SASQ.disable_color()
 
-@testset "ortital spaces" begin
-    @test OccupiedOrbital <: GeneralOrbital
-    @test VirtualOrbital <: GeneralOrbital
+@testset "index spaces" begin
+    @test OccupiedOrbital ⊆ GeneralOrbital
+    @test VirtualOrbital ⊆ GeneralOrbital
     @test isdisjoint(VirtualOrbital, OccupiedOrbital)
     @test !isdisjoint(GeneralOrbital, OccupiedOrbital)
-    @test typeintersect(GeneralOrbital, OccupiedOrbital) == OccupiedOrbital
-    @test typeintersect(OccupiedOrbital, VirtualOrbital) == Union{}
-    @test SASQ.is_strict_subspace(OccupiedOrbital, GeneralOrbital)
-    @test !SASQ.is_strict_subspace(GeneralOrbital, GeneralOrbital)
+    @test intersect(GeneralOrbital, OccupiedOrbital) == OccupiedOrbital
+    @test intersect(OccupiedOrbital, VirtualOrbital) |> isnothing
+    @test OccupiedOrbital ⊊ GeneralOrbital
+    @test !(GeneralOrbital ⊊ GeneralOrbital)
 end
 
 @testset "kronecker delta" begin

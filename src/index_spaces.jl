@@ -1,17 +1,21 @@
+const GeneralIndex = :GeneralIndex
 
 const index_shortnames::Dict{Symbol,String} = Dict([
     :GeneralIndex => "GI",
-    :GeneralOrbital => "g",
-    :OccupiedOrbital => "o",
-    :VirtualOrbital => "v",
 ])
 
 const index_names::Dict{Symbol,String} = Dict([
     :GeneralIndex => "",
-    :GeneralOrbital => "pqrstuv",
-    :OccupiedOrbital => "ijklmno",
-    :VirtualOrbital => "abcdefg",
 ])
+
+function add_space_names(s::Symbol, shortname::String, names::String)
+    index_shortnames[s] = shortname
+    index_names[s] = names
+end
+
+function getshortname(s::Symbol)
+    index_shortnames[s]
+end
 
 const space_sums::Dict{NTuple{2,Symbol},Symbol} = Dict()
 const space_diff::Dict{NTuple{2,Symbol},Symbol} = Dict()
@@ -22,8 +26,6 @@ function add_space_sum(a::Symbol, b::Symbol, c::Symbol)
     space_diff[(c, a)] = b
     space_diff[(c, b)] = a
 end
-
-add_space_sum(:OccupiedOrbital, :VirtualOrbital, :GeneralOrbital)
 
 const space_intersections::Dict{NTuple{2,Symbol},Symbol} = Dict()
 
@@ -40,21 +42,21 @@ function Base.intersect(a::Symbol, b::Symbol)
     end
 end
 
-add_space_intersection(:GeneralIndex, :GeneralOrbital, :GeneralOrbital)
-add_space_intersection(:GeneralOrbital, :OccupiedOrbital, :OccupiedOrbital)
-add_space_intersection(:GeneralOrbital, :VirtualOrbital, :VirtualOrbital)
-
 function Base.isdisjoint(a::Symbol, b::Symbol)
+    if a == b
+        return false
+    end
+
     a, b = a < b ? (a, b) : (b, a)
     !haskey(space_intersections, (a, b))
 end
 
-function Base.:<:(a::Symbol, b::Symbol)
+function Base.:⊆(a::Symbol, b::Symbol)
     intersect(a, b) == a
 end
 
-function is_strict_subspace(a::Symbol, b::Symbol)
-    a != b && a <: b
+function Base.:⊊(a::Symbol, b::Symbol)
+    a != b && a ⊆ b
 end
 
 function add_spaces(a::Symbol, b::Symbol)
@@ -98,11 +100,7 @@ function subscript(i)
     String(take!(io))
 end
 
-colors::Dict{Symbol,Union{Symbol,Int}} = Dict{Symbol,Union{Symbol,Int}}([
-    :GeneralOrbital => :nothing,
-    :OccupiedOrbital => :light_green,
-    :VirtualOrbital => :cyan,
-])
+colors::Dict{Symbol,Union{Symbol,Int}} = Dict()
 
 function getname(io::IO, s::Symbol, i::Int)
     names = index_names[s]
@@ -124,7 +122,7 @@ const Constraints = SortedDict{Int,Symbol}
 
 # Lets you call the constraints as a function instead of explicitly calling get
 function (constraints::Constraints)(p::Int)
-    get(constraints, p, :GeneralOrbital)
+    get(constraints, p, GeneralOrbital)
 end
 
 const IndexTranslation = Dict{Int,Tuple{Symbol,Int}}
@@ -133,10 +131,25 @@ function (translation::IndexTranslation)(p::Int)
     get(translation, p, (:GeneralOrbital, p))
 end
 
+export translate
+function translate(translations...)
+    counts = Dict{Symbol,Int}()
+    translation = IndexTranslation()
+
+    for (S, inds) in translations
+        for p in inds
+            counts[S] = get(counts, S, 0) + 1
+            translation[p] = (S, counts[S])
+        end
+    end
+
+    translation
+end
+
 function getname(io::IO, constraints::Constraints,
     translation::IndexTranslation, i::Int)
     do_color = index_color &&
-               (is_strict_subspace(constraints(i), translation(i)[1]) ||
+               (constraints(i) ⊊ translation(i)[1] ||
                 color_translated)
 
     if do_color
@@ -147,6 +160,18 @@ function getname(io::IO, constraints::Constraints,
 
     if do_color
         print(io, "\x1b[39m")
+    end
+end
+
+function print_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, p)
+    getname(io, constraints, translation, p)
+end
+
+function print_mo_index(io::IO, constraints::Constraints,
+    translation::IndexTranslation, indices...)
+    for p in indices
+        print_mo_index(io, constraints, translation, p)
     end
 end
 
