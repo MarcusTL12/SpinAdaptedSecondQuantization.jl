@@ -616,6 +616,7 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
                 if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in new_ext
                     push!(indices, sprint(SASQ.print_mo_index, t.constraints, translation, b))
                 end
+            end
             einsum_str *= join(indices)
             einsum_str *= ","
             print_einsum = true
