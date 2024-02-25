@@ -587,8 +587,16 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
     external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
 
     # Remove a and i  from external
-    fixed = ["a","i"]
+    fixed = ['a','i']
     external = join([a for a in external if a ∉ fixed])
+
+    new_ext = ""
+    new_ext *= fix_b ? "" : "b"
+    new_ext *= fix_j ? "" : "j"
+    if length(external) == 4
+        new_ext *= fix_c ? "" : "c"
+        new_ext *= fix_k ? "" : "k"
+    end
 
     temp_color = index_color
     disable_color()
@@ -600,20 +608,32 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
     print_einsum = false
     for a in t.tensors
         # indices = [ind for ind in get_indices(a) if ind in t.sum_indices]
-        indices = []
-        for b in get_indices(a)
-            if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
-                push!(indices, sprint(SASQ.print_mo_index, t.constraints, translation, b))
-            end
-        end
-
-        if length(get_indices(a)) > 0 && (length(t.sum_indices) > 0 || sum([1 for b in get_indices(a) if sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external]) == 1)
+        if length(get_indices(a)) == 0 || (length(get_indices(a))=length(new_ext) && length(t.sum_indices) == 0)
+            push!(not_summed_tensors, a)
+        else
+            indices = []
+            for b in get_indices(a)
+                if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in new_ext
+                    push!(indices, sprint(SASQ.print_mo_index, t.constraints, translation, b))
+                end
             einsum_str *= join(indices)
             einsum_str *= ","
             print_einsum = true
-        else
-            push!(not_summed_tensors, a)
         end
+        # indices = []
+        # for b in get_indices(a)
+        #     if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
+        #         push!(indices, sprint(SASQ.print_mo_index, t.constraints, translation, b))
+        #     end
+        # end
+
+        # if length(get_indices(a)) > 0 && (length(t.sum_indices) > 0 || sum([1 for b in get_indices(a) if sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external]) in [1,2,3])
+        #     einsum_str *= join(indices)
+        #     einsum_str *= ","
+        #     print_einsum = true
+        # else
+        #     push!(not_summed_tensors, a)
+        # end
     end
     
     # new_ext = external
@@ -625,14 +645,6 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
     # elseif fix_i
     #     new_ext = "b"
     # end
-
-    new_ext = ""
-    new_ext *= fix_b ? "" : "b"
-    new_ext *= fix_j ? "" : "j"
-    if length(external) == 4
-        new_ext *= fix_c ? "" : "c"
-        new_ext *= fix_k ? "" : "k"
-    end
 
     if print_einsum
         einsum_str = einsum_str[begin:end-1] * "->" * new_ext * "\""
@@ -715,7 +727,7 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
     end
 
     if length(external) == 0
-        pre_string = "$(symbol)"
+        pre_string = "v1$(symbol)"
     end
 
     if length(tensor_str) > 0
