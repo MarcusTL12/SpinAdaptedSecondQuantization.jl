@@ -556,3 +556,172 @@ function old_print_code_einsum_withextract(t::Term, symbol::String, translation)
     end
 
 end
+
+function print_code_einsum_withextract_general(t::Term, symbol::String, translation)
+    # Print python np.einsum code
+    scalar_str = @sprintf "%+12.8f" t.scalar
+    translation = update_index_translation(t, translation)
+
+    fix_b = false
+    fix_c = false
+    fix_j = false
+    fix_k = false
+    if length(t.deltas) > 0
+        for d in t.deltas
+            if 'b' in sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+                fix_b = true
+            end
+            if 'c' in sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+                fix_c = true
+            end
+            if 'j' in sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+                fix_j = true
+            end
+            if 'k' in sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+                fix_k = true
+            end
+        end
+    end
+
+    external_int = get_external_indices(t)
+    external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
+
+    # Remove a and i  from external
+    fixed = ["a","i"]
+    external = join([a for a in external if a ∉ fixed])
+
+    temp_color = index_color
+    disable_color()
+
+    # Make einsum_str and find not-summed tensors
+    einsum_str = "\""
+    notsum_str = ""
+    not_summed_tensors = []
+    print_einsum = false
+    for a in t.tensors
+        # indices = [ind for ind in get_indices(a) if ind in t.sum_indices]
+        indices = []
+        for b in get_indices(a)
+            if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
+                push!(indices, sprint(SASQ.print_mo_index, t.constraints, translation, b))
+            end
+        end
+
+        if length(get_indices(a)) > 0 && (length(t.sum_indices) > 0 || sum([1 for b in get_indices(a) if sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external]) == 1)
+            einsum_str *= join(indices)
+            einsum_str *= ","
+            print_einsum = true
+        else
+            push!(not_summed_tensors, a)
+        end
+    end
+    
+    # new_ext = external
+    # if fix_a
+    #     new_ext = "j"
+    #     if fix_i
+    #         new_ext = ""
+    #     end
+    # elseif fix_i
+    #     new_ext = "b"
+    # end
+
+    new_ext = ""
+    new_ext *= fix_b ? "" : "b"
+    new_ext *= fix_j ? "" : "j"
+    if length(external) == 4
+        new_ext *= fix_c ? "" : "c"
+        new_ext *= fix_k ? "" : "k"
+    end
+
+    if print_einsum
+        einsum_str = einsum_str[begin:end-1] * "->" * new_ext * "\""
+    end
+
+    if (temp_color)
+        enable_color()
+    end
+
+    # Make tensor_str
+    tensor_str = ""
+    for a in t.tensors 
+        if a ∉ not_summed_tensors
+            tensor_str *= ", extract_mat($(get_symbol(a)), \""
+            for b in get_indices(a)
+                if t.constraints[b] == VirtualOrbital
+                    if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
+                        tensor_str *= "v"
+                    else
+                        tensor_str *= "a"
+                    end
+                elseif t.constraints[b] == OccupiedOrbital
+                    if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
+                        tensor_str *= "o"
+                    else
+                        tensor_str *= "i"
+                    end
+                else
+                    throw("Space not supported")
+                end
+            end
+            tensor_str *= "\", o, v)"
+        end
+    end
+
+    # Make string for not-summed tensors
+    for a in not_summed_tensors
+        if length(get_indices(a)) > 0
+            notsum_str *= " * extract_mat($(get_symbol(a)), \""
+            for b in get_indices(a)
+                if t.constraints[b] == VirtualOrbital
+                    if sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
+                        notsum_str *= "v"
+                    else
+                        notsum_str *= "a"
+                    end
+                elseif t.constraints[b] == OccupiedOrbital
+                    if sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
+                        notsum_str *= "o"
+                    else
+                        notsum_str *= "i"
+                    end
+                else
+                    throw("Space not supported")
+                end
+            end
+            notsum_str *= "\", o, v)"
+        else
+            notsum_str *= " * $(get_symbol(a))"
+        end
+    end
+
+    # Printing depending on sum or not
+    pre_string = "$(symbol)_$(external)"
+    pre_string *= fix_b ? "[a," : "[:,"  #Just to try it
+    if fix_j
+        pre_string *= "i,"
+    else
+        pre_string *= ":,"
+    end
+    if fix_c
+        pre_string *= "a,"
+    else
+        pre_string *= ":,"
+    end
+    if fix_k
+        pre_string *= "i]"
+    else
+        pre_string *= ":]"
+    end
+
+    if length(external) == 0
+        pre_string = "$(symbol)"
+    end
+
+    if length(tensor_str) > 0
+        return "$pre_string = $pre_string .+ $scalar_str $notsum_str * np.einsum($einsum_str$tensor_str, optimize=\"optimal\");"
+    else
+        return "$pre_string += $scalar_str $notsum_str;"
+    end
+
+end
