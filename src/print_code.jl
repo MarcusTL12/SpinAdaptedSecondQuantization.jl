@@ -608,7 +608,7 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
     print_einsum = false
     for a in t.tensors
         # indices = [ind for ind in get_indices(a) if ind in t.sum_indices]
-        if length(get_indices(a)) == 0 || (length(get_indices(a))=length(new_ext) && length(t.sum_indices) == 0)
+        if length(get_indices(a)) == 0 || (length(get_indices(a))==length(new_ext) && length(t.sum_indices) == 0)
             push!(not_summed_tensors, a)
         else
             indices = []
