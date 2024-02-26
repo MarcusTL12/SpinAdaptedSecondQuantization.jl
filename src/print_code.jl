@@ -608,7 +608,8 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
     print_einsum = false
     for a in t.tensors
         # indices = [ind for ind in get_indices(a) if ind in t.sum_indices]
-        if length(get_indices(a)) == 0 || (length(get_indices(a))==length(new_ext) && length(t.sum_indices) == 0)
+        # if (No indices) or (nothing summed  and (0 external or all external))
+        if length(get_indices(a)) == 0 || (length(t.sum_indices) == 0 && sum([1 for b in get_indices(a) if sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in new_ext]) in [0,length(new_ext)] )
             push!(not_summed_tensors, a)
         else
             indices = []
