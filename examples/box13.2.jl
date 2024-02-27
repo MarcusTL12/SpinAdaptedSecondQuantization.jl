@@ -4,9 +4,9 @@ h = ∑((
         real_tensor("F", 1, 2) +
         ∑((-2 // 1 * psym_tensor("g", 1, 2, 3, 3) +
            psym_tensor("g", 1, 3, 3, 2)) * occupied(3), [3])
-    ) * E(1, 2), 1:2)
+    ) * E(1, 2) * electron(1, 2), 1:2)
 
-g = 1 // 2 * ∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4), 1:4)
+g = 1 // 2 * ∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4) * electron(1, 2, 3, 4), 1:4)
 
 H = simplify(h + g)
 

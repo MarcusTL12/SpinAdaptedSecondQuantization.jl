@@ -48,7 +48,7 @@ struct Term{T<:Number}
                 if isnothing(s)
                     return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
                         Operator[], Constraints(), true)
-                elseif s ⊊ GeneralOrbital
+                elseif s != GeneralIndex
                     constraints[firstind] = s
                 end
                 push!(nonfirst_delta_indices, (p, firstind))
@@ -60,17 +60,6 @@ struct Term{T<:Number}
             if haskey(constraints, q)
                 constraints[p] = constraints[q]
             end
-        end
-
-        gen_constraints = Int[]
-        for (p, s) in constraints
-            if s == GeneralOrbital
-                push!(gen_constraints, p)
-            end
-        end
-
-        for p in gen_constraints
-            delete!(constraints, p)
         end
 
         new{T}(
@@ -155,38 +144,25 @@ function update_index_translation(t::Term, translation::IndexTranslation)
         end
     end
 
-    seen_g = Set{Int}()
-    seen_o = Set{Int}()
-    seen_v = Set{Int}()
+    if do_index_translation
+        seen_inds = Dict{Symbol,Set{Int}}()
 
-    for p in ex_inds
-        if !haskey(translation, p)
-            push!(seen_g, p)
-        end
-    end
-
-    for (p, (S, q)) in translation
-        if p ∈ ex_inds
-            if S ⊆ OccupiedOrbital
-                push!(seen_o, q)
-            elseif S ⊆ VirtualOrbital
-                push!(seen_v, q)
-            elseif S == GeneralOrbital
-                push!(seen_g, q)
+        for (p, (S, q)) in translation
+            if p ∈ ex_inds
+                push!(get!(seen_inds, S, Set()), q)
             end
         end
-    end
 
-    if do_index_translation
+        for p in ex_inds
+            if !haskey(translation, p)
+                S = t.constraints(p)
+                translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
+            end
+        end
+
         for p in t.sum_indices
             S = t.constraints(p)
-            if S ⊆ OccupiedOrbital
-                translation[p] = (OccupiedOrbital, find_first_free!(seen_o))
-            elseif S ⊆ VirtualOrbital
-                translation[p] = (VirtualOrbital, find_first_free!(seen_v))
-            elseif S == GeneralOrbital
-                translation[p] = (GeneralOrbital, find_first_free!(seen_g))
-            end
+            translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
         end
     end
 
@@ -259,28 +235,19 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         print(io, ')')
     end
 
-    constraint_noprint = index_color ? get_non_constraint_indices(t) : Int[]
-    filter!(constraint_noprint) do x
-        haskey(colors, t.constraints(x))
-    end
-    constraint_print = [i for (i, _) in t.constraints if i ∉ constraint_noprint]
-    filter!(constraint_print) do x
-        t.constraints(x) ⊊ translation(x)[1]
-    end
-
-    if !isempty(constraint_print)
+    if !do_index_translation
         printsep()
 
         print(io, "C(")
 
         isfirst = true
 
-        for i in constraint_print
+        for (i, s) in t.constraints
             if !isfirst
                 print(io, ", ")
             end
             print_mo_index(io, t.constraints, translation, i)
-            print(io, "∈", getshortname(t.constraints(i)))
+            print(io, "∈", getshortname(s))
             isfirst = false
         end
 

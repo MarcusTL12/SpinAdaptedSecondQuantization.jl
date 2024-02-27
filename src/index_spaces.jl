@@ -103,6 +103,11 @@ end
 colors::Dict{Symbol,Union{Symbol,Int}} = Dict()
 
 function getname(io::IO, s::Symbol, i::Int)
+    if s == GeneralIndex
+        subscript(io, i)
+        return
+    end
+
     names = index_names[s]
 
     print(io, names[(i-1)%length(names)+1])
@@ -122,13 +127,13 @@ const Constraints = SortedDict{Int,Symbol}
 
 # Lets you call the constraints as a function instead of explicitly calling get
 function (constraints::Constraints)(p::Int)
-    get(constraints, p, GeneralOrbital)
+    get(constraints, p, GeneralIndex)
 end
 
 const IndexTranslation = Dict{Int,Tuple{Symbol,Int}}
 
 function (translation::IndexTranslation)(p::Int)
-    get(translation, p, (:GeneralOrbital, p))
+    get(translation, p, (:GeneralIndex, p))
 end
 
 export translate
@@ -148,12 +153,10 @@ end
 
 function getname(io::IO, constraints::Constraints,
     translation::IndexTranslation, i::Int)
-    do_color = index_color &&
-               (constraints(i) ⊊ translation(i)[1] ||
-                color_translated)
+    do_color = index_color && haskey(colors, constraints(i))
 
     if do_color
-        print(io, Base.text_colors[get(colors, constraints(i), :nothing)])
+        print(io, Base.text_colors[colors[constraints(i)]])
     end
 
     getname(io, translation(i)...)
@@ -176,12 +179,10 @@ function print_mo_index(io::IO, constraints::Constraints,
 end
 
 index_color::Bool = true
-color_translated::Bool = false
 do_index_translation::Bool = true
 
 export enable_color, disable_color, set_color,
-    enable_color_translated, disable_color_translated,
-    enable_index_tranlation, disable_index_translation
+    enable_index_translation, disable_index_translation
 
 """
     enable_color()
@@ -251,7 +252,7 @@ coloring nevertheless). To re-enable the coloring see
 
 This is enabled by default.
 """
-function enable_index_tranlation()
+function enable_index_translation()
     global do_index_translation = true
     nothing
 end
@@ -266,25 +267,5 @@ See [`enable_index_tranlation`](@ref)
 """
 function disable_index_translation()
     global do_index_translation = false
-    nothing
-end
-
-"""
-    enable_color_translated()
-
-Enables the coloring of indices that has been translated.
-"""
-function enable_color_translated()
-    global color_translated = true
-    nothing
-end
-
-"""
-    disable_color_translated()
-
-Disables the coloring of indices that has been translated.
-"""
-function disable_color_translated()
-    global color_translated = false
     nothing
 end
