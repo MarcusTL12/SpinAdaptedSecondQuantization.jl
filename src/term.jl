@@ -655,6 +655,28 @@ function non_constraint_non_scalar_equal(a::Term, b::Term)
     (b.tensors, b.operators, b.deltas, b.sum_indices)
 end
 
+function possibly_equal_nonscalar(a::Term, b::Term)
+    if (length(a.deltas), length(a.sum_indices)) !=
+       (length(b.deltas), length(b.sum_indices))
+        return false
+    end
+
+    if length(a.operators) != length(b.operators) ||
+       !all(typeof(oa) == typeof(ob) for (oa, ob) in
+            zip(a.operators, b.operators))
+        return false
+    end
+
+    if length(a.tensors) != length(b.tensors) ||
+       !all((get_symbol(ta), length(get_indices(ta))) ==
+            (get_symbol(tb), length(get_indices(tb)))
+            for (ta, tb) in zip(a.tensors, b.tensors))
+        return false
+    end
+
+    true
+end
+
 function possibly_equal(a::Term, b::Term)
     if (a.scalar, length(a.deltas), length(a.sum_indices)) !=
        (b.scalar, length(b.deltas), length(b.sum_indices))
@@ -704,17 +726,108 @@ function constraints_equal_but_one(a::Term, b::Term)
     p_different
 end
 
+function constraints_could_be_equal_but_one(a::Term, b::Term)
+    exinds = get_external_indices(a)
+
+    if exinds != get_external_indices(b)
+        return false
+    end
+
+    for p in exinds
+        if a.constraints(p) != b.constraints(p)
+            return false
+        end
+    end
+
+    counts_a = Dict{Symbol,Int}()
+    counts_b = Dict{Symbol,Int}()
+
+    for (_, s) in a.constraints
+        counts_a[s] = get(counts_a, s, 0) + 1
+        counts_b[s] = 0
+    end
+
+    for (_, s) in b.constraints
+        counts_b[s] = get(counts_b, s, 0) + 1
+        if !haskey(counts_a, s)
+            counts_a[s] = 0
+        end
+    end
+
+    found_up = false
+    found_down = false
+
+    for (s, c) in counts_a
+        Δ = c - get(counts_b, s, 0)
+        if abs(Δ) >= 2
+            return false
+        elseif Δ == 1
+            if found_up
+                return false
+            else
+                found_up = true
+            end
+        elseif Δ == -1
+            if found_down
+                return false
+            else
+                found_down = true
+            end
+        end
+    end
+
+    found_up == found_down
+end
+
+function find_equal_perm(a::Term, b::Term)
+    permuted_inds = copy(b.sum_indices)
+    mapping = [p => p for p in permuted_inds]
+    for perm in PermGen(length(b.sum_indices))
+        copy!(permuted_inds, b.sum_indices)
+        permute!(permuted_inds, perm.data)
+        for (i, (p, q)) in enumerate(zip(b.sum_indices, permuted_inds))
+            mapping[i] = p => q
+        end
+
+        new_b = sort_operators(exchange_indices(b, mapping))
+
+        p = if equal_nonscalar(a, new_b)
+            return true
+        end
+
+        p = if non_constraint_non_scalar_equal(a, new_b)
+            constraints_equal_but_one(a, new_b)
+        end
+
+        if !isnothing(p)
+            return (new_b, p)
+        end
+    end
+end
+
 # TODO: add docs
 # TODO: add tests
 function try_add_constraints(a::Term, b::Term)
-    if !non_constraint_non_scalar_equal(a, b)
+    if !possibly_equal_nonscalar(a, b)
         return (a, b), false
     end
 
-    p = constraints_equal_but_one(a, b)
+    if !constraints_could_be_equal_but_one(a, b)
+        return (a, b), false
+    end
+
+    p = find_equal_perm(a, b)
     if isnothing(p)
         return (a, b), false
     end
+
+    if p == true
+        return new_scalar(
+            a, a.scalar + b.scalar
+        ), true
+    end
+
+    (b, p) = p
 
     s1 = a.constraints(p)
     s2 = b.constraints(p)

@@ -16,21 +16,21 @@ trans = translate(VirtualOrbital => 1:2:8, OccupiedOrbital => 2:2:8)
 
 # H |HF⟩
 function eq0()
-    simplify_heavy(act_on_ket(H))
+    simplify(act_on_ket(H))
 end
 
 # [H, Eai] |HF⟩
 function eq1()
-    x = simplify_heavy(act_on_ket(commutator(H, Eai(1, 2))))
+    x = simplify(act_on_ket(commutator(H, Eai(1, 2))))
 
     x = look_for_tensor_replacements_smart(x, make_exchange_transformer("g", "L"))
 
-    x, trans
+    x
 end
 
 # [[H, Eai], Ebj] |HF⟩
 function eq2()
-    x = simplify_heavy(act_on_ket(
+    x = simplify(act_on_ket(
         commutator(commutator(H, Eai(1, 2)), Eai(3, 4))
     ))
 
@@ -39,18 +39,18 @@ function eq2()
     s, ss, ns = desymmetrize(x, make_permutation_mappings([(1, 2), (3, 4)]))
 
     println("Symmetrize:")
-    println((s, trans),)
+    println(s)
 
     println("\nSymmetric:")
-    println((ss, trans),)
+    println(ss)
 
     println("\nNon-symmetric:")
-    println((ns, trans),)
+    println(ns)
 end
 
 # [[[H, Eai], Ebj], Eck] |HF⟩
 function eq3()
-    x = simplify_heavy(act_on_ket(
+    x = simplify(act_on_ket(
         commutator(commutator(commutator(H, Eai(1, 2)), Eai(3, 4)), Eai(5, 6))
     ))
 
@@ -59,18 +59,18 @@ function eq3()
     s, ss, ns = desymmetrize(x, make_permutation_mappings([(1, 2), (3, 4), (5, 6)]))
 
     println("Symmetrize:")
-    println((s, trans),)
+    println(s)
 
     println("\nSymmetric:")
-    println((ss, trans),)
+    println(ss)
 
     println("\nNon-symmetric:")
-    println((ns, trans),)
+    println(ns)
 end
 
 # [[[[H, Eai], Ebj], Eck], Edl] |HF⟩
 function eq4()
-    x = simplify_heavy(act_on_ket(
+    x = simplify(act_on_ket(
         commutator(commutator(commutator(commutator(H, Eai(1, 2)), Eai(3, 4)), Eai(5, 6)), Eai(7, 8))
     ))
 
@@ -79,11 +79,11 @@ function eq4()
     s, ss, ns = desymmetrize(x, make_permutation_mappings([(1, 2), (3, 4), (5, 6), (7, 8)]))
 
     println("Symmetrize:")
-    println((s, trans),)
+    println(s)
 
     println("\nSymmetric:")
-    println((ss, trans),)
+    println(ss)
 
     println("\nNon-symmetric:")
-    println((ns, trans),)
+    println(ns)
 end
