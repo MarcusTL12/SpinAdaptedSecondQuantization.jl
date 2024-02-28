@@ -566,21 +566,16 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
         # t term, a tensor
         write_str = " extract_mat($(get_symbol(a)), \""
         for b in get_indices(a)
-            if t.constraints[b] == VirtualOrbital
-                if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
-                    write_str *= "v"
-                else
-                    write_str *= "a"
-                end
-            elseif t.constraints[b] == OccupiedOrbital
-                if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
-                    write_str *= "o"
-                else
-                    write_str *= "i"
-                end
-            else
+            if t.constraints[b] ∉ [VirtualOrbital, OccupiedOrbital]
                 throw("Space not supported")
             end
+
+            if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
+                write_str *= t.constraints[b] == VirtualOrbital ? "v" : "o"
+            else
+                write_str *= t.constraints[b] == VirtualOrbital ? "a" : "i"
+            end
+            
         end
         return write_str * "\", o, v)"
     end
@@ -591,16 +586,17 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
     fix_k = false
     if length(t.deltas) > 0
         for d in t.deltas
-            if 'b' in sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+            delta_ind = sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+            if 'b' in delta_ind
                 fix_b = true
             end
-            if 'c' in sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+            if 'c' in delta_ind
                 fix_c = true
             end
-            if 'j' in sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+            if 'j' in delta_ind
                 fix_j = true
             end
-            if 'k' in sprint(SASQ.print_mo_index, t.constraints, translation, d.indices...)
+            if 'k' in delta_ind
                 fix_k = true
             end
         end
@@ -688,7 +684,6 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
         pre_string *= fix_k ? ",i" : ",:"
     end
     pre_string *= "]"
-
 
     if length(external) == 0
         pre_string = "$(symbol)"
