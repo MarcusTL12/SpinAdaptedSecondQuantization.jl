@@ -108,6 +108,19 @@ function noop_part(t::Term)
     )
 end
 
+function new_constraints(t::Term, constraints::Constraints)
+    Term(
+        t.scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        t.operators,
+        constraints,
+        false,
+        true
+    )
+end
+
 function Base.zero(::Type{Term{T}}) where {T<:Number}
     Term(zero(T), Int[], KroneckerDelta[], Tensor[], Operator[],
         Constraints(), true, true)
@@ -911,6 +924,40 @@ function simplify_heavy(t::Term)
         sort_operators |>
         set_max_simplified
     end
+end
+
+function split_indices(t::Term, (from, (to1, to2)))
+    finished_terms = typeof(t)[]
+    new_terms = typeof(t)[]
+    old_terms = [t]
+
+    while !isempty(old_terms)
+        while !isempty(old_terms)
+            t = pop!(old_terms)
+            did_split = false
+            for (p, s) in t.constraints
+                if s == from
+                    c1 = copy(t.constraints)
+                    c2 = copy(t.constraints)
+
+                    c1[p] = to1
+                    c2[p] = to2
+
+                    push!(new_terms, new_constraints(t, c1))
+                    push!(new_terms, new_constraints(t, c2))
+                    did_split = true
+                    break
+                end
+            end
+            if !did_split
+                push!(finished_terms, t)
+            end
+        end
+
+        old_terms, new_terms = new_terms, old_terms
+    end
+
+    finished_terms
 end
 
 # Some operator overloading (Not ment for external use):

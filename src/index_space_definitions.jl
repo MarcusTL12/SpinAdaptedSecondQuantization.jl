@@ -1,8 +1,8 @@
 export GeneralOrbital, OccupiedOrbital, VirtualOrbital
 
-const GeneralOrbital = :A_GeneralOrbital
-const OccupiedOrbital = :C_OccupiedOrbital
-const VirtualOrbital = :B_VirtualOrbital
+const GeneralOrbital = :GeneralOrbital
+const OccupiedOrbital = :OccupiedOrbital
+const VirtualOrbital = :VirtualOrbital
 
 add_space_names(GeneralOrbital, "g", "pqrstuv")
 add_space_names(OccupiedOrbital, "o", "ijklmno")

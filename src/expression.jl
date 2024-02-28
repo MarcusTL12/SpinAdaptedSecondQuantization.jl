@@ -359,11 +359,14 @@ end
 
 # Unnecessarily expensive simplify for testing on small expressions
 export simplify_heavy
-function simplify_heavy(ex::Expression)
+function simplify_heavy(ex::Expression,
+    mapping=GeneralOrbital => (OccupiedOrbital, VirtualOrbital))
     done = false
     ex = simplify(ex)
     while !done
-        new_ex = try_add_constraints(simplify_heavy_terms(ex))
+        new_ex = split_indices(ex, mapping) |>
+                 simplify_heavy_terms |>
+                 try_add_constraints
         done = new_ex == ex
         ex = new_ex
     end
@@ -373,6 +376,16 @@ end
 export sort_operators
 function sort_operators(ex::Expression)
     Expression([sort_operators(t) for t in ex.terms])
+end
+
+function split_indices(ex::Expression, mapping)
+    terms = eltype(ex.terms)[]
+
+    for t in ex.terms
+        append!(terms, split_indices(t, mapping))
+    end
+
+    Expression(terms)
 end
 
 # Commutator:
@@ -417,7 +430,7 @@ function bch(A, B, n)
     X = A
     Y = A
     for i = 1:n
-        Y = 1//i * commutator(Y, B)
+        Y = 1 // i * commutator(Y, B)
         X += Y
     end
     X
