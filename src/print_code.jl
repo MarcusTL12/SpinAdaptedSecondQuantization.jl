@@ -611,8 +611,10 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
 
     # Determining actual externals, after the deltas
     new_ext = ""
-    new_ext *= fix_b ? "" : "b"
-    new_ext *= fix_j ? "" : "j"
+    if length(external) >= 2
+        new_ext *= fix_b ? "" : "b"
+        new_ext *= fix_j ? "" : "j"
+    end
     if length(external) == 4
         new_ext *= fix_c ? "" : "c"
         new_ext *= fix_k ? "" : "k"
@@ -679,13 +681,18 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
 
     # Printing depending on sum or not
     pre_string = "$(symbol)_$(external)"
+
+    if length(external) >= 2   
     pre_string *= fix_b ? "[a" : "[:"
     pre_string *= fix_j ? ",i" : ",:"
+    end
     if length(external) == 4
         pre_string *= fix_c ? ",a" : ",:"
         pre_string *= fix_k ? ",i" : ",:"
     end
-    pre_string *= "]"
+    if length(external) >= 2
+        pre_string *= "]"
+    end
 
     if length(external) == 0
         pre_string = "$(symbol)"
