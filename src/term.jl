@@ -808,26 +808,14 @@ end
 # TODO: add docs
 # TODO: add tests
 function try_add_constraints(a::Term, b::Term)
-    if !possibly_equal_nonscalar(a, b)
+    if !non_constraint_non_scalar_equal(a, b)
         return (a, b), false
     end
 
-    if !constraints_could_be_equal_but_one(a, b)
-        return (a, b), false
-    end
-
-    p = find_equal_perm(a, b)
+    p = constraints_equal_but_one(a, b)
     if isnothing(p)
         return (a, b), false
     end
-
-    if p == true
-        return new_scalar(
-            a, a.scalar + b.scalar
-        ), true
-    end
-
-    (b, p) = p
 
     s1 = a.constraints(p)
     s2 = b.constraints(p)
