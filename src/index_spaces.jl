@@ -1,40 +1,43 @@
-const GeneralIndex = :GeneralIndex
+const index_ids::Dict{Any,Int} = Dict()
 
-const index_shortnames::Dict{Symbol,String} = Dict([
-    :GeneralIndex => "GI",
-])
+const index_shortnames::Vector{String} = String[]
 
-const index_names::Dict{Symbol,String} = Dict([
-    :GeneralIndex => "",
-])
+const index_names::Vector{String} = String[]
 
-function add_space_names(s::Symbol, shortname::String, names::String)
-    index_shortnames[s] = shortname
-    index_names[s] = names
+function new_space(id, shortname::String, names::String)
+    new_ind = length(index_ids) + 1
+    index_ids[id] = new_ind
+
+    push!(index_shortnames, shortname)
+    push!(index_names, names)
+
+    new_ind
 end
 
-function getshortname(s::Symbol)
+const GeneralIndex = new_space(:GeneralIndex, "GI", "")
+
+function getshortname(s::Int)
     index_shortnames[s]
 end
 
-const space_sums::Dict{NTuple{2,Symbol},Symbol} = Dict()
-const space_diff::Dict{NTuple{2,Symbol},Symbol} = Dict()
+const space_sums::Dict{NTuple{2,Int},Int} = Dict()
+const space_diff::Dict{NTuple{2,Int},Int} = Dict()
 
-function add_space_sum(a::Symbol, b::Symbol, c::Symbol)
+function add_space_sum(a::Int, b::Int, c::Int)
     a, b = a < b ? (a, b) : (b, a)
     space_sums[(a, b)] = c
     space_diff[(c, a)] = b
     space_diff[(c, b)] = a
 end
 
-const space_intersections::Dict{NTuple{2,Symbol},Symbol} = Dict()
+const space_intersections::Dict{NTuple{2,Int},Int} = Dict()
 
-function add_space_intersection(a::Symbol, b::Symbol, c::Symbol)
+function add_space_intersection(a::Int, b::Int, c::Int)
     a, b = a < b ? (a, b) : (b, a)
     space_intersections[(a, b)] = c
 end
 
-function Base.intersect(a::Symbol, b::Symbol)
+function Base.intersect(a::Int, b::Int)
     if a == b
         a
     else
@@ -42,7 +45,7 @@ function Base.intersect(a::Symbol, b::Symbol)
     end
 end
 
-function Base.isdisjoint(a::Symbol, b::Symbol)
+function Base.isdisjoint(a::Int, b::Int)
     if a == b
         return false
     end
@@ -51,20 +54,20 @@ function Base.isdisjoint(a::Symbol, b::Symbol)
     !haskey(space_intersections, (a, b))
 end
 
-function Base.:⊆(a::Symbol, b::Symbol)
+function Base.:⊆(a::Int, b::Int)
     intersect(a, b) == a
 end
 
-function Base.:⊊(a::Symbol, b::Symbol)
+function Base.:⊊(a::Int, b::Int)
     a != b && a ⊆ b
 end
 
-function add_spaces(a::Symbol, b::Symbol)
+function add_spaces(a::Int, b::Int)
     a, b = a < b ? (a, b) : (b, a)
     get(space_sums, (a, b), nothing)
 end
 
-function diff_spaces(a::Symbol, b::Symbol)
+function diff_spaces(a::Int, b::Int)
     get(space_diff, (a, b), nothing)
 end
 
@@ -100,9 +103,9 @@ function subscript(i)
     String(take!(io))
 end
 
-colors::Dict{Symbol,Union{Symbol,Int}} = Dict()
+colors::Dict{Int,Union{Int,Int}} = Dict()
 
-function getname(io::IO, s::Symbol, i::Int)
+function getname(io::IO, s::Int, i::Int)
     if s == GeneralIndex
         subscript(io, i)
         return
@@ -119,18 +122,18 @@ function getname(io::IO, s::Symbol, i::Int)
 end
 
 """
-    Constraints = SortedDict{Int,Symbol}
+    Constraints = SortedDict{Int,Int}
 
 Type alias for container of Index constraints
 """
-const Constraints = SortedDict{Int,Symbol}
+const Constraints = SortedDict{Int,Int}
 
 # Lets you call the constraints as a function instead of explicitly calling get
 function (constraints::Constraints)(p::Int)
     get(constraints, p, GeneralIndex)
 end
 
-const IndexTranslation = Dict{Int,Tuple{Symbol,Int}}
+const IndexTranslation = Dict{Int,Tuple{Int,Int}}
 
 function (translation::IndexTranslation)(p::Int)
     get(translation, p, (:GeneralIndex, p))
@@ -138,7 +141,7 @@ end
 
 export translate
 function translate(translations...)
-    counts = Dict{Symbol,Int}()
+    counts = Dict{Int,Int}()
     translation = IndexTranslation()
 
     for (S, inds) in translations
@@ -210,7 +213,7 @@ dict. This includes integers in the range 0-255 which the corresponding colors
 can be found in this table on
 [Wikipedia](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit).
 """
-function set_color(s::Symbol, color)
+function set_color(s::Int, color)
     colors[s] = color
     nothing
 end
@@ -234,7 +237,7 @@ Disables the coloring for a specific orbital space. This can be useful
 when dealing with a medium-large number of orbital spaces, and having
 distinguishable colors is infeasible.
 """
-function disable_color(s::Symbol)
+function disable_color(s::Int)
     delete!(colors, s)
     nothing
 end

@@ -158,7 +158,7 @@ function update_index_translation(t::Term, translation::IndexTranslation)
     end
 
     if do_index_translation
-        seen_inds = Dict{Symbol,Set{Int}}()
+        seen_inds = Dict{Int,Set{Int}}()
 
         for (p, (S, q)) in translation
             if p ∈ ex_inds
@@ -752,8 +752,8 @@ function constraints_could_be_equal_but_one(a::Term, b::Term)
         end
     end
 
-    counts_a = Dict{Symbol,Int}()
-    counts_b = Dict{Symbol,Int}()
+    counts_a = Dict{Int,Int}()
+    counts_b = Dict{Int,Int}()
 
     for (_, s) in a.constraints
         counts_a[s] = get(counts_a, s, 0) + 1
