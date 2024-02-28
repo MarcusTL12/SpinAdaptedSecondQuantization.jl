@@ -643,6 +643,7 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
             end
             if join(indices) == new_ext
                 push!(not_summed_tensors, a)
+                new_ext = ""
             else
                 einsum_str *= join(indices)
                 einsum_str *= ","
