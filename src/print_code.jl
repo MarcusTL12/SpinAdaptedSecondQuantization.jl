@@ -641,9 +641,13 @@ function print_code_einsum_withextract_general(t::Term, symbol::String, translat
                     push!(indices, sprint(SASQ.print_mo_index, t.constraints, translation, b))
                 end
             end
-            einsum_str *= join(indices)
-            einsum_str *= ","
-            print_einsum = true
+            if join(indices) == new_ext
+                push!(not_summed_tensors, a)
+            else
+                einsum_str *= join(indices)
+                einsum_str *= ","
+                print_einsum = true
+            end
         end
     end
 
