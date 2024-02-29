@@ -5,6 +5,10 @@ const index_shortnames::Vector{String} = String[]
 const index_names::Vector{String} = String[]
 
 function new_space(id, shortname::String, names::String)
+    if haskey(index_ids, id)
+        return index_ids[id]
+    end
+
     new_ind = length(index_ids) + 1
     index_ids[id] = new_ind
 
@@ -35,6 +39,10 @@ const space_intersections::Dict{NTuple{2,Int},Int} = Dict()
 function add_space_intersection(a::Int, b::Int, c::Int)
     a, b = a < b ? (a, b) : (b, a)
     space_intersections[(a, b)] = c
+end
+
+function add_subspace_relation(a::Int, c::Int)
+    add_space_intersection(a, c, c)
 end
 
 function Base.intersect(a::Int, b::Int)
@@ -103,7 +111,7 @@ function subscript(i)
     String(take!(io))
 end
 
-colors::Dict{Int,Union{Int,Int}} = Dict()
+colors::Dict{Int,Union{Int,Symbol}} = Dict()
 
 function getname(io::IO, s::Int, i::Int)
     if s == GeneralIndex
