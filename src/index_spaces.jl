@@ -32,6 +32,8 @@ function add_space_sum(a::Int, b::Int, c::Int)
     space_sums[(a, b)] = c
     space_diff[(c, a)] = b
     space_diff[(c, b)] = a
+    add_subspace_relation(c, a)
+    add_subspace_relation(c, b)
 end
 
 const space_intersections::Dict{NTuple{2,Int},Int} = Dict()
@@ -39,10 +41,32 @@ const space_intersections::Dict{NTuple{2,Int},Int} = Dict()
 function add_space_intersection(a::Int, b::Int, c::Int)
     a, b = a < b ? (a, b) : (b, a)
     space_intersections[(a, b)] = c
+
+    complete_subspace_tree()
 end
 
 function add_subspace_relation(a::Int, c::Int)
     add_space_intersection(a, c, c)
+end
+
+function complete_subspace_tree()
+    for (_, from) in index_ids
+        queue = [from]
+        seen = [from]
+
+        while !isempty(queue)
+            curnode = popfirst!(queue)
+            for (_, s) in index_ids
+                if s ⊊ curnode && s ∉ seen
+                    if !(s ⊊ from)
+                        add_subspace_relation(from, s)
+                    end
+                    push!(queue, s)
+                    push!(seen, s)
+                end
+            end
+        end
+    end
 end
 
 function Base.intersect(a::Int, b::Int)

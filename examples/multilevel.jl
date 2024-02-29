@@ -23,25 +23,22 @@ set_color(InactiveOccupiedOrbital, :red)
 # Define relations
 
 SASQ.add_space_sum(ActiveOrbital, InactiveOrbital, GeneralOrbital)
-
-SASQ.add_subspace_relation(GeneralOrbital, ActiveOrbital)
-SASQ.add_subspace_relation(GeneralOrbital, InactiveOrbital)
-
-
 SASQ.add_space_sum(ActiveVirtualOrbital, InactiveVirtualOrbital, VirtualOrbital)
-
-SASQ.add_subspace_relation(VirtualOrbital, ActiveVirtualOrbital)
-SASQ.add_subspace_relation(VirtualOrbital, InactiveVirtualOrbital)
-
-
 SASQ.add_space_sum(ActiveOccupiedOrbital, InactiveOccupiedOrbital, OccupiedOrbital)
-
-SASQ.add_subspace_relation(OccupiedOrbital, ActiveOccupiedOrbital)
-SASQ.add_subspace_relation(OccupiedOrbital, InactiveOccupiedOrbital)
+SASQ.add_space_sum(ActiveOccupiedOrbital, ActiveVirtualOrbital, ActiveOrbital)
+SASQ.add_space_sum(InactiveOccupiedOrbital, InactiveVirtualOrbital, InactiveOrbital)
 
 SASQ.add_space_intersection(ActiveOrbital, OccupiedOrbital, ActiveOccupiedOrbital)
 SASQ.add_space_intersection(ActiveOrbital, VirtualOrbital, ActiveVirtualOrbital)
 SASQ.add_space_intersection(InactiveOrbital, OccupiedOrbital, InactiveOccupiedOrbital)
-SASQ.add_space_intersection(InactiveOrbital, VirtualOrbital, InactiveOccupiedOrbital)
+SASQ.add_space_intersection(InactiveOrbital, VirtualOrbital, InactiveVirtualOrbital)
 
+# Macros for constrain
 
+active(indices...) = constrain(p => ActiveOrbital for p in indices)
+inactive(indices...) = constrain(p => InactiveOrbital for p in indices)
+
+aocc(indices...) = constrain(p => ActiveOccupiedOrbital for p in indices)
+iocc(indices...) = constrain(p => InactiveOccupiedOrbital for p in indices)
+avir(indices...) = constrain(p => ActiveVirtualOrbital for p in indices)
+ivir(indices...) = constrain(p => InactiveVirtualOrbital for p in indices)
