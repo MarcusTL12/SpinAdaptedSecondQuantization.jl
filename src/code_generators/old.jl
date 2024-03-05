@@ -122,9 +122,9 @@ function print_code_einsum(t::Term, symbol::String, translation, fixed)
         # t term, a tensor
         write_str = " extract_mat($(get_symbol(a)), \""
         for b in get_indices(a)
-            if t.constraints[b] ∉ [VirtualOrbital, OccupiedOrbital]
-                throw("Space not supported")
-            elseif b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
+            # if t.constraints[b] ∉ [VirtualOrbital, OccupiedOrbital]
+            #     # throw("Space not supported")
+            if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
                 write_str *= t.constraints[b] == VirtualOrbital ? "v" : "o"
             else
                 write_str *= t.constraints[b] == VirtualOrbital ? "a" : "i"
@@ -158,7 +158,7 @@ function print_code_einsum(t::Term, symbol::String, translation, fixed)
     end
 
     external_int = get_external_indices(t)
-    external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
+    @show external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
 
     # Remove a and i  from external
     external = join([a for a in external if a ∉ fixed])

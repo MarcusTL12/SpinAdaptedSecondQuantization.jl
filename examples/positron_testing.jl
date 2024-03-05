@@ -8,7 +8,7 @@ end
 
 
 function contains_delta(term)
-    println(SASQ.get_external_indices(term))
+    # println(SASQ.get_external_indices(term))
     if length(term.deltas) == 0
         return true
     end
@@ -80,6 +80,8 @@ S2 = 1 // 2 * ∑(
 
 T = T2 + S1 + S2
 
+@show HF
+
 function omega(proj, op, n)
     hf_expectation_value(simplify(right_state' * proj * bch(op, T, n) * right_state))
 end
@@ -96,7 +98,7 @@ Omega_AI = omega_AI()
 
 open("file_omega_AI.py", "w") do output_file
     for t in Omega_AI.terms
-        println(output_file, SASQ.print_code_einsum_notrans(t, "Omega_AI_", []))
+        println(output_file, SASQ.print_code_einsum(t, "Omega_AI_", SASQ.IndexTranslation(), []))
     end
 end
 
