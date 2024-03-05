@@ -96,7 +96,7 @@ Omega_AI = omega_AI()
 
 open("file_omega_AI.py", "w") do output_file
     for t in Omega_AI.terms
-        println(output_file, SASQ.print_code_einsum(t, "Omega_AI_",  []))
+        println(output_file, SASQ.print_code_einsum_notrans(t, "Omega_AI_", []))
     end
 end
 
