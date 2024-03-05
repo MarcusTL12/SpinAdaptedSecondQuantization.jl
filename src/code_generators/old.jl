@@ -112,7 +112,7 @@ function print_eT_code(t :: Term, symbol, translation, routine_name)
     ), end='!\\n!\\n')"""
 end
 
-function print_code_einsum(t::Term, symbol::String, translation, fixed)
+function print_code_einsum_positrons(t::Term, symbol::String, translation, fixed)
     # Print python np.einsum code for term t added to symbol. With deltas, only works on 0,2 or 4 dimensional symbol
     # fixed = [] or fixed = ["a", "i"]
     scalar_str = @sprintf "%+12.8f" t.scalar
@@ -122,14 +122,12 @@ function print_code_einsum(t::Term, symbol::String, translation, fixed)
         # t term, a tensor
         write_str = " extract_mat($(get_symbol(a)), \""
         for b in get_indices(a)
-            # if t.constraints[b] ∉ [VirtualOrbital, OccupiedOrbital]
-            #     # throw("Space not supported")
             if b ∈ t.sum_indices || sprint(SASQ.print_mo_index, t.constraints, translation, b)[1] in external
-                write_str *= t.constraints[b] ⊂ VirtualOrbital ? "v" : "o"
+                write_str *= t.constraints[b] ⊆ VirtualOrbital ? "v" : "o"
             else
-                write_str *= t.constraints[b] ⊂ VirtualOrbital ? "a" : "i"
+                #Here only if is a positron not summed and not a real external
+                write_str *= b == 1 ? "i" : "a"
             end
-
         end
         return write_str * "\", o, v)"
     end
@@ -158,7 +156,7 @@ function print_code_einsum(t::Term, symbol::String, translation, fixed)
     end
 
     external_int = get_external_indices(t)
-    @show external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
+    external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
 
     # Remove a and i  from external
     external = join([a for a in external if a ∉ fixed])
