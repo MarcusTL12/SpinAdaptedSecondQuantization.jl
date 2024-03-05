@@ -59,18 +59,21 @@ function print_code_einsum_testing(t::SASQ.Term, symbol::String, translation, fi
     external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
 
     # Remove a and i  from external
-    external = join([a for a in external if a ∉ fixed])
+    external = join(reverse([a for a in external if a ∉ fixed]))
+    new_ext = external
 
     # Determining actual externals, after the deltas
-    new_ext = ""
-    if length(external) >= 2
-        new_ext *= fix_b ? "" : "b"
-        new_ext *= fix_j ? "" : "j"
-    end
-    if length(external) == 4
-        new_ext *= fix_c ? "" : "c"
-        new_ext *= fix_k ? "" : "k"
-    end
+
+    # No deltas in this case
+    # new_ext = ""
+    # if length(external) >= 2
+    #     new_ext *= fix_b ? "" : "b"
+    #     new_ext *= fix_j ? "" : "j"
+    # end
+    # if length(external) == 4
+    #     new_ext *= fix_c ? "" : "c"
+    #     new_ext *= fix_k ? "" : "k"
+    # end
 
     # temp_color = index_color
     # disable_color()
@@ -160,8 +163,18 @@ function contains_delta(term)
     return false
 end
 
-function filter_deltas(expression)
-    terms = [contains_delta(t) for t in expression.terms]
+function contains_wrong_s(term)
+    # Check if there is s_ai in that term
+    for tens in term.tensors
+        if ((tens.indices[1] == 1 || tens.indices[2] == 2) && tens.symbol in ["s","s2"])
+            return false
+        end
+    end
+    return true
+end
+
+function filter_unwanted(expression)
+    terms = [contains_delta(t) && contains_wrong_s(t) for t in expression.terms]
     return SASQ.Expression(expression[terms])
 end
 
@@ -190,13 +203,13 @@ HF_elec = simplify(hF_elec + g_elec)
 HF = HF_elec + h_posi + g_int
 
 E_hf = hf_expectation_value(right_state' * (H + HF) // 2 * right_state) |> simplify_heavy
-E_hf = filter_deltas(E_hf)
+E_hf = filter_unwanted(E_hf)
 
 @show E_hf  # Filtering is not needed
 
 open("file_energy.py", "w") do output_file
     for t in E_hf.terms
-        println(output_file, SASQ.print_code_einsum_positrons(t, "E", SASQ.IndexTranslation(), ['I']))
+        println(output_file, print_code_einsum_testing(t, "E", SASQ.IndexTranslation(), ['I']))
     end
 end
 
@@ -226,7 +239,7 @@ T2 = 1 // 2 * ∑(
 
 S1 = ∑(s(1, 2, 3, 4) * ex_ketop(1, 2) * ex_positron(3, 4), 1:4)
 S2 = 1 // 2 * ∑(
-    s(1:6...) * ex_ketop(1, 2, 3, 4) * ex_positron(5, 6),
+    psym_tensor("s2", 1:6...) * ex_ketop(1, 2, 3, 4) * ex_positron(5, 6),
     1:6
 )
 
@@ -243,7 +256,7 @@ function omega_AI()
     o = simplify_heavy(o)
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
-    return filter_deltas(o)
+    return filter_unwanted(o)
 end
 
 Omega_AI = omega_AI()
@@ -259,7 +272,7 @@ function omega_ai()
     o = simplify_heavy(o)
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
-    return filter_deltas(o)
+    return filter_unwanted(o)
 end
 
 # ...
