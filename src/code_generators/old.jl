@@ -126,7 +126,7 @@ function print_code_einsum_positrons(t::Term, symbol::String, translation, fixed
                 write_str *= t.constraints[b] ⊆ VirtualOrbital ? "v" : "o"
             else
                 #Here only if is a positron not summed and not a real external
-                write_str *= b == 1 ? "i" : "a"
+                write_str *= b == 1 ? "I" : "A"
             end
         end
         return write_str * "\", o, v)"
