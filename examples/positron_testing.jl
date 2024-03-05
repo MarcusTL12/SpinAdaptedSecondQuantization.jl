@@ -1,20 +1,20 @@
 include("multilevel.jl")
 
-right_state = fermiondag(1, α) * ivir(1)
+right_state = fermiondag(1, α) * iocc(1)
 
 function act_on_actual_ket(O)
     act_on_ket(O * right_state)
 end
 
 h_elec = ∑(real_tensor("h", 1, 2) * E(1, 2) * active(1, 2), 1:2)
-h_posi = ∑(real_tensor("h", 1, 2) * E(1, 2) * ivir(1, 2), 1:2)
+h_posi = ∑(real_tensor("h", 1, 2) * E(1, 2) * inactive(1, 2), 1:2)
 
 h = h_elec + h_posi
 
 g_elec = 1 // 2 * ∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4) * active(1, 2, 3, 4), 1:4) |> simplify
-g_posi = 1 // 2 * ∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4) * ivir(1, 2, 3, 4), 1:4) |> simplify
+g_posi = 1 // 2 * ∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4) * inactive(1, 2, 3, 4), 1:4) |> simplify
 
-g_int = -∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4) * active(1, 2) * ivir(3, 4), 1:4) |> simplify
+g_int = -∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4) * active(1, 2) * inactive(3, 4), 1:4) |> simplify
 
 H_elec = h_elec + g_elec
 
@@ -47,8 +47,8 @@ deex_braop(a, i) = 1 // 2 * ex_ketop(a, i)'
 deex_braop(a, i, b, j) = 1 // 3 * ex_ketop(a, i, b, j)' +
                          1 // 6 * ex_ketop(a, j, b, i)'
 
-ex_positron(a, b) = E(a, b) * ivir(a, b)
-ex_positron(a, b, c, d) = E(a, i) * E(b, j) * ivir(a, b, c, d)
+ex_positron(a, i) = E(a, i) * iocc(i) * ivir(a)
+ex_positron(a, i, b, j) = E(a, i) * E(b, j) * iocc(i, j) * ivir(a, b)
 
 deex_positron(a, i) = 1 // 2 * ex_positron(a, i)'
 deex_positron(a, i, b, j) = 1 // 3 * ex_positron(a, i, b, j)' +
@@ -74,8 +74,8 @@ function omega(proj, op, n)
     hf_expectation_value(simplify(right_state' * proj * bch(op, T, n) * right_state))
 end
 
-function omega_AB()
-    o = omega(deex_positron(2, 1), HF_elec, 1)
+function omega_AI()
+    o = omega(deex_positron(2, 1), HF, 1)
     o = simplify_heavy(o)
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
