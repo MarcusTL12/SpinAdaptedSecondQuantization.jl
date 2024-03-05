@@ -5,24 +5,24 @@ using SpinAdaptedSecondQuantization
 ActiveOrbital = SASQ.new_space(:ActiveOrbital, "a", "pqrstuv")
 InactiveOrbital = SASQ.new_space(:InactiveOrbital, "i", "pqrstuv")
 
-set_color(ActiveOrbital, :cyan)
-set_color(InactiveOrbital, :red)
+# set_color(ActiveOrbital, :cyan)
+# set_color(InactiveOrbital, :red)
 
 ActiveVirtualOrbital = SASQ.new_space(:ActiveVirtualOrbital, "av", "abcdefg")
 ActiveOccupiedOrbital = SASQ.new_space(:ActiveOccupiedOrbital, "ao", "ijklmno")
 
-set_color(ActiveVirtualOrbital, :cyan)
-set_color(ActiveOccupiedOrbital, :cyan)
+# set_color(ActiveVirtualOrbital, :cyan)
+# set_color(ActiveOccupiedOrbital, :cyan)
 
-InactiveVirtualOrbital = SASQ.new_space(:InactiveVirtualOrbital, "iv", "abcdefg")
-InactiveOccupiedOrbital = SASQ.new_space(:InactiveOccupiedOrbital, "io", "ijklmno")
+InactiveVirtualOrbital = SASQ.new_space(:InactiveVirtualOrbital, "iv", "IABCDEFG")
+InactiveOccupiedOrbital = SASQ.new_space(:InactiveOccupiedOrbital, "io", "IJKLMNO")
 
-set_color(InactiveVirtualOrbital, :red)
-set_color(InactiveOccupiedOrbital, :red)
+# set_color(InactiveVirtualOrbital, :red)
+# set_color(InactiveOccupiedOrbital, :red)
 
 # Define relations
 
-SASQ.add_space_sum(ActiveOrbital, InactiveOrbital, GeneralOrbital)
+# SASQ.add_space_sum(ActiveOrbital, InactiveOrbital, GeneralOrbital)
 SASQ.add_space_sum(ActiveVirtualOrbital, InactiveVirtualOrbital, VirtualOrbital)
 SASQ.add_space_sum(ActiveOccupiedOrbital, InactiveOccupiedOrbital, OccupiedOrbital)
 SASQ.add_space_sum(ActiveOccupiedOrbital, ActiveVirtualOrbital, ActiveOrbital)
