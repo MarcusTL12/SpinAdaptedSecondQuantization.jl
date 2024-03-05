@@ -301,6 +301,7 @@ function print_code_einsum_notrans(t::Term, symbol::String, fixed)
     external_int = get_external_indices(t)
     # external = sprint(SASQ.print_mo_index, t.constraints, external_int...)
     external = sprint(translate, external_int...)
+    external = join([translate(p) for p in external_int])
 
     # Remove a and i  from external
     external = join([a for a in external if a ∉ fixed])
