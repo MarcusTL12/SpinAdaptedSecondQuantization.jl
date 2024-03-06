@@ -166,7 +166,7 @@ end
 function contains_wrong_s(term)
     # Check if there is s_ai in that term
     for tens in term.tensors
-        if ((tens.indices[1] == 1 || tens.indices[2] == 2) && tens.symbol in ["s","s2"])
+        if ((tens.indices[1] == 1 || tens.indices[2] >= 2) && tens.symbol in ["s","s2"])
             return false
         end
     end
@@ -230,16 +230,16 @@ deex_positron(a, i, b, j) = 1 // 3 * ex_positron(a, i, b, j)' +
                             1 // 6 * ex_positron(a, j, b, i)'
 
 t(inds...) = psym_tensor("t", inds...)
-s(inds...) = psym_tensor("s", inds...)
+s(inds...) = real_tensor("s", inds...)
 
 T2 = 1 // 2 * ∑(
     t(1:4...) * ex_ketop(1, 2, 3, 4),
     1:4
 )
 
-S1 = ∑(s(1, 2, 3, 4) * ex_ketop(1, 2) * ex_positron(3, 4), 1:4)
+S1 = ∑(s(1, 2, 3, 4)  * ex_positron(1,2) * ex_ketop(3,4), 1:4)
 S2 = 1 // 2 * ∑(
-    psym_tensor("s2", 1:6...) * ex_ketop(1, 2, 3, 4) * ex_positron(5, 6),
+   real_tensor("s2", 1:6...) * ex_positron(1,2)* ex_ketop(3,4,5,6) ,
     1:6
 )
 
@@ -280,3 +280,23 @@ end
 @show omega_AI()
 @show omega_ai()
 ;
+
+function omega_AIai()
+    o = omega(deex_positron(2,1)*deex_braop(4,3), HF, 2)
+    o = simplify_heavy(o)
+    o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
+    o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
+    return filter_unwanted(o)
+end
+
+@show omega_AIai()
+
+function omega_AIaibj()
+    o = omega(deex_positron(2,1)*deex_braop(6,5,4,3), HF, 2)
+    o = simplify_heavy(o)
+    o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
+    o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
+    return filter_unwanted(o)
+end
+
+@show omega_AIaibj()
