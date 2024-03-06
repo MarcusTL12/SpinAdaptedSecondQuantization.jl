@@ -1,6 +1,6 @@
-include("multilevel.jl")
+include("multilevel_var.jl")
 
-right_state = fermiondag(1, α) * ivir(1)
+right_state = fermiondag(1, α) * iocc(1)
 
 function act_on_actual_ket(O)
     act_on_ket(O * right_state)
@@ -156,7 +156,7 @@ function print_code_einsum_testing(t::SASQ.Term, symbol::String, translation, fi
 end
 
 function contains_delta(term)
-    # Removes terms with deltas (to remove δ_AI terms where A is not summed)
+    # println(SASQ.get_external_indices(term))
     if length(term.deltas) == 0
         return true
     end
@@ -164,31 +164,16 @@ function contains_delta(term)
 end
 
 function contains_wrong_s(term)
-    # Returns false if term contains s_IB 
+    # Check if there is s_ai in that term
     for tens in term.tensors
-        if ((tens.indices[1] == 1 || (tens.indices[1] > 2 && tens.indices[2] > 2)) && tens.symbol in ["s","s2"])
+        if ((tens.indices[1] == 1 || tens.indices[2] >= 2) && tens.symbol in ["s","s2"])
             return false
         end
     end
     return true
 end
 
-function fix_B(term)
-    # If the term contains s_AB, it adds δ_BI and removes max_simplify
-    for tens in term.tensors
-        if (tens.indices[1] == 2 && tens.indices[2] >= 2 && tens.symbol in ["s","s2"])
-            push!(term.deltas, SASQ.KroneckerDelta([1, tens.indices[2]]))
-            term = SASQ.new_constraints(term, term.constraints)
-        end
-    end
-    return term
-end
-
 function filter_unwanted(expression)
-    # Removes all junk terms, due to the fact that thre are not true occupied inactive
-    terms = [contains_delta(t) && contains_wrong_s(t) for t in expression.terms]
-    terms = [fix_B(t) for t in SASQ.Expression(expression[terms]).terms]
-    expression = simplify(SASQ.Expression(terms))
     terms = [contains_delta(t) && contains_wrong_s(t) for t in expression.terms]
     return SASQ.Expression(expression[terms])
 end
@@ -203,16 +188,16 @@ function S_AIsymmetry(t::T) where {T<:SASQ.Tensor}
 end
 
 h_elec = ∑(real_tensor("h", 1, 2) * E(1, 2) * active(1, 2), 1:2)
-h_posi = ∑(real_tensor("h_p", 1, 2) * E(1, 2) * ivir(1, 2), 1:2)
+h_posi = ∑(real_tensor("h_p", 1, 2) * E(1, 2) * inactive(1, 2), 1:2)
 
 h = h_elec + h_posi
 
 g_elec = 1 // 2 * ∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4) * active(1, 2, 3, 4), 1:4) |> simplify
-g_int = -∑(real_tensor("g_p", 1, 2, 3, 4) *  E(1, 2)* E(3,4) * active(3,4) * ivir(1,2), 1:4) |> simplify
+g_int = -∑(real_tensor("g_p", 1, 2, 3, 4) * E(1,2)*E(3,4) * active(1, 2) * inactive(3, 4), 1:4) |> simplify
 # g_posi = 1 // 2 * ∑(psym_tensor("g_pp", 1, 2, 3, 4) * e(1, 2, 3, 4) * ivir(1, 2, 3, 4), 1:4) |> simplify
 
 H_elec = h_elec + g_elec
-H = H_elec + h_posi + g_int
+@show H = H_elec + h_posi + g_int
 
 # E_hf = hf_expectation_value(right_state' * H * right_state) |> simplify_heavy
 # @show E_hf
@@ -226,10 +211,14 @@ HF_elec = simplify(hF_elec + g_elec)
 
 HF = HF_elec + h_posi + g_int
 
-E_hf = hf_expectation_value(right_state' * (H + HF) // 2 * right_state) |> simplify_heavy
+# E_hf = hf_expectation_value(right_state' * (H + HF) // 2 * right_state) |> simplify_heavy
+E_hf = hf_expectation_value( (H + HF) // 2 ) |> simplify_heavy
+@show E_hf
 E_hf = filter_unwanted(E_hf)
 
 @show E_hf  # Filtering is not needed
+
+
 
 open("file_energy.py", "w") do output_file
     for t in E_hf.terms
@@ -246,8 +235,8 @@ deex_braop(a, i) = 1 // 2 * ex_ketop(a, i)'
 deex_braop(a, i, b, j) = 1 // 3 * ex_ketop(a, i, b, j)' +
                          1 // 6 * ex_ketop(a, j, b, i)'
 
-ex_positron(a, b) = E(a, b) * ivir(a, b)
-ex_positron(a, b, c, d) = E(a, i) * E(b, j) * ivir(a, b, c, d)
+ex_positron(a, i) = E(a, i) * iocc(i) * ivir(a)
+ex_positron(a, i, b, j) = E(a, i) * E(b, j) * ivir(a, b) * iocc(i, j)
 
 deex_positron(a, i) = 1 // 2 * ex_positron(a, i)'     #probabily this 1/2 can be removed
 deex_positron(a, i, b, j) = 1 // 3 * ex_positron(a, i, b, j)' +
@@ -272,13 +261,16 @@ T = T2 + S1 + S2
 @show HF
 
 function omega(proj, op, n)
-    hf_expectation_value(simplify(right_state' * proj * bch(op, T, n) * right_state))
+    # hf_expectation_value(simplify(right_state' * proj * bch(op, T, n) * right_state))
+    println("Ket : ", proj * bch(op, T, n) )
+    hf_expectation_value(simplify(proj * bch(op, T, n) ))
 end
 
 # Omega_AI
 
 function omega_AI()
     o = omega(deex_positron(2, 1), HF, 1)
+    println(o)
     o = simplify_heavy(o)
     o = look_for_tensor_replacements_smart(o, S_AIsymmetry)
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
@@ -312,8 +304,6 @@ open("file_omega_ai.py", "w") do output_file
         println(output_file, print_code_einsum_testing(t, "Omega", SASQ.IndexTranslation(), ['I']))
     end
 end
-
-
 
 # Omega_AIai
 
