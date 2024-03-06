@@ -156,7 +156,7 @@ function print_code_einsum_testing(t::SASQ.Term, symbol::String, translation, fi
 end
 
 function contains_delta(term)
-    # println(SASQ.get_external_indices(term))
+    # Removes terms with deltas (to remove δ_AI terms where A is not summed)
     if length(term.deltas) == 0
         return true
     end
@@ -164,18 +164,31 @@ function contains_delta(term)
 end
 
 function contains_wrong_s(term)
-    # Check if there is s_ai in that term
+    # Returns false if term contains s_IB 
     for tens in term.tensors
-        if ((tens.indices[1] == 1 || tens.indices[2] >= 2) && tens.symbol in ["s","s2"])
+        if ((tens.indices[1] == 1) && tens.symbol in ["s","s2"])
             return false
         end
     end
     return true
 end
 
+function fix_B(term)
+    # If the term contains s_AB, it adds δ_BI and removes max_simplify
+    for tens in term.tensors
+        if (tens.indices[1] == 2 && tens.indices[2] >= 2 && tens.symbol in ["s","s2"])
+            push!(term.deltas, SASQ.KroneckerDelta([1, tens.indices[2]]))
+            term = SASQ.new_constraints(term, term.constraints)
+        end
+    end
+    return term
+end
+
 function filter_unwanted(expression)
+    # Removes all junk terms, due to the fact that thre are not true occupied inactive
     terms = [contains_delta(t) && contains_wrong_s(t) for t in expression.terms]
-    return SASQ.Expression(expression[terms])
+    terms = [fix_B(t) for t in SASQ.Expression(expression[terms]).terms]
+    return simplify(SASQ.Expression(terms))
 end
 
 function S_AIsymmetry(t::T) where {T<:SASQ.Tensor}
@@ -193,7 +206,7 @@ h_posi = ∑(real_tensor("h_p", 1, 2) * E(1, 2) * ivir(1, 2), 1:2)
 h = h_elec + h_posi
 
 g_elec = 1 // 2 * ∑(psym_tensor("g", 1, 2, 3, 4) * e(1, 2, 3, 4) * active(1, 2, 3, 4), 1:4) |> simplify
-g_int = -∑(psym_tensor("g_p", 1, 2, 3, 4) * e(1, 2, 3, 4) * active(1, 2) * ivir(3, 4), 1:4) |> simplify
+g_int = -∑(real_tensor("g_p", 1, 2, 3, 4) *  E(1, 2)* E(3,4) * active(3,4) * ivir(1,2), 1:4) |> simplify
 # g_posi = 1 // 2 * ∑(psym_tensor("g_pp", 1, 2, 3, 4) * e(1, 2, 3, 4) * ivir(1, 2, 3, 4), 1:4) |> simplify
 
 H_elec = h_elec + g_elec
