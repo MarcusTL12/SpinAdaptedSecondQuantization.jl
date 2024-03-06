@@ -178,6 +178,15 @@ function filter_unwanted(expression)
     return SASQ.Expression(expression[terms])
 end
 
+function S_AIsymmetry(t::T) where {T<:SASQ.Tensor}
+    # Unites S_PQrstu and S_PQturs into 2 S_PQrstu
+    if length(SASQ.get_indices(t)) != 6 || SASQ.get_symbol(t) != "s2"
+        return
+    end
+
+    1, SASQ.reorder_indices(t, [1, 2, 5, 6, 3, 4]), 2, T("s2", SASQ.get_indices(t))
+end
+
 h_elec = ∑(real_tensor("h", 1, 2) * E(1, 2) * active(1, 2), 1:2)
 h_posi = ∑(real_tensor("h_p", 1, 2) * E(1, 2) * ivir(1, 2), 1:2)
 
@@ -251,52 +260,80 @@ function omega(proj, op, n)
     hf_expectation_value(simplify(right_state' * proj * bch(op, T, n) * right_state))
 end
 
+# Omega_AI
+
 function omega_AI()
     o = omega(deex_positron(2, 1), HF, 1)
     o = simplify_heavy(o)
+    o = look_for_tensor_replacements_smart(o, S_AIsymmetry)
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
     return filter_unwanted(o)
 end
 
-Omega_AI = omega_AI()
-
+@show Omega_AI = omega_AI()
 open("file_omega_AI.py", "w") do output_file
     for t in Omega_AI.terms
         println(output_file, print_code_einsum_testing(t, "Omega_AI", SASQ.IndexTranslation(), ['A','I']))
     end
 end
 
+
+
+# Omega_ai
+
 function omega_ai()
     o = omega(deex_braop(4,3), HF, 1)
     o = simplify_heavy(o)
+    o = look_for_tensor_replacements_smart(o, S_AIsymmetry)
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
     return filter_unwanted(o)
 end
 
-# ...
+@show Omega_ai=omega_ai()
+open("file_omega_ai.py", "w") do output_file
+    for t in Omega_ai.terms
+        println(output_file, print_code_einsum_testing(t, "Omega", SASQ.IndexTranslation(), ['I']))
+    end
+end
 
-@show omega_AI()
-@show omega_ai()
-;
+
+
+# Omega_AIai
 
 function omega_AIai()
     o = omega(deex_positron(2,1)*deex_braop(4,3), HF, 2)
     o = simplify_heavy(o)
+    o = look_for_tensor_replacements_smart(o, S_AIsymmetry)
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
     return filter_unwanted(o)
 end
 
-@show omega_AIai()
+@show Omega_AIai = omega_AIai()
+open("file_omega_AIai.py", "w") do output_file
+    for t in Omega_AIai.terms
+        println(output_file, print_code_einsum_testing(t, "Omega_AI", SASQ.IndexTranslation(), ['A','I']))
+    end
+end
+
+
+
+# Omega_AIaibj
 
 function omega_AIaibj()
     o = omega(deex_positron(2,1)*deex_braop(6,5,4,3), HF, 2)
     o = simplify_heavy(o)
+    o = look_for_tensor_replacements_smart(o, S_AIsymmetry)
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("t", "u"))
     o = look_for_tensor_replacements_smart(o, make_exchange_transformer("g", "L"))
     return filter_unwanted(o)
 end
 
-@show omega_AIaibj()
+@show Omega_AIaibj = omega_AIaibj()
+open("file_omega_AIaibj.py", "w") do output_file
+    for t in Omega_AIaibj.terms
+        println(output_file, print_code_einsum_testing(t, "Omega_AI", SASQ.IndexTranslation(), ['A','I']))
+    end
+end
