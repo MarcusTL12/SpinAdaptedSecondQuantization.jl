@@ -37,6 +37,22 @@ function cc_ket_P(H, T, n, order, photon_order)
     return project(HT, order, photon_order)
 end
 
+function cc_ket_P_withV(H, T, n, order, photon_order, V)
+    # HT = e^-T H eT |HF>
+    HT = bch(H, T, n) |> x -> act_on_ket(V*x, order + photon_order) |> simplify
+
+    # Return only terms of op_length = order
+    return project(HT, order, photon_order)
+end
+
+function cc_ket_P_withVleftright(H, T, n, order, photon_order, V_left, V_right)
+    # HT = e^-T H eT |HF>
+    HT = bch(H, T, n) |> x -> act_on_ket(V_left*x*V_right, order + photon_order) |> simplify
+
+    # Return only terms of op_length = order
+    return project(HT, order, photon_order)
+end
+
 function remove_P(expression)
     ex = SASQ.Expression(deepcopy(expression.terms))
     for term in copy(ex.terms)
@@ -78,31 +94,44 @@ end
 
 
 # Define Hamiltonian in terms of F and g
-Φ = 1 // 2 * ∑(psym_tensor("g", 1,2,3,4) * e(1,2,3,4), 1:4) +
-    ∑((-2 * psym_tensor("g", 1, 2, 3, 3) + psym_tensor("g", 1, 3, 3, 2)) *
+Φ = 1 // 2 * ∑(psym_tensor("g", 1,2,3,4) * e(1,2,3,4) * electron(1,2,3,4), 1:4) +
+    ∑((-2 * rsym_tensor("g", 1, 2, 3, 3) + psym_tensor("g", 1, 3, 3, 2)) *
         occupied(3) * E(1,2), 1:3)
-F = ∑(real_tensor("F", 1, 2) * E(1, 2), 1:2)
-d = ∑(real_tensor("d", 1,2) * (boson() + bosondag()) * E(1,2), 1:2)
+F = ∑(real_tensor("F", 1, 2) * E(1, 2) * electron(1,2), 1:2)
+d = ∑(real_tensor("d", 1,2) * (boson() + bosondag()) * E(1,2) * electron(1,2), 1:2)
 E_f = real_tensor("ω") * bosondag() * boson()
 
 # Electronic cluster operator to n'th order
-Tn(n) = 1 // factorial(n) * ∑(psym_tensor("t", 1:2n...) * prod(E(2i-1,2i) for i = 1:n) * occupied(2:2:2n...) * virtual(1:2:2n...), 1:2n)
-Sn(n) = 1 // factorial(n) * ∑(psym_tensor("s", 1:2n...) * bosondag() * prod(E(2i-1,2i) for i = 1:n) * occupied(2:2:2n...) * virtual(1:2:2n...), 1:2n)
+Tn(n) = 1 // factorial(n) * ∑(psym_tensor("t$n", 1:2n...) * prod(E(2i-1,2i) for i = 1:n) * occupied(2:2:2n...) * virtual(1:2:2n...), 1:2n)
+Sn(n) = 1 // factorial(n) * ∑(psym_tensor("s$n", 1:2n...)  * prod(E(2i-1,2i) for i = 1:n) * occupied(2:2:2n...) * virtual(1:2:2n...), 1:2n)
 T2u = ∑(1 // 2 * occupied(1, 3) * virtual(2, 4) *
     (2 // 3 * psym_tensor("u", 1, 2, 3, 4) +
-    1 // 3 * psym_tensor("u", 1, 4, 3, 2)) * E(1, 2) * E(3, 4), 1:4)
+    1 // 3 * psym_tensor("u", 1, 4, 3, 2)) * E(1, 2) * E(3, 4) * electron(1,2,3,4), 1:4)
 
 # HT = e^-T H eT |HF>
 gamma_transform = real_tensor("γ") * real_tensor("ω") * bosondag() +
-                  ∑(real_tensor("d", 1,2) * real_tensor("γ") * E(1,2), 1:2)
+                  ∑(real_tensor("d", 1,2) * real_tensor("γ") * E(1,2) * electron(1,2,3,4), 1:2)
 H0 = F + Φ
 H = H0 + d + E_f + gamma_transform
-T = Tn(2) + Sn(1) + Sn(2) # Γ1 included directly in H
+T = Tn(2) + Sn(1) * bosondag() + Sn(2) * bosondag() # Γ1 included directly in H
+
+# First test
+Vn(n) = real_tensor("V$n")
+V_taylor(n) = Vn(n)-bosondag()*Vn(n+1)
+V = V_taylor(0)+V_taylor(1)*(Sn(1) + Sn(2))+1//2*V_taylor(2)*(Sn(1) + Sn(2))^2
+
+#Second test
+α = real_tensor("α")
+@show V_left = (SASQ.Expression(1)-α * bosondag()) * (SASQ.Expression(1)+α*Sn(1)+1//2*α^2*Sn(1)^2)
+@show V_right = (SASQ.Expression(1)+α*Sn(2))
+
 
 # New terms compared to electronic Hamiltonian CCSD
-Ecorr = cc_ket_P(H, T, 1, 0, 0) - cc_ket_P(H0, Tn(2), 2, 0, 0)
+@show Ecorr = cc_ket_P(H, T, 1, 0, 0) #- cc_ket_P(H0, Tn(2), 2, 0, 0)
 omega_ai = cc_ket_P(H, T, 2, 1, 0) - cc_ket_P(H0, Tn(2), 2, 1, 0)
 omega_aibj = cc_ket_P(H, T, 2, 2, 0) - cc_ket_P(H0, Tn(2), 2, 2, 0)
-omega_1 = cc_ket_P(H, T, 1, 0, 1)
+@show omega_1 = cc_ket_P(H, T, 1, 0, 1)
+@show omega_1_withV = cc_ket_P_withV(H0, T, 1, 0, 1, V)
+@show omega_1_with = cc_ket_P_withVleftright(H0, T, 1, 0, 1, V_left, V_right)
 omega_ai_1 = cc_ket_P(H, T, 2, 1, 1)
 omega_aibj_1 = cc_ket_P(H, T, 2, 2, 1)
