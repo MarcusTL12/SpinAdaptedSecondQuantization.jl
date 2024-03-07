@@ -149,7 +149,7 @@ function print_code_einsum_testing(t::SASQ.Term, symbol::String, translation, fi
     end
 
     if length(tensor_str) > 0
-        return "$pre_string = $pre_string .+ $scalar_str $notsum_str * np.einsum($einsum_str$tensor_str, optimize=\"optimal\");"
+        return "$pre_string = $pre_string .+ $scalar_str $notsum_str * fixed_einsum($einsum_str$tensor_str, optimize=\"optimal\");"
     else
         return "$pre_string += $scalar_str $notsum_str;"
     end
