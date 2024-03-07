@@ -34,7 +34,11 @@ function cc_ket_P(H, T, n, order, photon_order)
     HT = bch(H, T, n) |> x -> act_on_ket(x, order + photon_order) |> simplify
 
     # Return only terms of op_length = order
-    return project(HT, order, photon_order)
+    HT = project(HT, order, photon_order)
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("t2", "u"))
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("s2", "v"))
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("g", "L"))
+    return HT
 end
 
 function cc_ket_P_withV(H, T, n, order, photon_order, V)
@@ -42,7 +46,11 @@ function cc_ket_P_withV(H, T, n, order, photon_order, V)
     HT = bch(H, T, n) |> x -> act_on_ket(V*x, order + photon_order) |> simplify
 
     # Return only terms of op_length = order
-    return project(HT, order, photon_order)
+    HT = project(HT, order, photon_order)
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("t2", "u"))
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("s2", "v"))
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("g", "L"))
+    return HT
 end
 
 function cc_ket_P_withVleftright(H, T, n, order, photon_order, V_left, V_right)
@@ -50,7 +58,11 @@ function cc_ket_P_withVleftright(H, T, n, order, photon_order, V_left, V_right)
     HT = bch(H, T, n) |> x -> act_on_ket(V_left*x*V_right, order + photon_order) |> simplify
 
     # Return only terms of op_length = order
-    return project(HT, order, photon_order)
+    HT = project(HT, order, photon_order)
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("t2", "u"))
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("s2", "v"))
+    HT = look_for_tensor_replacements_smart(HT, make_exchange_transformer("g", "L"))
+    return HT
 end
 
 function remove_P(expression)
@@ -95,7 +107,7 @@ end
 
 # Define Hamiltonian in terms of F and g
 Φ = 1 // 2 * ∑(psym_tensor("g", 1,2,3,4) * e(1,2,3,4) * electron(1,2,3,4), 1:4) +
-    ∑((-2 * rsym_tensor("g", 1, 2, 3, 3) + psym_tensor("g", 1, 3, 3, 2)) *
+    ∑((-2 * psym_tensor("g", 1, 2, 3, 3) + psym_tensor("g", 1, 3, 3, 2)) *
         occupied(3) * E(1,2), 1:3)
 F = ∑(real_tensor("F", 1, 2) * E(1, 2) * electron(1,2), 1:2)
 d = ∑(real_tensor("d", 1,2) * (boson() + bosondag()) * E(1,2) * electron(1,2), 1:2)
@@ -120,18 +132,21 @@ Vn(n) = real_tensor("V$n")
 V_taylor(n) = Vn(n)-bosondag()*Vn(n+1)
 V = V_taylor(0)+V_taylor(1)*(Sn(1) + Sn(2))+1//2*V_taylor(2)*(Sn(1) + Sn(2))^2
 
-#Second test
+# Second test
 α = real_tensor("α")
-@show V_left = (SASQ.Expression(1)-α * bosondag()) * (SASQ.Expression(1)+α*Sn(1)+1//2*α^2*Sn(1)^2)
-@show V_right = (SASQ.Expression(1)+α*Sn(2))
+V_left = (SASQ.Expression(1)-α * bosondag()) * (SASQ.Expression(1)+α*Sn(1)+1//2*α^2*Sn(1)^2)
+V_right = (SASQ.Expression(1)+α*Sn(2))
 
 
 # New terms compared to electronic Hamiltonian CCSD
 @show Ecorr = cc_ket_P(H, T, 1, 0, 0) #- cc_ket_P(H0, Tn(2), 2, 0, 0)
-omega_ai = cc_ket_P(H, T, 2, 1, 0) - cc_ket_P(H0, Tn(2), 2, 1, 0)
+
+@show omega_ai_noQED = cc_ket_P(H0, Tn(2), 2, 1, 0)
+@show omega_ai = cc_ket_P(H0, T, 2, 1, 0) #- cc_ket_P(H0, Tn(2), 2, 1, 0)
+@show omega_ai_SC = cc_ket_P_withVleftright(H0, T, 2, 1, 0, V_left, V_right)
+
 omega_aibj = cc_ket_P(H, T, 2, 2, 0) - cc_ket_P(H0, Tn(2), 2, 2, 0)
-@show omega_1 = cc_ket_P(H, T, 1, 0, 1)
-@show omega_1_withV = cc_ket_P_withV(H0, T, 1, 0, 1, V)
-@show omega_1_with = cc_ket_P_withVleftright(H0, T, 1, 0, 1, V_left, V_right)
+@show omega_1 = cc_ket_P(H0, T, 1, 0, 1)
+@show omega_1_SC = cc_ket_P_withVleftright(H0, T, 1, 0, 1, V_left, V_right)
 omega_ai_1 = cc_ket_P(H, T, 2, 1, 1)
 omega_aibj_1 = cc_ket_P(H, T, 2, 2, 1)
