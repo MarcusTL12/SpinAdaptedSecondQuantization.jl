@@ -497,6 +497,27 @@ function bch(A, B, n)
     X
 end
 
+export act_on_bra
+act_on_bra(x, max_ops=Inf) = act_on_ket(x', max_ops)'
+
+export act_eT_on_bra
+function act_eT_on_bra(braop, T; max_n=Inf, max_ops=Inf)
+    i = 0
+    acc = act_on_bra(braop)
+    proj = acc
+
+    while i <= max_n
+        i += 1
+        proj = simplify(act_on_bra(proj * T)) * 1 // i
+        if iszero(proj)
+            break
+        end
+        acc += proj
+    end
+
+    simplify(act_on_bra(acc, max_ops))
+end
+
 # Function to express all operators in an expression in terms of
 # elementary fermionic/bosinic anihilation and creation operators (if possible)
 export convert_to_elementary_operators
