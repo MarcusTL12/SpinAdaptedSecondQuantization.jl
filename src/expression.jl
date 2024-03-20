@@ -412,6 +412,79 @@ function commutator(A::Expression, B::Expression, n::Integer)
     return X
 end
 
+function commutator(A, B, rest...)
+    commutator(commutator(A, B), rest...)
+end
+
+function nested_commutator(A, Bs)
+    for B in Bs
+        A = commutator(A, B)
+    end
+    A
+end
+
+export bch_smart_kernel, bch_smart
+function bch_smart_kernel(A, Bs, n)
+    if n == 0
+        return A
+    end
+
+    inds = zeros(Int, n)
+
+    acc = Term[]
+
+    function calculate_prefactor()
+        cur_group_start = 1
+        cur_group_ind = inds[1]
+        fac = 1
+        for i in 2:n
+            if inds[i] != cur_group_ind
+                fac *= factorial(i - cur_group_start)
+                cur_group_start = i
+                cur_group_ind = inds[i]
+            end
+        end
+
+        fac *= factorial(n + 1 - cur_group_start)
+
+        fac
+    end
+
+    function rec(i)
+        if i == n + 1
+            choices = [Bs[j] for j in inds]
+            c = nested_commutator(A, choices)
+            append!(acc, (1 // calculate_prefactor() * c).terms)
+            return
+        end
+
+        last_max = if i == 1
+            length(Bs)
+        else
+            inds[i-1]
+        end
+
+        for j in 1:last_max
+            inds[i] = j
+            rec(i + 1)
+        end
+    end
+
+    rec(1)
+
+    Expression(acc)
+end
+
+function bch_smart(A, Bs, n)
+    acc = Term[]
+
+    for i in 0:n
+        append!(acc, bch_smart_kernel(A, Bs, i).terms)
+    end
+
+    Expression(acc)
+end
+
 function bch(A, B, n)
     # Baker-Campbell-Haussdorf expansion,
     # e^-B A e^B = A + 1/1! [A,B] + 1/2! [[A,B],B] + ... + 1/n! [A,B]_n
