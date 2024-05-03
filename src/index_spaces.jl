@@ -201,6 +201,23 @@ function getname(io::IO, constraints::Constraints,
     end
 end
 
+function getname_latex(io::IO, constraints::Constraints,
+    translation::IndexTranslation, i::Int)
+    do_color = index_color && haskey(colors, constraints(i))
+
+    if do_color
+        @error "Colored latex not supported yet"
+        # print(io, Base.text_colors[colors[constraints(i)]])
+    end
+
+    getname(io, translation(i)...)
+
+    if do_color
+        @error "Colored latex not supported yet"
+        # print(io, "\x1b[39m")
+    end
+end
+
 function print_mo_index(io::IO, constraints::Constraints,
     translation::IndexTranslation, p)
     getname(io, constraints, translation, p)
@@ -210,6 +227,18 @@ function print_mo_index(io::IO, constraints::Constraints,
     translation::IndexTranslation, indices...)
     for p in indices
         print_mo_index(io, constraints, translation, p)
+    end
+end
+
+function print_mo_index_latex(io::IO, constraints::Constraints,
+    translation::IndexTranslation, p)
+    getname_latex(io, constraints, translation, p)
+end
+
+function print_mo_index_latex(io::IO, constraints::Constraints,
+    translation::IndexTranslation, indices...)
+    for p in indices
+        print_mo_index_latex(io, constraints, translation, p)
     end
 end
 

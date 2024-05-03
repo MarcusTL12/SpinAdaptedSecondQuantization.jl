@@ -96,6 +96,43 @@ but rather include a single zero term")
     end
 end
 
+export print_latex
+
+function print_latex(ex::Expression, tensor_replacement=Dict())
+    print_latex(stdout, ex, tensor_replacement)
+end
+
+function print_latex(io::IO, ex::Expression, tensor_replacement=Dict())
+    print_latex(io, (ex, IndexTranslation()), tensor_replacement)
+end
+
+function print_latex(io::IO,
+    (ex, translation)::Tuple{Expression,IndexTranslation}, tensor_replacement=Dict())
+    if isempty(ex.terms)
+        throw("Expressions should not be empty,\
+but rather include a single zero term")
+    end
+
+    t, rest = Iterators.peel(ex.terms)
+
+    if t.scalar < 0
+        print(io, "- ")
+        print_latex(io, (new_scalar(t, -t.scalar), translation), tensor_replacement)
+    else
+        print_latex(io, (t, translation), tensor_replacement)
+    end
+
+    for t in rest
+        if t.scalar < 0
+            print(io, "\n- ")
+            print_latex(io, (new_scalar(t, -t.scalar), translation), tensor_replacement)
+        else
+            print(io, "\n+ ")
+            print_latex(io, (t, translation), tensor_replacement)
+        end
+    end
+end
+
 function Base.zero(::Type{Expression{T}}) where {T<:Number}
     Expression([zero(Term{T})])
 end

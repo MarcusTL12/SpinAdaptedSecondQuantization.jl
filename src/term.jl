@@ -142,6 +142,18 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
+function printscalar_latex(io::IO, s::T) where {T<:Number}
+    print(io, s)
+end
+
+function printscalar_latex(io::IO, s::Rational{T}) where {T}
+    if isone(denominator(s))
+        print(io, numerator(s))
+    else
+        print(io, "\\frac{", numerator(s), "}{", denominator(s), "}")
+    end
+end
+
 # TODO: Make this more subspace agnostic
 function update_index_translation(t::Term, translation::IndexTranslation)
     translation = copy(translation)
@@ -268,6 +280,92 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
     end
 end
 
+function print_latex(io::IO, (t, translation)::Tuple{Term,IndexTranslation}, tensor_replacement)
+    sep = Ref(false)
+
+    function printsep()
+        if sep[]
+            print(io, ' ')
+        end
+        sep[] = true
+    end
+
+    ex_inds = get_external_indices(t)
+
+    for (p, (S, _)) in translation
+        Sc = t.constraints(p)
+        if p ∈ ex_inds && !(Sc ⊆ S)
+            @warn "Printing index $p as $S, but it is constrained to $Sc"
+        end
+    end
+
+    translation = update_index_translation(t, translation)
+
+    all_nonscalar_empty = isempty(t.sum_indices) && isempty(t.deltas) &&
+                          isempty(t.tensors) && isempty(t.operators) &&
+                          isempty(t.constraints)
+
+    if !isone(t.scalar)
+        if isone(-t.scalar)
+            print(io, '-')
+        else
+            printsep()
+            printscalar_latex(io, t.scalar)
+        end
+    elseif all_nonscalar_empty
+        printscalar_latex(io, t.scalar)
+        sep[] = true
+    end
+
+    if !isempty(t.sum_indices)
+        printsep()
+        print(io, "\\sum_{")
+        for i in t.sum_indices
+            print_mo_index_latex(io, t.constraints, translation, i)
+        end
+        print(io, "}{")
+        sep[] = false
+    end
+
+    for d in t.deltas
+        printsep()
+        print_latex(io, (d, t.constraints, translation))
+    end
+
+    for ten in t.tensors
+        printsep()
+        print_latex(io, (ten, t.constraints, translation), tensor_replacement)
+    end
+
+    for op in t.operators
+        printsep()
+        print_latex(io, (op, t.constraints, translation))
+    end
+
+    if !isempty(t.sum_indices)
+        print(io, '}')
+    end
+
+    if !do_index_translation
+        printsep()
+
+        print(io, "C(")
+
+        isfirst = true
+
+        for (i, s) in t.constraints
+            if !isfirst
+                print(io, ", ")
+            end
+            print_mo_index(io, t.constraints, translation, i)
+            print(io, "\\in", getshortname(s))
+            isfirst = false
+        end
+
+        print(io, ')')
+    end
+end
+
 # utility function to "copy" a term but replace the scalar with a new one
 function new_scalar(t::Term{T1}, scalar::T2) where {T1<:Number,T2<:Number}
     Term(
@@ -320,17 +418,17 @@ function Base.isless(a::Term, b::Term)
 
     (
         length(a.operators), operatortypes_a,
+        length(b.deltas),
         length(a.sum_indices),
         length(a.tensors), tensorstrings_a,
-        length(a.deltas),
         a.operators, a.sum_indices, a.tensors, a.deltas,
         a.constraints,
         -abs(a.scalar), -sign(a.scalar),
     ) < (
         length(b.operators), operatortypes_b,
+        length(a.deltas),
         length(b.sum_indices),
         length(b.tensors), tensorstrings_b,
-        length(b.deltas),
         b.operators, b.sum_indices, b.tensors, b.deltas,
         b.constraints,
         -abs(b.scalar), -sign(b.scalar),
