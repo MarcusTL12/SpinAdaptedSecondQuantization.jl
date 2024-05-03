@@ -94,3 +94,37 @@ function reductive_commutator(e::TripletExcitationOperator, a::FermionOperator)
         -δ(p, r) * fermion(q, a.spin)
     end * (a.spin == α ? 1 : -1))
 end
+
+function reductive_commutator(a::PairFermionOperator, b::PairFermionOperator)
+    if a.dag == b.dag
+        (1, zero(Expression{Int64}))
+    elseif b.dag
+        Γ, ex = reductive_commutator(b, a)
+        (Γ, -ex)
+    else
+        p = a.p
+        q = a.q
+        r = b.p
+        s = b.q
+
+        Ev(p, q) = 2δ(p, q) - E(q, p)
+
+        (1,
+            δ(p, s) * E(q, r) - δ(p, r) * Ev(s, q) +
+            δ(q, s) * E(p, r) - δ(q, r) * Ev(s, p)
+        )
+    end
+end
+
+function reductive_commutator(a::PairFermionOperator, b::SingletExcitationOperator)
+    p = a.p
+    q = a.q
+    r = b.p
+    s = b.q
+
+    (1, if a.dag
+        -δ(q, s) * Q(p, r)' - δ(p, s) * Q(q, r)'
+    else
+        δ(q, r) * Q(p, s) + δ(p, r) * Q(q, s)
+    end)
+end
