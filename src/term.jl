@@ -319,19 +319,19 @@ function Base.isless(a::Term, b::Term)
     tensorstrings_b = [get_symbol(t) for t in b.tensors]
 
     (
+        length(a.deltas),
         length(a.operators), operatortypes_a,
         length(a.sum_indices),
         length(a.tensors), tensorstrings_a,
-        length(a.deltas),
-        a.operators, a.sum_indices, a.tensors, a.deltas,
+        a.deltas, a.operators, a.sum_indices, a.tensors,
         a.constraints,
         -abs(a.scalar), -sign(a.scalar),
     ) < (
+        length(b.deltas),
         length(b.operators), operatortypes_b,
         length(b.sum_indices),
         length(b.tensors), tensorstrings_b,
-        length(b.deltas),
-        b.operators, b.sum_indices, b.tensors, b.deltas,
+        b.deltas, b.operators, b.sum_indices, b.tensors,
         b.constraints,
         -abs(b.scalar), -sign(b.scalar),
     )
