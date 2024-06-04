@@ -4,6 +4,9 @@ struct PairFermionOperator <: Operator
     p::Int
     q::Int
     dag::Bool
+    function PairFermionOperator(p, q, dag)
+        new(minmax(p, q)..., dag)
+    end
 end
 
 function Base.show(io::IO,
