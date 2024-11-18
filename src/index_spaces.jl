@@ -2,7 +2,7 @@ const index_ids::Dict{Any,Int} = Dict()
 
 const index_shortnames::Vector{String} = String[]
 
-const index_names::Vector{String} = String[]
+const index_names::Vector{Vector{Char}} = String[]
 
 function new_space(id, shortname::String, names::String)
     if haskey(index_ids, id)
@@ -13,7 +13,7 @@ function new_space(id, shortname::String, names::String)
     index_ids[id] = new_ind
 
     push!(index_shortnames, shortname)
-    push!(index_names, names)
+    push!(index_names, collect(names))
 
     new_ind
 end

@@ -21,3 +21,12 @@ end
 function electron(indices...)
     constrain(p => GeneralOrbital for p in indices)
 end
+
+const Boson = new_space(:Boson, "b", "αβγδ")
+add_subspace_relation(GeneralIndex, Boson)
+
+export boson_ind
+
+function boson_ind(indices...)
+    constrain(α => Boson for α in indices)
+end

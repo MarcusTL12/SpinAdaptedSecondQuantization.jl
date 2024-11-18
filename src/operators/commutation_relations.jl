@@ -39,9 +39,9 @@ end
 
 function reductive_commutator(a::BosonOperator, b::BosonOperator)
     if a.dag && !b.dag
-        return (1, Expression(-1))
+        return (1, Expression(-1) * delta(a.p, b.p))
     elseif !a.dag && b.dag
-        return (1, Expression(1))
+        return (1, Expression(1) * delta(a.p, b.p))
     else
         return (1, zero(Expression{Int64}))
     end
