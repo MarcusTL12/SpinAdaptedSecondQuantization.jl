@@ -12,8 +12,6 @@ H = simplify(h + g)
 
 Eai(a, i) = E(a, i) * virtual(a) * occupied(i)
 
-trans = translate(VirtualOrbital => 1:2:8, OccupiedOrbital => 2:2:8)
-
 # H |HF⟩
 function eq0()
     simplify(act_on_ket(H))
