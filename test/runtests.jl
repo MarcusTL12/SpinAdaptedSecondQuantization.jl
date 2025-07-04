@@ -16,7 +16,7 @@ end
 
 @testset "kronecker delta" begin
     dpp = δ(1, 1)
-    dpq = δ(1, 2)
+    dpq = δ(1, 2) * electron(1, 2)
 
     @test string(dpp) == "1"
     @test string(dpq) == "δ_pq"
