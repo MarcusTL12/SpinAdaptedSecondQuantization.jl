@@ -148,7 +148,7 @@ Expression(ops::Vector{Operator}) = Expression([Term(
     ops
 )])
 
-export constrain, occupied, virtual
+export constrain
 
 function constrain(constraints...)
     Expression([Term(
@@ -159,14 +159,6 @@ function constrain(constraints...)
         Operator[],
         Constraints(constraints...)
     )])
-end
-
-function occupied(indices...)
-    constrain(p => OccupiedOrbital for p in indices)
-end
-
-function virtual(indices...)
-    constrain(p => VirtualOrbital for p in indices)
 end
 
 function Base.getindex(ex::Expression, i)
@@ -355,11 +347,14 @@ end
 
 # Unnecessarily expensive simplify for testing on small expressions
 export simplify_heavy
-function simplify_heavy(ex::Expression)
+function simplify_heavy(ex::Expression,
+    mapping=GeneralOrbital => (OccupiedOrbital, VirtualOrbital))
     done = false
     ex = simplify(ex)
     while !done
-        new_ex = try_add_constraints(simplify_heavy_terms(ex))
+        new_ex = split_indices(ex, mapping) |>
+                 simplify_heavy_terms |>
+                 try_add_constraints
         done = new_ex == ex
         ex = new_ex
     end
@@ -369,6 +364,16 @@ end
 export sort_operators
 function sort_operators(ex::Expression)
     Expression([sort_operators(t) for t in ex.terms])
+end
+
+function split_indices(ex::Expression, mapping)
+    terms = eltype(ex.terms)[]
+
+    for t in ex.terms
+        append!(terms, split_indices(t, mapping))
+    end
+
+    Expression(terms)
 end
 
 # Commutator:
@@ -407,16 +412,110 @@ function commutator(A::Expression, B::Expression, n::Integer)
     return X
 end
 
+function commutator(A, B, rest...)
+    commutator(commutator(A, B), rest...)
+end
+
+function nested_commutator(A, Bs)
+    for B in Bs
+        A = commutator(A, B)
+    end
+    A
+end
+
+export bch_smart_kernel, bch_smart
+function bch_smart_kernel(A, Bs, n)
+    if n == 0
+        return A
+    end
+
+    inds = zeros(Int, n)
+
+    acc = Term[]
+
+    function calculate_prefactor()
+        cur_group_start = 1
+        cur_group_ind = inds[1]
+        fac = 1
+        for i in 2:n
+            if inds[i] != cur_group_ind
+                fac *= factorial(i - cur_group_start)
+                cur_group_start = i
+                cur_group_ind = inds[i]
+            end
+        end
+
+        fac *= factorial(n + 1 - cur_group_start)
+
+        fac
+    end
+
+    function rec(i)
+        if i == n + 1
+            choices = [Bs[j] for j in inds]
+            c = nested_commutator(A, choices)
+            append!(acc, (1 // calculate_prefactor() * c).terms)
+            return
+        end
+
+        last_max = if i == 1
+            length(Bs)
+        else
+            inds[i-1]
+        end
+
+        for j in 1:last_max
+            inds[i] = j
+            rec(i + 1)
+        end
+    end
+
+    rec(1)
+
+    Expression(acc)
+end
+
+function bch_smart(A, Bs, n)
+    acc = Term[]
+
+    for i in 0:n
+        append!(acc, bch_smart_kernel(A, Bs, i).terms)
+    end
+
+    Expression(acc)
+end
+
 function bch(A, B, n)
     # Baker-Campbell-Haussdorf expansion,
     # e^-B A e^B = A + 1/1! [A,B] + 1/2! [[A,B],B] + ... + 1/n! [A,B]_n
     X = A
     Y = A
     for i = 1:n
-        Y = 1//i * commutator(Y, B)
+        Y = 1 // i * commutator(Y, B)
         X += Y
     end
     X
+end
+
+export act_on_bra
+act_on_bra(x, max_ops=Inf) = act_on_ket(x', max_ops)'
+
+export act_eT_on_bra
+function act_eT_on_bra(braop, T; max_n=Inf, max_ops=Inf)
+    i = 0
+    acc = act_on_bra(braop)
+    proj = acc
+
+    while i <= max_n
+        i += 1
+        proj = simplify(act_on_bra(proj * T)) * 1 // i
+        if iszero(proj)
+            break
+        end
+        acc += proj
+    end
+
+    simplify(act_on_bra(acc, max_ops))
 end
 
 # Function to express all operators in an expression in terms of

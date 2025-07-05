@@ -31,7 +31,9 @@ function Base.:(==)(a::A, b::B) where {A<:Tensor,B<:Tensor}
 end
 
 function Base.isless(a::A, b::B) where {A<:Tensor,B<:Tensor}
-    (get_symbol(a), get_indices(a)) < (get_symbol(b), get_indices(b))
+    ia = get_indices(a)
+    ib = get_indices(b)
+    (get_symbol(a), length(ia), ia) < (get_symbol(b), length(ib), ib)
 end
 
 function get_permutations(t::Tensor)

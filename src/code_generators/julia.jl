@@ -94,9 +94,9 @@ $symbol = """)
             n = String(take!(io))
             if !haskey(all_index_names, n)
                 s = t.constraints(p)
-                fac = if s <: OccupiedOrbital
+                fac = if s ⊆ OccupiedOrbital
                     1
-                elseif s <: VirtualOrbital
+                elseif s ⊆ VirtualOrbital
                     10
                 else
                     11

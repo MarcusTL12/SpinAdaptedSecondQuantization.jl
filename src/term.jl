@@ -1,8 +1,3 @@
-# Lets you call the constraints as a function instead of explicitly calling get
-function (constraints::Constraints)(p::Int)
-    get(constraints, p, GeneralOrbital)
-end
-
 struct Term{T<:Number}
     scalar::T
     sum_indices::Vector{Int}
@@ -49,11 +44,11 @@ struct Term{T<:Number}
         for d in deltas
             firstind, rest = Iterators.peel(d.indices)
             for p in rest
-                s = typeintersect(constraints(firstind), constraints(p))
-                if s == Union{}
+                s = intersect(constraints(firstind), constraints(p))
+                if isnothing(s)
                     return new{T}(zero(T), Int[], KroneckerDelta[], Tensor[],
                         Operator[], Constraints(), true)
-                elseif is_strict_subspace(s, GeneralOrbital)
+                elseif s != GeneralIndex
                     constraints[firstind] = s
                 end
                 push!(nonfirst_delta_indices, (p, firstind))
@@ -65,17 +60,6 @@ struct Term{T<:Number}
             if haskey(constraints, q)
                 constraints[p] = constraints[q]
             end
-        end
-
-        gen_constraints = Int[]
-        for (p, s) in constraints
-            if s == GeneralOrbital
-                push!(gen_constraints, p)
-            end
-        end
-
-        for p in gen_constraints
-            delete!(constraints, p)
         end
 
         new{T}(
@@ -124,6 +108,19 @@ function noop_part(t::Term)
     )
 end
 
+function new_constraints(t::Term, constraints::Constraints)
+    Term(
+        t.scalar,
+        t.sum_indices,
+        t.deltas,
+        t.tensors,
+        t.operators,
+        constraints,
+        false,
+        true
+    )
+end
+
 function Base.zero(::Type{Term{T}}) where {T<:Number}
     Term(zero(T), Int[], KroneckerDelta[], Tensor[], Operator[],
         Constraints(), true, true)
@@ -160,38 +157,25 @@ function update_index_translation(t::Term, translation::IndexTranslation)
         end
     end
 
-    seen_g = Set{Int}()
-    seen_o = Set{Int}()
-    seen_v = Set{Int}()
+    if do_index_translation
+        seen_inds = Dict{Int,Set{Int}}()
 
-    for p in ex_inds
-        if !haskey(translation, p)
-            push!(seen_g, p)
-        end
-    end
-
-    for (p, (S, q)) in translation
-        if p ∈ ex_inds
-            if S <: OccupiedOrbital
-                push!(seen_o, q)
-            elseif S <: VirtualOrbital
-                push!(seen_v, q)
-            elseif S == GeneralOrbital
-                push!(seen_g, q)
+        for (p, (S, q)) in translation
+            if p ∈ ex_inds
+                push!(get!(seen_inds, S, Set()), q)
             end
         end
-    end
 
-    if do_index_translation
+        for p in ex_inds
+            if !haskey(translation, p)
+                S = t.constraints(p)
+                translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
+            end
+        end
+
         for p in t.sum_indices
             S = t.constraints(p)
-            if S <: OccupiedOrbital
-                translation[p] = (OccupiedOrbital, find_first_free!(seen_o))
-            elseif S <: VirtualOrbital
-                translation[p] = (VirtualOrbital, find_first_free!(seen_v))
-            elseif S == GeneralOrbital
-                translation[p] = (GeneralOrbital, find_first_free!(seen_g))
-            end
+            translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
         end
     end
 
@@ -212,7 +196,7 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
 
     for (p, (S, _)) in translation
         Sc = t.constraints(p)
-        if p ∈ ex_inds && !(Sc <: S)
+        if p ∈ ex_inds && !(Sc ⊆ S)
             @warn "Printing index $p as $S, but it is constrained to $Sc"
         end
     end
@@ -264,28 +248,19 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         print(io, ')')
     end
 
-    constraint_noprint = index_color ? get_non_constraint_indices(t) : Int[]
-    filter!(constraint_noprint) do x
-        haskey(colors, t.constraints(x))
-    end
-    constraint_print = [i for (i, _) in t.constraints if i ∉ constraint_noprint]
-    filter!(constraint_print) do x
-        is_strict_subspace(t.constraints(x), translation(x)[1])
-    end
-
-    if !isempty(constraint_print)
+    if !do_index_translation
         printsep()
 
         print(io, "C(")
 
         isfirst = true
 
-        for i in constraint_print
+        for (i, s) in t.constraints
             if !isfirst
                 print(io, ", ")
             end
             print_mo_index(io, t.constraints, translation, i)
-            print(io, "∈", getshortname(t.constraints(i)))
+            print(io, "∈", getshortname(s))
             isfirst = false
         end
 
@@ -344,21 +319,21 @@ function Base.isless(a::Term, b::Term)
     tensorstrings_b = [get_symbol(t) for t in b.tensors]
 
     (
+        length(a.deltas),
         length(a.operators), operatortypes_a,
         length(a.sum_indices),
         length(a.tensors), tensorstrings_a,
-        length(a.deltas),
-        a.operators, a.sum_indices, a.tensors, a.deltas,
-        -abs(a.scalar), -sign(a.scalar),
+        a.deltas, a.operators, a.sum_indices, a.tensors,
         a.constraints,
+        -abs(a.scalar), -sign(a.scalar),
     ) < (
+        length(b.deltas),
         length(b.operators), operatortypes_b,
         length(b.sum_indices),
         length(b.tensors), tensorstrings_b,
-        length(b.deltas),
-        b.operators, b.sum_indices, b.tensors, b.deltas,
-        -abs(b.scalar), -sign(b.scalar),
+        b.deltas, b.operators, b.sum_indices, b.tensors,
         b.constraints,
+        -abs(b.scalar), -sign(b.scalar),
     )
 end
 
@@ -693,6 +668,28 @@ function non_constraint_non_scalar_equal(a::Term, b::Term)
     (b.tensors, b.operators, b.deltas, b.sum_indices)
 end
 
+function possibly_equal_nonscalar(a::Term, b::Term)
+    if (length(a.deltas), length(a.sum_indices)) !=
+       (length(b.deltas), length(b.sum_indices))
+        return false
+    end
+
+    if length(a.operators) != length(b.operators) ||
+       !all(typeof(oa) == typeof(ob) for (oa, ob) in
+            zip(a.operators, b.operators))
+        return false
+    end
+
+    if length(a.tensors) != length(b.tensors) ||
+       !all((get_symbol(ta), length(get_indices(ta))) ==
+            (get_symbol(tb), length(get_indices(tb)))
+            for (ta, tb) in zip(a.tensors, b.tensors))
+        return false
+    end
+
+    true
+end
+
 function possibly_equal(a::Term, b::Term)
     if (a.scalar, length(a.deltas), length(a.sum_indices)) !=
        (b.scalar, length(b.deltas), length(b.sum_indices))
@@ -742,6 +739,85 @@ function constraints_equal_but_one(a::Term, b::Term)
     p_different
 end
 
+function constraints_could_be_equal_but_one(a::Term, b::Term)
+    exinds = get_external_indices(a)
+
+    if exinds != get_external_indices(b)
+        return false
+    end
+
+    for p in exinds
+        if a.constraints(p) != b.constraints(p)
+            return false
+        end
+    end
+
+    counts_a = Dict{Int,Int}()
+    counts_b = Dict{Int,Int}()
+
+    for (_, s) in a.constraints
+        counts_a[s] = get(counts_a, s, 0) + 1
+        counts_b[s] = 0
+    end
+
+    for (_, s) in b.constraints
+        counts_b[s] = get(counts_b, s, 0) + 1
+        if !haskey(counts_a, s)
+            counts_a[s] = 0
+        end
+    end
+
+    found_up = false
+    found_down = false
+
+    for (s, c) in counts_a
+        Δ = c - get(counts_b, s, 0)
+        if abs(Δ) >= 2
+            return false
+        elseif Δ == 1
+            if found_up
+                return false
+            else
+                found_up = true
+            end
+        elseif Δ == -1
+            if found_down
+                return false
+            else
+                found_down = true
+            end
+        end
+    end
+
+    found_up == found_down
+end
+
+function find_equal_perm(a::Term, b::Term)
+    permuted_inds = copy(b.sum_indices)
+    mapping = [p => p for p in permuted_inds]
+    for perm in PermGen(length(b.sum_indices))
+        copy!(permuted_inds, b.sum_indices)
+        permute!(permuted_inds, perm.data)
+        for (i, (p, q)) in enumerate(zip(b.sum_indices, permuted_inds))
+            mapping[i] = p => q
+        end
+
+        new_b = sort_operators(exchange_indices(b, mapping))
+
+        p = if equal_nonscalar(a, new_b)
+            return true
+        end
+
+        p = if non_constraint_non_scalar_equal(a, new_b)
+            constraints_equal_but_one(a, new_b)
+        end
+
+        if !isnothing(p)
+            return (new_b, p)
+        end
+    end
+end
+
 # TODO: add docs
 # TODO: add tests
 function try_add_constraints(a::Term, b::Term)
@@ -766,7 +842,7 @@ function try_add_constraints(a::Term, b::Term)
             a.operators, new_constraints), true
     end
 
-    if is_strict_subspace(s1, s2)
+    if s1 ⊊ s2
         s1, s2 = s2, s1
         a, b = b, a
     end
@@ -850,6 +926,40 @@ function simplify_heavy(t::Term)
     end
 end
 
+function split_indices(t::Term, (from, (to1, to2)))
+    finished_terms = typeof(t)[]
+    new_terms = typeof(t)[]
+    old_terms = [t]
+
+    while !isempty(old_terms)
+        while !isempty(old_terms)
+            t = pop!(old_terms)
+            did_split = false
+            for (p, s) in t.constraints
+                if s == from
+                    c1 = copy(t.constraints)
+                    c2 = copy(t.constraints)
+
+                    c1[p] = to1
+                    c2[p] = to2
+
+                    push!(new_terms, new_constraints(t, c1))
+                    push!(new_terms, new_constraints(t, c2))
+                    did_split = true
+                    break
+                end
+            end
+            if !did_split
+                push!(finished_terms, t)
+            end
+        end
+
+        old_terms, new_terms = new_terms, old_terms
+    end
+
+    finished_terms
+end
+
 # Some operator overloading (Not ment for external use):
 
 function Base.:*(a::A, b::Term{B}) where {A<:Number,B<:Number}
@@ -868,7 +978,7 @@ function fuse_constraints!(a::Constraints, b::Constraints)
             if isdisjoint(a[p], s)
                 return 0
             else
-                a[p] = typeintersect(a[p], s)
+                a[p] = intersect(a[p], s)
             end
         else
             a[p] = s
