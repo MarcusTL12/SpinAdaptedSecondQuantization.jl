@@ -32,15 +32,15 @@ end
 end
 
 @testset "print singlet excitation operator" begin
-    Epq = E(1, 2)
+    Epq = E(1, 2) * electron(1, 2)
     @test string(Epq) == "E_pq"
 end
 
 @testset "print real tensor" begin
-    hpq = real_tensor("h", 1, 2)
+    hpq = real_tensor("h", 1, 2) * electron(1, 2)
     @test string(hpq) == "h_pq"
 
-    gpqrs = real_tensor("g", 1, 2, 3, 4)
+    gpqrs = real_tensor("g", 1, 2, 3, 4) * electron(1, 2, 3, 4)
     @test string(gpqrs) == "g_pqrs"
 end
 
@@ -60,15 +60,16 @@ end
             SASQ.RealTensor("g", [i, a, i, i])
         ],
         [SASQ.SingletExcitationOperator(p, q)],
-        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital,
+                        p => GeneralOrbital, q => GeneralOrbital)
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ia(δ_pqa g_iaii h_pa E_pq) C(p∈v, q∈v)"
+          "3/5 ∑_ic(δ_abc g_icii h_ac E_ab)"
 
     t = SASQ.lower_delta_indices(t)
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ia(δ_pqa g_ipii h_pp E_pp) C(p∈v, q∈v)"
+          "3/5 ∑_ic(δ_abc g_iaii h_aa E_aa)"
 
     t = SASQ.Term(
         3 // 5,
@@ -79,11 +80,12 @@ end
             SASQ.RealTensor("g", [i, a, i, q])
         ],
         [SASQ.SingletExcitationOperator(p, q)],
-        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital,
+                        p => GeneralOrbital, q => GeneralOrbital)
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ia(δ_pa g_iaiq h_pa E_pq) C(p∈v)"
+          "3/5 ∑_ib(δ_ab g_ibip h_ab E_ap)"
 end
 
 @testset "term exchange_indices" begin
@@ -102,25 +104,26 @@ end
             SASQ.RealTensor("g", [i, a, i, q])
         ],
         [SASQ.SingletExcitationOperator(p, q)],
-        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital,
+            p => GeneralOrbital, q => GeneralOrbital, r => GeneralOrbital)
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/7 δ_pqr g_stsq h_pt E_pq C(s∈o, t∈v)"
+          "3/7 δ_pqr g_iaiq h_pa E_pq"
 
     t = SASQ.lower_delta_indices(t)
 
     @test string(SASQ.Expression([t])) ==
-          "3/7 δ_pqr g_stsp h_pt E_pp C(s∈o, t∈v)"
+          "3/7 δ_pqr g_iaip h_pa E_pp"
 
     t2 = SASQ.exchange_indices(t, [p => q])
 
     @test string(SASQ.Expression([t2])) ==
-          "3/7 δ_qr g_stsq h_qt E_qq C(s∈o, t∈v)"
+          "3/7 δ_pq g_iaip h_pa E_pp"
 
     t3 = SASQ.exchange_indices(t2, [q => r])
 
-    @test string(SASQ.Expression([t3])) == "3/7 g_stsr h_rt E_rr C(s∈o, t∈v)"
+    @test string(SASQ.Expression([t3])) == "3/7 g_iaip h_pa E_pp"
 end
 
 @testset "term summation delta" begin
@@ -137,7 +140,8 @@ end
         SASQ.Operator[
             SASQ.SingletExcitationOperator(p, q)
         ],
-        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital)
+        SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital,
+                        p => GeneralOrbital, q => GeneralOrbital)
     )
 
     t = SASQ.lower_delta_indices(t)
@@ -324,8 +328,9 @@ end
 end
 
 @testset "hf energy" begin
-    h = ∑(real_tensor("h", 1, 2) * E(1, 2), 1:2)
-    g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...), 1:4) |> simplify
+    h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+    g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...) * electron(1:4...),
+    1:4) |> simplify
 
     H = simplify(h + g)
 
@@ -341,7 +346,7 @@ end
             (-2real_tensor("g", 1, 2, 3, 3) + real_tensor("g", 1, 3, 3, 2)) *
             occupied(3),
             [3]
-        )) * E(1, 2),
+        )) * E(1, 2) * electron(1, 2),
         1:2
     )
     HF = hF + g
@@ -401,10 +406,11 @@ end
             (-2psym_tensor("g", 1, 2, 3, 3) + psym_tensor("g", 1, 3, 3, 2)) *
             occupied(3),
             [3]
-        )) * E(1, 2),
+        )) * E(1, 2) * electron(1, 2),
         1:2
     )
-    g = 1 // 2 * ∑(psym_tensor("g", 1:4...) * e(1:4...), 1:4) |> simplify
+    g = 1 // 2 * ∑(psym_tensor("g", 1:4...) * e(1:4...) *
+        electron(1:4...), 1:4) |> simplify
 
     HF = simplify(hF + g)
 
@@ -441,8 +447,8 @@ end
 end
 
 @testset "ket" begin
-    h = ∑(real_tensor("h", 1, 2) * E(1, 2), 1:2)
-    g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...), 1:4)
+    h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+    g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...) * electron(1:4...), 1:4)
     H = simplify(h + g)
 
     Hket = act_on_ket(H) |> simplify
