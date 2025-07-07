@@ -1,4 +1,4 @@
-export desymmetrize, make_permutation_mappings
+export symmetrize, desymmetrize, make_permutation_mappings
 
 function make_permutation_mappings(index_groups)
     mappings = Vector{Pair{Int,Int}}[]
@@ -64,4 +64,17 @@ function desymmetrize(ex::Expression{T}, mappings) where {T<:Number}
     symmetrize = Expression(symmetrize)
 
     symmetrize, self_symmetric, non_symmetric
+end
+
+function symmetrize(ex::Expression{T}, mappings) where {T<:Number}
+    terms = Term{T}[]
+
+    for t in ex.terms
+        for mapping in mappings
+            other_term = exchange_indices(t, mapping)
+            push!(terms, other_term)
+        end
+    end
+
+    Expression(terms)
 end
