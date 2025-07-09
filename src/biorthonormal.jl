@@ -1,41 +1,47 @@
 export pick_biorthonormal
 
-function project_biorthonormal_term(t)
-    t = copy(t)
+function project_biorthonormal_operator(
+    o::SingletExcitationOperator,
+    template::SingletExcitationOperator)
 
-    n_op = length(t.operators)
-
-    out_inds = 1:2n_op
-
-    t = SASQ.make_space_for_indices(t, out_inds)
-
-    for (base_ind, o) in enumerate(t.operators)
-        if !(o isa SingletExcitationOperator)
-            throw("Biorthonormal currently only " *
-                  "supported for Epq type operators only")
-        end
-
-        a = 2base_ind - 1
-        i = 2base_ind
-
-        push!(t.deltas, SASQ.KroneckerDelta(a, o.p))
-        push!(t.deltas, SASQ.KroneckerDelta(i, o.q))
-    end
-
-    empty!(t.operators)
-
-    t
+    [
+        KroneckerDelta(o.p, template.p),
+        KroneckerDelta(o.q, template.q),
+    ]
 end
 
-function pick_biorthonormal(x)
-    tiers = Dict()
+function pick_biorthonormal(
+    x::Expression{T}, template_ex::Expression) where {T<:Number}
+    @assert length(template_ex.terms) == 1
+
+    template = template_ex[1]
+
+    @assert isempty(template.deltas)
+    @assert isempty(template.tensors)
+    @assert isempty(template.sum_indices)
+    @assert isone(template.scalar)
+
+    out_inds = get_all_indices(template)
+
+    template_types = [typeof(o) for o in template.operators]
+
+    terms = Term{T}[]
 
     for t in x.terms
-        n = length(t.operators)
+        if length(t.operators) == length(template_types) &&
+           all(typeof(o) == tp for (o, tp) in zip(t.operators, template_types))
+            t = make_space_for_indices(copy(t), out_inds)
+            for (o, o_template) in zip(t.operators, template.operators)
+                new_deltas = project_biorthonormal_operator(o, o_template)
 
-        tiers[n] = get(tiers, n, SASQ.Expression(0)) +
-                   SASQ.Expression([project_biorthonormal_term(t)])
+                append!(t.deltas, new_deltas)
+            end
+
+            empty!(t.operators)
+
+            push!(terms, t)
+        end
     end
 
-    [simplify_heavy(tiers[n-1]) for n in 2:length(tiers)]
+    simplify_heavy(Expression(terms))
 end
