@@ -1,6 +1,6 @@
-export pick_biorthonormal
+export pick_biorthogonal
 
-function project_biorthonormal_operator(
+function project_biorthogonal_operator(
     o::SingletExcitationOperator,
     template::SingletExcitationOperator)
 
@@ -10,7 +10,7 @@ function project_biorthonormal_operator(
     ]
 end
 
-function pick_biorthonormal(
+function pick_biorthogonal(
     x::Expression{T}, template_ex::Expression) where {T<:Number}
     @assert length(template_ex.terms) == 1
 
@@ -32,7 +32,7 @@ function pick_biorthonormal(
            all(typeof(o) == tp for (o, tp) in zip(t.operators, template_types))
             t = make_space_for_indices(copy(t), out_inds)
             for (o, o_template) in zip(t.operators, template.operators)
-                new_deltas = project_biorthonormal_operator(o, o_template)
+                new_deltas = project_biorthogonal_operator(o, o_template)
 
                 append!(t.deltas, new_deltas)
             end
