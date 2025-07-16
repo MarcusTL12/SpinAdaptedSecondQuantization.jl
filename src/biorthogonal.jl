@@ -1,4 +1,4 @@
-export pick_biorthogonal
+export project_biorthogonal
 
 function project_biorthogonal_operator(
     o::SingletExcitationOperator,
@@ -10,7 +10,30 @@ function project_biorthogonal_operator(
     ]
 end
 
-function pick_biorthogonal(
+"""
+    project_biorthogonal(ex::Expression, template::Expression)
+
+This has the effect of projecting the expression `ex` on the biorthogonal bra
+state of the `template` expression.
+
+For a singlet double excitation, the following will be equivalent:
+
+```
+bra = (
+        1//3 * E(1, 2) * E(3, 4) +
+        1//6 * E(1, 4) * E(3, 2)
+    )' * occupied(2, 4) * virtual(1, 3)
+
+result = hf_expectation_value(bra * ex)
+```
+
+```
+ket = E(1, 2) * E(3, 4) * occupied(2, 4) * virtual(1, 3)
+result = project_biorthogonal(act_on_ket(ex), ket)
+result = symmetrize(result, make_permutation_mappings([(1, 2), (3, 4)]))
+```
+"""
+function project_biorthogonal(
     x::Expression{T}, template_ex::Expression) where {T<:Number}
     @assert length(template_ex.terms) == 1
 
