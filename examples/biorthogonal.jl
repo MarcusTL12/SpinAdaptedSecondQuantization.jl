@@ -20,6 +20,15 @@ Hbar = simplify(bch(H, T2, 4))
 # Compute Hbar |HF⟩, keeping only terms with up to two operators
 Hbar_ket = simplify(act_on_ket(Hbar, 2))
 
+energy = begin
+    tmp = act_on_bra(Hbar_ket)
+    tmp = simplify_heavy(tmp - hf_expectation_value(H))
+    look_for_tensor_replacements(tmp, make_exchange_transformer("t", "u"))
+end
+
+println("E = ", energy)
+println()
+
 omega_ai = begin
     # Project ⟨ai| Hbar |HF⟩
     tmp = project_biorthogonal(Hbar_ket, E(1, 2) * occupied(2) * virtual(1))
