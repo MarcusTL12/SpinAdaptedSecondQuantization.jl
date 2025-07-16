@@ -1,5 +1,4 @@
-export look_for_tensor_replacements, make_exchange_transformer,
-    look_for_tensor_replacements_smart
+export look_for_tensor_replacements, make_exchange_transformer
 
 function do_tensor_replacement(t::Term, transformer)
     old_tensors = t.tensors
@@ -57,7 +56,7 @@ function make_exchange_transformer(from, to)
     g2L_transformer
 end
 
-function look_for_tensor_replacements(ex::Expression, transformer)
+function look_for_tensor_replacements_old(ex::Expression, transformer)
     is_done = false
 
     while !is_done
@@ -100,7 +99,7 @@ function look_for_tensor_replacements(ex::Expression, transformer)
     ex
 end
 
-function look_for_tensor_replacements_smart(ex::Expression, transformer)
+function look_for_tensor_replacements(ex::Expression, transformer)
     if iszero(ex)
         return ex
     end
@@ -147,7 +146,7 @@ function look_for_tensor_replacements_smart(ex::Expression, transformer)
         end
     end
 
-    extra_expression = look_for_tensor_replacements_smart(
+    extra_expression = look_for_tensor_replacements(
         Expression(new_terms), transformer
     )
 

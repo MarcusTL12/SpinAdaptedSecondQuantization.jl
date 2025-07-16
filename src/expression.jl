@@ -423,7 +423,6 @@ function nested_commutator(A, Bs)
     A
 end
 
-export bch_smart_kernel, bch_smart
 function bch_smart_kernel(A, Bs, n)
     if n == 0
         return A
@@ -475,7 +474,7 @@ function bch_smart_kernel(A, Bs, n)
     Expression(acc)
 end
 
-function bch_smart(A, Bs, n)
+function bch(A, Bs::AbstractArray, n)
     acc = Term[]
 
     for i in 0:n
@@ -485,7 +484,7 @@ function bch_smart(A, Bs, n)
     Expression(acc)
 end
 
-function bch(A, B, n)
+function bch(A, B::Expression, n)
     # Baker-Campbell-Haussdorf expansion,
     # e^-B A e^B = A + 1/1! [A,B] + 1/2! [[A,B],B] + ... + 1/n! [A,B]_n
     X = A
