@@ -542,8 +542,16 @@ function split_indices(ex::Expression, mapping)
     Expression(terms)
 end
 
-# Commutator:
 export commutator
+
+"""
+    commutator(a::Expression, b::Expression)
+
+Compute commutator between `a` and `b`. This is computed termwise using the
+[`reductive_commutator`](@ref) function, then adding/subtracting the swapped
+result if the reductive commutator for a given pair of terms turned out to be
+an anti-commutator.
+"""
 function commutator(a::Expression{A}, b::Expression{B}) where
 {A<:Number,B<:Number}
     terms = Term{promote_type(A, B)}[]
@@ -555,8 +563,16 @@ function commutator(a::Expression{A}, b::Expression{B}) where
     Expression(terms)
 end
 
-# Commutator:
 export anticommutator
+
+"""
+    anticommutator(a::Expression, b::Expression)
+
+Compute commutator between `a` and `b`. This is computed termwise using the
+[`reductive_commutator`](@ref) function, then adding/subtracting the swapped
+result if the reductive commutator for a given pair of terms turned out to be
+an commutator.
+"""
 function anticommutator(a::Expression{A}, b::Expression{B}) where
 {A<:Number,B<:Number}
     terms = Term{promote_type(A, B)}[]
@@ -568,6 +584,11 @@ function anticommutator(a::Expression{A}, b::Expression{B}) where
     Expression(terms)
 end
 
+"""
+    commutator(A::Expression, B::Expression, n::Integer)
+
+Compute `n` nested commutators ``[...[[[A], B], B]..., B]``.
+"""
 function commutator(A::Expression, B::Expression, n::Integer)
     # [A, B]_n
     # [A, B]_3 = [[[A, B], B], B]
@@ -578,10 +599,24 @@ function commutator(A::Expression, B::Expression, n::Integer)
     return X
 end
 
+"""
+    commutator(A, B, C, ...)
+
+Computes the nested commutator ``[...[[A, B], C], ...]``
+"""
 function commutator(A, B, rest...)
     commutator(commutator(A, B), rest...)
 end
 
+"""
+    commutator(A, Bs)
+
+Compute nested commutator with all expressions in iteratable Bs.
+
+``
+[...[[[A], B_1], B_2], ...]
+``
+"""
 function nested_commutator(A, Bs)
     for B in Bs
         A = commutator(A, B)
@@ -640,6 +675,18 @@ function bch_smart_kernel(A, Bs, n)
     Expression(acc)
 end
 
+"""
+    bch(A, Bs::AbstractArray, n)
+
+Equivalent to `bch(A, sum(Bs), n)` if all `Bs` commute with eachother, but
+evalutating in a smart way in order to avoid computing equivalent terms many
+times, for example instead of computing both ``\frac12 [[A, B_1], B_2]`` and
+``\frac12 [[A, B_2], B_1]``, it will only compute the first one and multiply
+by 2. This can be much faster if one has many commuting terms in `Bs`.
+
+!!! warning
+    Should not be used if some expressions in `Bs` do not commute.
+"""
 function bch(A, Bs::AbstractArray, n)
     acc = Term[]
 
@@ -650,22 +697,75 @@ function bch(A, Bs::AbstractArray, n)
     Expression(acc)
 end
 
+"""
+    bch(A, B, n)
+
+Compute Baker-Campbell-Haussdorff expansion
+
+``
+e^{-B} A e^B
+=
+A + [A, B] + \\frac{1}{2!} [[A, B], B] + \\frac{1}{3!} [[[A, B], B], B] +
+\\frac{1}{n!} [...[[[A, B], B], B], ...B]
+``
+
+up to nth order. Terminates if commutator becomes zero.
+"""
 function bch(A, B::Expression, n)
-    # Baker-Campbell-Haussdorf expansion,
+    # Baker-Campbell-Haussdorff expansion,
     # e^-B A e^B = A + 1/1! [A,B] + 1/2! [[A,B],B] + ... + 1/n! [A,B]_n
     X = A
     Y = A
     for i = 1:n
         Y = 1 // i * commutator(Y, B)
+        if iszero(Y)
+            break
+        end
         X += Y
     end
     X
 end
 
 export act_on_bra
+
+"""
+    act_on_bra(x::Expression, [max_ops=Inf])
+
+Projects `x` on a HF bra by projecting the adjoint on a ket and ajointing the
+result.
+
+```julia
+act_on_bra(x, max_ops=Inf) = act_on_ket(x', max_ops)'
+```
+
+See [`act_on_ket`](@ref)
+"""
 act_on_bra(x, max_ops=Inf) = act_on_ket(x', max_ops)'
 
 export act_eT_on_bra
+
+"""
+    act_eT_on_bra(braop::Expression, T::Expression; [max_n=Inf], [max_ops=Inf])
+
+computes
+
+``
+\\langle\\text{HF}| \\text{braop} e^T
+``
+
+This can be useful for evaluating certain coupled cluster expressions from
+left to right. Since the cluster operator T is purely exciting acting ``e^T``
+to the left will terminate after only a few terms depending on the left state
+being projected on.
+
+!!! warning
+    If `T` contains de-excitations, the expression will not truncate and the
+    parameter `max_n` must be specified with a finite positive integer for
+    the function to terminate, truncating the expression.
+    `max_n` specifies the highest order term from the
+    taylor expansion of `e^T` to include. If `T` is purely exciting, the
+    expansion exits early when it terminates.
+"""
 function act_eT_on_bra(braop, T; max_n=Inf, max_ops=Inf)
     i = 0
     acc = act_on_bra(braop)
@@ -683,9 +783,15 @@ function act_eT_on_bra(braop, T; max_n=Inf, max_ops=Inf)
     simplify(act_on_bra(acc, max_ops))
 end
 
-# Function to express all operators in an expression in terms of
-# elementary fermionic/bosinic anihilation and creation operators (if possible)
 export convert_to_elementary_operators
+
+"""
+    convert_to_elementary_operators(ex::Expression)
+
+converts all operators to their representation using "elementary"
+annihilation and creation operators if implemented for all operator types in
+`ex`.
+"""
 function convert_to_elementary_operators(ex::Expression{T}) where {T<:Number}
     terms = Term{T}[]
 
@@ -696,10 +802,53 @@ function convert_to_elementary_operators(ex::Expression{T}) where {T<:Number}
     Expression(terms)
 end
 
+"""
+    Base.adjoint(ex::Expression)
+
+Termwise adjoint ex. Equivalent to the postfix notation `ex'`
+
+# Examples
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> Eai(a, i) = E(a, i) * occupied(i) * virtual(a)
+Eai (generic function with 1 method)
+julia> T2 = 1//2 * ∑(psym_tensor("t", 1:4...) * Eai(1, 2) * Eai(3, 4), 1:4)
+1/2 ∑_aibj(t_aibj E_ai E_bj)
+julia> adjoint(T2)
+1/2 ∑_aibj(t_aibj E_jb E_ia)
+julia> T2'
+1/2 ∑_aibj(t_aibj E_jb E_ia)
+julia> simplify(ans)
+1/2 ∑_iajb(t_aibj E_ia E_jb)
+```
+"""
 function Base.adjoint(ex::Expression)
     Expression([t' for t in ex.terms])
 end
 
+"""
+    Base.:(^)(ex::Expression, n::Integer)
+
+Computes `ex^n` by repeated multiplication.
+
+!!! warning
+    n must be a non negative integer
+
+# Examples
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+∑_pq(h_pq E_pq)
+julia> h^2
+∑_pqrs(h_pq h_rs E_pq E_rs)
+julia> h^3
+∑_pqrstu(h_pq h_rs h_tu E_pq E_rs E_tu)
+```
+"""
 function Base.:(^)(ex::Expression{T}, n::Integer) where {T<:Number}
     if n < 0
         throw("Negative powers for expressions are not supported!")
