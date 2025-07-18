@@ -370,5 +370,46 @@ function to fully simplify, as well as recognizing the
 2 * coloumb - 1 * exchange pattern for the T2 amplitudes.
 Now we have a correct and rather nice expression for the doubles equations,
 however, because of the particle symmetry of the bra that we introduced with
-the call to [`symmetrize`](@ref) some terms are pairwise equal after permuting
-the indices (a, i) <-> (b, j).
+the call to [`symmetrize`](@ref) some terms are equal after permuting
+the indices (a, i) <-> (b, j). Computing all of these redundant terms leads to
+a lot of unnecessary terms to code and compute, so it is much more efficient
+to only code the non-redundant ones, then symmetrize the final result
+numerically. To help with this, we provide the [`desymmetrize`](@ref) function
+which sort of acts like the reverse of [`symmetrize`](@ref). We can call this
+function on our ``\Omega_{ij}^{ab}`` expression
+
+```@repl 1
+omega_aibj_s, omega_aibj_ss, omega_aibj_ns = desymmetrize(
+    omega_aibj, make_permutation_mappings([(1, 2), (3, 4)])
+);
+omega_aibj_s
+omega_aibj_ss
+@assert iszero(omega_aibj_ns)
+```
+
+The [`desymmetrize`](@ref) function returns three expressions. The first
+`omega_aibj_s` contains the terms it found redundant permutations of elsewhere
+in the original expression. These needs to be symmetrized to obtain the correct
+expression. The second term `omega_aibj_ss` contains the "self-symmetric" terms.
+These are the terms which themselves carry the symmetry requested and can be
+evaluated as-is. The third and last term `omega_aibj_ns` are the "non-symmetric"
+terms and should be zero when deriving an expression which is known to have
+the requested symmetry. This operatoion is equivalent to extracting a
+permutation operator from part of an expression
+
+``
+\Omega_{ij}^{ab} =
+(\Omega_{\text{ss}})_{ij}^{ab} +
+P_{ij}^{ab} (\Omega_{\text{s}})_{ij}^{ab}
+``
+
+!!! warning
+    If the non-symmetric expression is not zero something wrong has happened,
+    for example, some tensor might be defined as real_tensor when it should be
+    defined as psym_tensor.
+
+!!! note
+    The [`desymmetrize`](@ref) function can be useful to simplify terms that
+    are not symmetric under the requested symmetry if many of the terms within
+    do carry the symmetry. Then the non-symmetric expression would also be coded
+    and added to the final result.
