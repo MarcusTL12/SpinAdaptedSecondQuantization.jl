@@ -149,7 +149,7 @@ correlation energy as
 E_corr = E0 - E_HF
 ```
 
-Here we see a very common pattern; the 2 * coulom - 1 * exchange pattern where
+Here we see a very common pattern; the 2 * coulomb - 1 * exchange pattern where
 we have terms that differ by a prefactor of ``-\frac12`` and an exchange of
 index 2 and 4 of a 4 index tensor, such as the two electron integrals or the
 T2 amplitudes. We usually define separate tensor names for these patterns 
@@ -178,3 +178,166 @@ the patterns mentioned above
 look_for_tensor_replacements(E_corr, make_exchange_transformer("g", "L"))
 look_for_tensor_replacements(E_corr, make_exchange_transformer("t", "u"))
 ```
+
+### Omega Equations
+
+#### Biorthonormal Bra
+
+For the singles equations we want to compute quantity
+
+``
+\Omega_i^a
+=
+\bar{\left\langle_i^a\right|} \bar H |\text{HF}\rangle
+``
+
+where the bra ``\bar{\left\langle_i^a\right|}`` is the biorthogonal bra state
+for the singly excited determinant
+
+``\left|_i^a\right\rangle = E_{ai} |\text{HF}\rangle``
+
+defined such that
+
+``\left\langle\bar{_i^a}|_j^b\right\rangle = \delta_{ij} \delta_{ab}``
+
+For a singly excited determinant we can explicitly express this biorthogonal bra
+simply as
+
+``\bar{\left\langle_i^a\right|} = \frac12 \langle\text{HF}| E_{ia}``
+
+As a quick example we can show this
+
+```@repl 1
+bra = 1//2 * E(2, 1) * occupied(2) * virtual(1)
+ket = E(3, 4) * occupied(4) * virtual(3)
+hf_expectation_value(bra * ket)
+```
+
+However for higher excitations the biorthogonal bra states can not be as easily
+expressed explicitly. For doubly excited determinants we want a biorthornormal
+bra state ``\bar{\left\langle_{ij}^{ab}\right|}`` such that
+
+``
+\left\langle\bar{_{ij}^{ab}}|_{kl}^{cd}\right\rangle
+=
+P_{ai,bj} \delta_{ik} \delta_{jl} \delta_{ac} \delta_{bd}
+=
+\delta_{ik} \delta_{jl} \delta_{ac} \delta_{bd} +
+\delta_{jk} \delta_{il} \delta_{bc} \delta_{ad}
+``
+
+with the permutation operator ``P_{ai,bj}`` generating the equivalent
+permutations due to the particle symmetry in the doubly excited determinant
+
+``
+\left|_{ij}^{ab}\right\rangle =
+\left|_{ji}^{ba}\right\rangle =
+E_{ai} E_{bj} |\text{HF}\rangle =
+E_{bj} E_{ai} |\text{HF}\rangle
+``
+
+We can write the biorthogonal bra explicitly as
+
+``
+\bar{\left\langle_{ij}^{ab}\right|}
+=
+\frac13 \left\langle_{ij}^{ab}\right| +
+\frac16 \left\langle_{ji}^{ab}\right|
+=
+\langle\text{HF}| \left(
+    \frac13 E_{jb} E_{ia} +
+    \frac16 E_{ib} E_{ja}
+\right)
+``
+
+Which we can confirm using the code
+
+```@repl 1
+bra = (1//3 * E(4, 3) * E(2, 1) + 1//6 * E(2, 3) * E(4, 1)) *
+    occupied(2, 4) * virtual(1, 3)
+ket = E(5, 6) * E(7, 8) * occupied(6, 8) * virtual(5, 7)
+hf_expectation_value(bra * ket)
+```
+
+!!! note
+    For higher order excited determinants such as triples, quadruples, etc. it is,
+    however, not possible to explicitly express a biorthogonal state that has
+    the desired properties. This is related to the fact that the expression is zero
+
+    ``P^{abc} E_{ai} E_{bj} E_{ck} = 0``
+
+    It is, however, still useful to be able to derive the expressions you would get
+    if you project on a biorthogonal basis anyway, even if it is not expressible
+    as a linear combination of excited determinants. For the triples for
+    example, we can define two distinct expressions
+
+    ``
+    \Omega_{ijk}^{abc}
+    =
+    \left\langle\bar{_{ijk}^{abc}}\right| \bar H |\text{HF}\rangle
+    ``
+
+    ``
+    \tilde \Omega_{ijk}^{abc}
+    =
+    \left\langle_{ijk}^{abc}\right| \bar H |\text{HF}\rangle
+    ``
+
+    the latter of which is the quantity that "actually exists" as a projection
+    onto a set of bra states which are expressible as excited determinants and
+    represent the equations which are to be solved to obtain the coupled cluster
+    wave function. The two ``\Omega`` expressions are related by a
+    non invertible linear transformation
+
+    ``
+    \tilde \Omega_{ijk}^{abc}
+    =
+    \sum_{a'i'b'j'c'k'}{
+        S_{ijki'j'k'}^{abca'b'c'}
+        \Omega_{i'j'k'}^{a'b'c'}
+    }
+    ``
+
+    We can then see that if one finds amplitudes such that the ``\Omega``
+    found by using the biorthogonal states they will also make the
+    ``\tilde \Omega`` be zero, which is the condition we want to solve for.
+    This is nice as we can safely "pretend" there exists a biorthogonal basis
+    which produces much simpler expressions and are therefore more efficient to
+    derive and numerically compute.
+
+Since we do not want to (and often can not, see note above)
+make an explicit expression for a biorthogonal bra we provide the function
+[`project_biorthogonal`](@ref) which lets us insert Kronecker deltas according
+to the definition of the biorthogonality in addition to the
+[`symmetrize`](@ref) function to expand the permutations required by the
+biorthonormality. We can reproduce the same behaviour as for the biorthogonal
+doubles from above as
+
+```@repl 1
+ket = E(5, 6) * E(7, 8) * occupied(6, 8) * virtual(5, 7)
+project_biorthogonal(ket, E(1, 2) * E(3, 4))
+symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]))
+```
+
+Here we supplied the "template" ket `E(1, 2) * E(3, 4)` which is that we want
+to project on the biorthogonal bra of.
+
+# Singles Equations
+
+We can use the [`project_biorthogonal`](@ref) function to project `Hbar_ket`
+on the singles biorthogonal bra and get an expression for ``\Omega_i^a``
+
+```@repl 1
+omega_ai = project_biorthogonal(Hbar_ket, E(1, 2))
+```
+
+Here we also see the coulomb - exchange pattern show up again, so we can
+simplify by.
+
+```@repl 1
+omega_ai = look_for_tensor_replacements(omega_ai,
+           make_exchange_transformer("t", "u"))
+```
+
+Which produces a nice simplified expression for the singes part of the CCSD
+equations.
