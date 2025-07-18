@@ -1,5 +1,11 @@
 export look_for_tensor_replacements, make_exchange_transformer
 
+"""
+    do_tensor_replacement(t::Term, transformer)
+
+Function that takes a term and produces the term you get by transforming
+its tensors according to the transformer.
+"""
 function do_tensor_replacement(t::Term, transformer)
     old_tensors = t.tensors
 
@@ -44,6 +50,12 @@ function do_tensor_replacement(t::Term, transformer)
     new_terms, other_terms
 end
 
+"""
+    make_exchange_transformer(name_from, name_to)
+
+Convenience function to make tensor transformer for use in
+[`look_for_tensor_replacements`](@ref).
+"""
 function make_exchange_transformer(from, to)
     function g2L_transformer(t::T) where {T<:Tensor}
         if length(get_indices(t)) != 4 || get_symbol(t) != from
@@ -99,6 +111,29 @@ function look_for_tensor_replacements_old(ex::Expression, transformer)
     ex
 end
 
+"""
+    look_for_tensor_replacements(ex::Expression, transformer)
+
+Looks for pairs of terms in `ex` that are equal up to a tensor transformation
+given by `transformer`. The most common use case is to recognize patterns such
+as ``L_{pqrs} = 2 g_{pqrs} - g_{psrq}`` where a convencience function to
+produce the relevant transformer provided
+(see [`make_exchange_transformer`](@ref)).
+
+```@example look_for_tensor_replacements
+using SpinAdaptedSecondQuantization
+h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+g = 1//2 * simplify(
+    ∑(psym_tensor("g", 1:4...) * e(1:4...) * electron(1:4...), 1:4)
+)
+H = h + g + real_tensor("h_nuc")
+```
+
+```@example look_for_tensor_replacements
+E_HF = simplify_heavy(hf_expectation_value(H))
+look_for_tensor_replacements(E_HF, make_exchange_transformer("g", "L"))
+```
+"""
 function look_for_tensor_replacements(ex::Expression, transformer)
     if iszero(ex)
         return ex
