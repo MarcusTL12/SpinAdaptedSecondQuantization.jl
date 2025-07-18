@@ -120,18 +120,27 @@ as ``L_{pqrs} = 2 g_{pqrs} - g_{psrq}`` where a convencience function to
 produce the relevant transformer provided
 (see [`make_exchange_transformer`](@ref)).
 
-```@setup look_for_tensor_replacements
-using SpinAdaptedSecondQuantization
-h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
-g = 1//2 * simplify(
-    ∑(psym_tensor("g", 1:4...) * e(1:4...) * electron(1:4...), 1:4)
-)
-H = h + g + real_tensor("h_nuc")
+```@meta
+DocTestSetup = quote
+    using SpinAdaptedSecondQuantization
+    h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+    g = 1//2 * simplify(
+        ∑(psym_tensor("g", 1:4...) * e(1:4...) * electron(1:4...), 1:4)
+    )
+    H = h + g + real_tensor("h_nuc")
+end
 ```
 
-```@repl look_for_tensor_replacements
-E_HF = simplify_heavy(hf_expectation_value(H))
-look_for_tensor_replacements(E_HF, make_exchange_transformer("g", "L"))
+```jldoctest
+julia> E_HF = simplify_heavy(hf_expectation_value(H))
+h_nuc
++ 2 ∑_i(h_ii)
++ 2 ∑_ij(g_iijj)
+- ∑_ij(g_ijji)
+julia> look_for_tensor_replacements(E_HF, make_exchange_transformer("g", "L"))
+h_nuc
++ 2 ∑_i(h_ii)
++ ∑_ij(L_iijj)
 ```
 """
 function look_for_tensor_replacements(ex::Expression, transformer)

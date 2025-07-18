@@ -8,6 +8,7 @@ makedocs(
     modules=[SpinAdaptedSecondQuantization],
     pages=[
         "Home" => "index.md",
+        "CCSD example" => "ccsd_example.md",
         "Reference/API" => "reference.md",
         "Internals" => "internals.md",
     ]
