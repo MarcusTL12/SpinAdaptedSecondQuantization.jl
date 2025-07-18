@@ -254,6 +254,78 @@ end
 # Simplification:
 
 export simplify
+
+"""
+    simplify(ex::Expression)
+
+Applies various simplification strategies to the given expression.
+The most important are:
+- Remove Kronecker deltas when indices are summed over.
+- Perform various operations to try to lower the lexiographic ordering of the
+    each term including:
+    - Lowering indices showing up in a Kronecker delta to the lowest of the
+        indices in said delta.
+    - Lowering summation indices to lowest available indices.
+    - Reorder summation indices to lower the lexiographic ordering of the order
+        they show up within the term.
+    - Bubble sort operators swaping neighbouring operators if:
+        - They commute
+        - The swap would lower the terms lexiographic ordering.
+- Look for pairs of terms differing only in index constraints and scalar
+    prefactors, and tries to combine them.
+
+# Examples:
+
+Collapsing deltas:
+```jldoctest simplify
+julia> using SpinAdaptedSecondQuantization
+
+julia> ∑(real_tensor("h", 1, 2) * electron(1, 2) * δ(1, 2), [2])
+∑_q(δ_pq h_pq)
+julia> simplify(ans)
+h_pp
+```
+
+Combining terms differing only by index constraints and scalars:
+```jldoctest simplify
+julia> real_tensor("h", 1, 2) * (occupied(1, 2) + occupied(1) * virtual(2))
+h_ia
++ h_ij
+julia> simplify(ans)
+h_ip
+```
+```jldoctest simplify
+julia> ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), [1, 2])
+∑_pq(h_pq E_pq)
+julia> ans - ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1) * occupied(2), [1, 2])
+∑_pq(h_pq E_pq)
+- ∑_pi(h_pi E_pi)
+julia> simplify(ans)
+∑_pa(h_pa E_pa)
+```
+
+Sorting commuting operators:
+```jldoctest simplify
+julia> E(3, 4) * E(1, 2) * electron(1:4...)
+E_rs E_pq
+julia> simplify(ans) # not able to swap as commutator is not zero
+E_rs E_pq
+julia> ans * occupied(2, 4) * virtual(1, 3)
+E_bj E_ai
+julia> simplify(ans) # now able to swap
+E_ai E_bj
+```
+```jldoctest simplify
+julia> E(3, 4) * E(5, 6) * E(1, 2) * electron(5, 6) * occupied(2, 4) * virtual(1, 3)
+E_bj E_pq E_ai
+julia> simplify(ans) # Can not swap first and last because of non commuting between
+E_bj E_pq E_ai
+julia> E(5, 6) * E(3, 4) * E(1, 2) * electron(5, 6) * occupied(2, 4) * virtual(1, 3)
+E_pq E_bj E_ai
+julia> simplify(ans) # Can swap adjacent last two, but not first
+E_pq E_ai E_bj
+```
+"""
 function simplify(ex::Expression)
     ex |>
     simplify_terms |>
@@ -346,8 +418,82 @@ function simplify_heavy_terms(ex::Expression)
     Expression(terms)
 end
 
-# Unnecessarily expensive simplify for testing on small expressions
 export simplify_heavy
+
+"""
+    simplify_heavy(ex::Expression,
+        [mapping=GeneralOrbital => (OccupiedOrbital, VirtualOrbital)])
+
+Similar to [`simplify`](@ref), but enabling a few extra simplification
+strategies that can be quite expensive, especially as the number of summation
+indices in a term grows large.
+
+The most expensive step is to iterate over *every permutation* of
+the summation indices of each term in order to find the order that has the least
+lexiographic ordering, which naturally has a scaling of O(n!) where n is the
+larget number of summation indices in a single term. This is quite managable for
+"small" numbers of indices (less than ~8), but quickly becomes unfeasible.
+
+!!! note
+    The iteration over permutations of summation indices happens after summation
+    indices that show up in Kronecker deltas, so if your terms contain many
+    Kronecker deltas this might yet be possible to run.
+
+The optional `mapping` argument defaults to splitting terms with general indices
+into a term with the index being occupied plus a term where the index is
+virtual, then performing simplification when all terms are split and recombining
+terms according to the same splitting if possible. This often allows for a few
+additional cancellations to occur than using only [`simplify`](@ref)
+If dealing with other index spaces, this splitting can be specified can
+be specified to be some other set of index spaces. See [`split_indices`](@ref).
+
+# Examples:
+
+HF energy with full real orbital symmetry:
+```jldoctest simplify_heavy
+julia> using SpinAdaptedSecondQuantization
+
+julia> h = ∑(rsym_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+∑_pq(h_pq E_pq)
+julia> g = 1//2 * \
+∑(rsym_tensor("g", 1:4...) * e(1:4...) * electron(1:4...), 1:4)
+1/2 ∑_pqrs(g_pqrs E_pq E_rs)
+- 1/2 ∑_pqrs(δ_qr g_pqrs E_ps)
+julia> H = simplify(h + g + real_tensor("h_nuc"));
+
+julia> E_HF = simplify(hf_expectation_value(H)) # Not nice
+h_nuc
++ 2 ∑_i(h_ii)
++ 2 ∑_ij(g_iijj)
+- ∑_pi(g_pipi)
++ ∑_ia(g_iaia)
+julia> simplify_heavy(E_HF) # Much nicer!
+h_nuc
++ 2 ∑_i(h_ii)
++ 2 ∑_ij(g_iijj)
+- ∑_ij(g_ijij)
+```
+
+Simplification by combining terms differing by index constraints
+```jldoctest simplify_heavy
+julia> ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), [1, 2])
+∑_pq(h_pq E_pq)
+julia> ans - ∑(real_tensor("h", 1, 2) * E(1, 2) * occupied(1, 2), [1, 2])
+∑_pq(h_pq E_pq)
+- ∑_ij(h_ij E_ij)
+julia> ans - ∑(real_tensor("h", 1, 2) * E(1, 2) * virtual(1, 2), [1, 2])
+∑_pq(h_pq E_pq)
+- ∑_ab(h_ab E_ab)
+- ∑_ij(h_ij E_ij)
+julia> simplify(ans)
+∑_pq(h_pq E_pq)
+- ∑_ab(h_ab E_ab)
+- ∑_ij(h_ij E_ij)
+julia> simplify_heavy(ans)
+∑_ai(h_ai E_ai)
++ ∑_ia(h_ia E_ia)
+```
+"""
 function simplify_heavy(ex::Expression,
     mapping=GeneralOrbital => (OccupiedOrbital, VirtualOrbital))
     done = false
@@ -367,6 +513,25 @@ function sort_operators(ex::Expression)
     Expression([sort_operators(t) for t in ex.terms])
 end
 
+"""
+    split_indices(ex::Expression, mapping)
+
+Splits the indices of each term according to the given mapping.
+
+```jldoctest @example
+julia> using SpinAdaptedSecondQuantization
+
+julia> h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+∑_pq(h_pq E_pq)
+
+julia> SASQ.split_indices(h,\
+ GeneralOrbital => (OccupiedOrbital, VirtualOrbital))
+∑_ab(h_ab E_ab)
++ ∑_ai(h_ai E_ai)
++ ∑_ia(h_ia E_ia)
++ ∑_ij(h_ij E_ij)
+```
+"""
 function split_indices(ex::Expression, mapping)
     terms = eltype(ex.terms)[]
 

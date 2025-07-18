@@ -181,7 +181,7 @@ look_for_tensor_replacements(E_corr, make_exchange_transformer("t", "u"))
 
 ### Omega Equations
 
-#### Biorthonormal Bra
+#### Biorthogonal Bra
 
 For the singles equations we want to compute quantity
 
@@ -310,7 +310,7 @@ make an explicit expression for a biorthogonal bra we provide the function
 [`project_biorthogonal`](@ref) which lets us insert Kronecker deltas according
 to the definition of the biorthogonality in addition to the
 [`symmetrize`](@ref) function to expand the permutations required by the
-biorthonormality. We can reproduce the same behaviour as for the biorthogonal
+biorthogonality. We can reproduce the same behaviour as for the biorthogonal
 doubles from above as
 
 ```@repl 1
@@ -322,7 +322,7 @@ symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]))
 Here we supplied the "template" ket `E(1, 2) * E(3, 4)` which is that we want
 to project on the biorthogonal bra of.
 
-# Singles Equations
+#### Singles Equations
 
 We can use the [`project_biorthogonal`](@ref) function to project `Hbar_ket`
 on the singles biorthogonal bra and get an expression for ``\Omega_i^a``
@@ -331,13 +331,44 @@ on the singles biorthogonal bra and get an expression for ``\Omega_i^a``
 omega_ai = project_biorthogonal(Hbar_ket, E(1, 2))
 ```
 
-Here we also see the coulomb - exchange pattern show up again, so we can
+Here we also see the 2 * coulomb - 1 * exchange pattern show up again, so we can
 simplify by.
 
 ```@repl 1
 omega_ai = look_for_tensor_replacements(omega_ai,
-           make_exchange_transformer("t", "u"))
+    make_exchange_transformer("t", "u"))
 ```
 
 Which produces a nice simplified expression for the singes part of the CCSD
 equations.
+
+#### Doubles Equations
+
+Here we want to derive the expression for the doubles ``\Omega``
+
+``
+\Omega_{ij}^{ab}
+=
+\bar{\left\langle_{ij}^{ab}\right|} \bar H |\text{HF}\rangle
+``
+
+Just like for the singles equations we project on a biorthogonal bra, though
+now using a doubly excited ket as the template, and we need to symmetrize
+to include the pertmutations caused by the particle symmetry of the biorthogonal
+bra.
+
+```@repl 1
+project_biorthogonal(Hbar_ket, E(1, 2) * E(3, 4));
+omega_aibj = simplify_heavy(
+    symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)])));
+omega_aibj = look_for_tensor_replacements(omega_aibj,
+    make_exchange_transformer("t", "u"))
+```
+
+Here we needed to use the (sometimes) expensive [`simplify_heavy`](@ref)
+function to fully simplify, as well as recognizing the
+2 * coloumb - 1 * exchange pattern for the T2 amplitudes.
+Now we have a correct and rather nice expression for the doubles equations,
+however, because of the particle symmetry of the bra that we introduced with
+the call to [`symmetrize`](@ref) some terms are pairwise equal after permuting
+the indices (a, i) <-> (b, j).
