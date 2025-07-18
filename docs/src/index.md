@@ -23,13 +23,6 @@ using SpinAdaptedSecondQuantization
 using SpinAdaptedSecondQuantization
 ```
 
-```@meta
-DocTestSetup = quote
-  using SpinAdaptedSecondQuantization
-  SASQ.disable_color()
-end
-```
-
 ## Basic Structure
 
 The core type of the package is the `Expression` type. This contains an array of
@@ -41,47 +34,96 @@ elements. These are:
 - An array of `tensors`
 - An array of `Kronecker deltas`
 - An array of `summation indices`
-- A dictionary of `orbital constraints`
+- A dictionary of `index constraints`
 
-### Orbital Indices
+### Indices
 
-Most types will contain orbital indices.
+Most types will contain indices.
 For convenience these are represented as integers,
-but they are purely symbolic. When printed, they will be given names according
+but they are purely symbolic. When constrained to a certain index space
+they will be printed with names according
 to the semi-standard names for general molecular orbital (MO) indices
-`pqrstuvw`. This means that index 1 will be printed as 'p',
-2 as 'q' and 8 as 'w'. For indices larger than 8 the names wrap around and
-are numbered with subscripts so index 9 will be printed as 'p₁'
-and index 78 as 'u₉'.
+`pqrstuv`, `abcdefg` and `ijklmno`.
+
+By default indices are unconstrained and will be printed as subscript indices
+`₁₂...`
+
+```@repl 1
+E(1, 2)
+```
+
+Usually, however, one wants to constrain indices to a certain subspace of
+indices. By default the available spaces are `GeneralOrbital`, `VirtualOrbital`
+and `OccupiedOrbital` which can be used for example like:
+
+```@repl 1
+E(1, 2) * constrain(1 => VirtualOrbital, 2 => OccupiedOrbital)
+```
+
+The shorthand functions `electron(...)`, `virtual(...)` and `occupied(...)`
+can also be used
+
+```@repl 1
+E(1, 2) * electron(1, 2)
+E(1, 2) * E(3, 4) * virtual(1, 3) * occupied(2, 4)
+```
 
 ### Operators
 
-A small variety of operator types is supported, see (REF TO LIST) for full list.
+A small variety of operator types is supplied by defualt listed in the following
+table.
+
+| Operator Type             | constructor(s)                  |
+| ------------------------- | ------------------------------- |
+| SingletExcitationOperator | E(p, q), e(p, q, r, s)          |
+| FermionOperator           | fermion(p, σ), fermiondag(p, σ) |
+| BosonOperator             | boson(), bosondag()             |
+| TripletExcitationOperator | τ(p, q)                         |
 
 A few examples are:
 
 ```@repl 1
-E(1, 2)
-E(1, 2) * E(3, 4)
-e(1, 2, 3, 4)
-fermion(1, α)
-fermiondag(2, β)
+E(1, 2) * electron(1, 2)
+E(1, 2) * E(3, 4) * virtual(1, 3) * occupied(2, 4)
+e(1, 2, 3, 4) * electron(1, 2, 3, 4)
+fermion(1, α) * occupied(1)
+fermiondag(2, β) * virtual(2)
+bosondag() * boson()
+τ(1, 2) * electron(1, 2)
 ```
 
 ### Tensors
 
 The simplest tensor type is the `RealTensor` which has a name and an array of
-MO-indices.
+indices.
 
 Example:
 
 ```@repl 1
-real_tensor("h", 1, 2)
-real_tensor("g", 1, 2, 3, 4)
+real_tensor("h", 1, 2) * electron(1, 2)
+real_tensor("g", 1, 2, 3, 4) * electron(1, 2, 3, 4)
 ```
 
 Some other types of tensors are supported with various symmetries in the
-indices. See (REF TO LIST) for full list.
+indices. Supported tensor types are listed below
+
+| Tensor type             | constructor               | symmetries                        |
+| ----------------------- | ------------------------- | --------------------------------- |
+| RealTensor              | real_tensor(name, p, ...) | No symmetries                     |
+| ParticleSymmetricTensor | psym_tensor(name, p, ...) | g₁₂₃₄ <-> g₃₄₁₂                   |
+| RealSymmetricTensor     | rsym_tensor(name, p, ...) | g₁₂₃₄ <-> g₂₁₃₄ <-> g₄₃₂₁ <-> ... |
+
+`rsym_tensor` i typically used when assuming full real orbtial symmetry of
+integrals such as 2-fold symmetry of h_pq and 8-fold symmetry of g_pqrs.
+the `psym_tensor` is useful when doing coupled cluster theory, where symmetries
+within index pairs does not exist because the integrals are T1 transformed.
+
+Examples of symmetric tensors:
+
+```@repl 1
+rsym_tensor("g", 4, 3, 1, 2) * electron(1, 2, 3, 4)
+psym_tensor("g", 4, 3, 1, 2) * electron(1, 2, 3, 4)
+```
 
 ### Kronecker Deltas
 
@@ -100,63 +142,28 @@ d1 * d2 # Compacts delta expression since all are equal
 
 ### Summation Indices
 
-A term can represent a sum over all values of a specific (or many) MO-indices.
+A term can represent a sum over all values of a specific (or many) indices.
+A sum can be constructed using the `summation` function, or the unicode aliases
+`∑` or `Σ`.
 
 Example:
 
 ```@repl 1
-a = summation(E(1, 2), [1])
-b = ∑(E(1, 2), 1:2) # Unicode
+a = summation(E(1, 2) * electron(1, 2), [1])
+b = ∑(E(1, 2) * electron(1, 2), 1:2) # Unicode
 a * b # Automatically renames summation indices to not collide
-```
-
-# Orbital Constraints
-
-An important feature is the ability to tell a term whether an MO-index
-belongs to a particular subset of all orbitals, specifically whether it belongs
-to the occupied or virtual set.
-
-Example:
-
-```@repl 1
-occupied(1)
-virtual(2)
-```
-
-here the constraints are printed explicitly as that is all that exists in
-the term, but if the index shows up other places in the term, the indices
-are colored to indicate the constraints instead:
-
-```@repl 1
-a = E(1, 2) * virtual(1) * occupied(2)
-```
-
-Where occupied orbitals are colored green and virtual are colored blue.
-If you would rather not have colored prints
-(printing to file, no color support in terminal, preferance, ...)
-you can easily turn this off:
-
-```@repl 1
-SpinAdaptedSecondQuantization.disable_color()
-a
-SASQ.enable_color() # Can use acronym SASQ instead of full module name
-a
-```
-
-Constraints will transfer to other indices through Kronecker deltas
-and will produce a zero-term if they are unsatisfiable:
-
-```@repl 1
-a = δ(1, 2) * occupied(1) # Now q is also occupied
-b = δ(2, 3) * virtual(3)
-a * b # gives 0 as they cannot be occupied and virtual
 ```
 
 ## Hartree-Fock energy expression
 
+As a simple example of use of the package, here is how to derive the HF energy
+expression.
+
 ```@repl 1
-h = ∑(rsym_tensor("h", 1, 2) * E(1, 2), 1:2)
-g = simplify(∑(rsym_tensor("g", 1:4...) * e(1:4...), 1:4))
-H = h + g
-E_hf = simplify_heavy(act_on_ket(H, 0))
+h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+g = 1//2 * simplify(
+    ∑(psym_tensor("g", 1:4...) * e(1:4...) * electron(1:4...), 1:4)
+)
+H = h + g + real_tensor("h_nuc")
+E_hf = simplify_heavy(hf_expectation_value(H))
 ```

@@ -174,7 +174,7 @@ function scalar_type(::Expression{T}) where {T<:Number}
     T
 end
 
-export summation, ∑
+export summation, ∑, Σ
 
 function summation(e::Expression, sum_indices)
     Expression([summation(t, sum_indices) for t in e.terms])
@@ -182,6 +182,7 @@ end
 
 # Unicode alias
 ∑(e, s) = summation(e, s)
+Σ(e, s) = summation(e, s)
 
 function promote_scalar(::Type{T}, e::Expression) where {T<:Number}
     Expression([promote_scalar(T, t) for t in e.terms])
