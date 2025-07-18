@@ -120,7 +120,7 @@ as ``L_{pqrs} = 2 g_{pqrs} - g_{psrq}`` where a convencience function to
 produce the relevant transformer provided
 (see [`make_exchange_transformer`](@ref)).
 
-```@example look_for_tensor_replacements
+```@setup look_for_tensor_replacements
 using SpinAdaptedSecondQuantization
 h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
 g = 1//2 * simplify(
@@ -129,7 +129,7 @@ g = 1//2 * simplify(
 H = h + g + real_tensor("h_nuc")
 ```
 
-```@example look_for_tensor_replacements
+```@repl look_for_tensor_replacements
 E_HF = simplify_heavy(hf_expectation_value(H))
 look_for_tensor_replacements(E_HF, make_exchange_transformer("g", "L"))
 ```
