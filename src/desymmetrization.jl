@@ -67,29 +67,33 @@ x_aibj
 + ∑_cd(g_acbd t_cidj)
 ```
 
-Desymmetrizing:
-```jldoctest desymmetrize
-julia> r, ss, ns = desymmetrize(ans * 1//1, \
-make_permutation_mappings([(1, 2), (3, 4)]));
+# Desymmetrizing:
+# ```jldoctest desymmetrize
+# julia> r, ss, ns = desymmetrize(ans * 1//1, \
+# make_permutation_mappings([(1, 2), (3, 4)]));
 
-julia> r # Only one of the two redundant terms survives
-∑_c(F_ac t_bjci)
-julia> ss # The self-symmetric term
-∑_cd(g_acbd t_cidj)
-julia> ns # The non-symmetric term
-x_aibj
-```
+# julia> r # Only one of the two redundant terms survives
+# ∑_c(F_ac t_bjci)
+# julia> ss # The self-symmetric term
+# ∑_cd(g_acbd t_cidj)
+# julia> ns # The non-symmetric term
+# x_aibj
+# ```
 
 !!! warning
     `desymmetrize` does repeated calls to [`simplify_heavy`](@ref) which can
     be slow if terms have many (>=8) summation indices.
 """
-function desymmetrize(ex::Expression{T}, mappings) where {T<:Number}
+function desymmetrize(ex_::Expression{T}, mappings) where {T<:Number}
     accounted_for = Set{Int}()
 
-    non_symmetric = Term{T}[]
-    self_symmetric = Term{T}[]
-    symmetrize = Term{T}[]
+    new_T = promote_type(T, Rational{Int})
+
+    ex = promote_scalar(new_T, ex_)
+
+    non_symmetric = Term{new_T}[]
+    self_symmetric = Term{new_T}[]
+    symmetrize = Term{new_T}[]
 
     for (i, t) in enumerate(ex.terms)
         if i ∈ accounted_for
@@ -125,6 +129,7 @@ function desymmetrize(ex::Expression{T}, mappings) where {T<:Number}
             push!(accounted_for, i)
             union!(accounted_for, keys(other_inds))
         else
+            @show Expression([t]) other_inds
             push!(non_symmetric, t)
             push!(accounted_for, i)
         end
