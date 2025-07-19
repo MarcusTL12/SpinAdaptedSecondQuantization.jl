@@ -423,3 +423,135 @@ as
 (\Omega_{\text{ns}})_{ij}^{ab} +
 P_{ij}^{ab} (\Omega_{\text{s}})_{ij}^{ab}
 ``
+
+## Jacobian Transformation
+
+The coupled cluster Jacobian is a central quantity for computing various
+properties of the coupled cluster wave function, such as density matrices and
+excitation energies. The Jacobian matrix ``A_{\mu\nu}`` is given by
+
+``
+A_{\mu\nu} = \langle\mu| e^{-T} [H, \tau_{\nu}] e^T |\text{HF}\rangle
+``
+
+though one is rarely interested in the full matrix, but rather to compute
+eigenvalues and solve linear systems. The matrix is usually huge and very
+structures (though not very sparse), so it is way more efficient to code a
+direct linear transformation. The Jacobian is not symmetric so one needs to
+derive both the right and left transformations given by
+
+``
+\rho_\mu = \sum_{\nu}{A_{\mu\nu} c_\nu}
+``
+
+``
+\sigma_\nu = \sum_{\mu}{b_\mu A_{\mu\nu}}
+``
+
+We can quite nicely derive expressions for both of these transformations using
+the code.
+
+### Right transformation
+
+The transformed vector ``\rho_\mu`` can be split into singles and doubles
+block like
+
+``
+\rho_{ai} = \sum_{\nu}{A_{ai,\nu} c_\nu}
+``
+
+``
+\rho_{aibj} = \sum_{\nu}{A_{aibj,\nu} c_\nu}
+``
+
+#### Singles block
+
+We then split the sum into blocks
+
+``
+\rho_{ai} = \sum_{\nu}{A_{ai,\nu} c_\nu}
+=
+\sum_{ck}{A_{ai,ck} c_{ck}} +
+\sum_{ck \geq dl}{A_{ai,ckdl} c_{ckdl}}
+``
+
+The singles sum is okay, but the triangular doubles sum ``ck \geq dl`` is not
+something we can express using the sums in the code, so we have to square it up.
+
+``
+\sum_{ck \geq dl}{A_{ai,ckdl} c_{ckdl}}
+=
+\frac12 \sum_{ckdl}{(1 + \delta_{ck,dl}) A_{ai,ckdl} c_{ckdl}}
+=
+\frac12 \sum_{ckdl}{A_{ai,ckdl} \tilde c_{ckdl}}
+``
+
+Here we have to add a factor of 2 on the diagonal of ``c_{ckdl}`` by defining
+the adjusted tensor
+
+``\tilde c_{ckdl} = (1 + \delta_{ck,dl}) c_{ckdl}``
+
+though we will not be using the ``\tilde c`` name in the derivation, but rather
+remembering that we have to numerically scale the diagonal of ``c_{ckdl}`` by
+2 when coding the final expression.
+
+We start by computing the projection
+
+``
+\sum_{ck}{e^{-T} [H, E_{ck}] e^T |\text{HF}\rangle c_{ck}}
+``
+
+```@repl 1
+simplify(commutator(H, E(5, 6) * occupied(6) * virtual(5)));
+simplify(bch(ans, T2, 4));
+simplify(act_on_ket(ans, 2));
+proj_ck = simplify(∑(ans * real_tensor("c", 5, 6), [5, 6]));
+```
+
+This projection will also be useful when doing the doubles block.
+To get the singles block out we project on a biorthogonal singles bra
+
+```@repl 1
+ρ_ai_singles = project_biorthogonal(proj_ck, E(1, 2));
+ρ_ai_singles = look_for_tensor_replacements(ρ_ai_singles,
+    make_exchange_transformer("t", "u"));
+ρ_ai_singles = look_for_tensor_replacements(ρ_ai_singles,
+    make_exchange_transformer("g", "L"));
+ρ_ai_singles
+```
+
+where we get a very consise expression for the singles-singles transformation.
+Next we compute the projection
+
+``
+\frac12 \sum_{ckdl}{e^{-T} [H, E_{ck} E_{dl}] e^T |\text{HF}\rangle c_{ckdl}}
+``
+
+```@repl 1
+simplify(commutator(H, E(5, 6) * E(7, 8) * occupied(6, 8) * virtual(5, 7)));
+simplify(bch(ans, T2, 4));
+simplify(act_on_ket(ans, 2));
+proj_ckdl = simplify(1//2 * ∑(ans * psym_tensor("c", 5:8...), 5:8));
+```
+
+This will also be useful for the doubles block later. Now we project on the
+singles bra to get
+
+```@repl 1
+ρ_ai_doubles = project_biorthogonal(proj_ckdl, E(1, 2));
+ρ_ai_doubles = look_for_tensor_replacements(ρ_ai_doubles,
+    make_exchange_transformer("g", "L"));
+ρ_ai_doubles = look_for_tensor_replacements(ρ_ai_doubles,
+    make_exchange_transformer("c", "cu"));
+ρ_ai_doubles
+```
+
+Here we introduced another tensor pattern
+
+``cu_{aibj} = 2 c_{aibj} - c_{ajbi}``
+
+We can now combine the two parts of the ``\rho_{ai}`` block
+
+```@repl 1
+ρ_ai = ρ_ai_singles + ρ_ai_doubles
+```
