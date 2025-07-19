@@ -3,12 +3,13 @@ using SpinAdaptedSecondQuantization
 
 makedocs(
     sitename="SpinAdaptedSecondQuantization.jl",
-    authors="Marcus T. Lexander, Tor S. Haugland, Alexander C. Paul",
+    authors="Marcus T. Lexander, Tor S. Haugland, Federico Rossi, Alexander C. Paul",
     format=Documenter.HTML(),
     modules=[SpinAdaptedSecondQuantization],
     pages=[
         "Home" => "index.md",
         "CCSD example" => "ccsd_example.md",
+        "QED-CCSD example" => "qed_ccsd_example.md",
         "Reference/API" => "reference.md",
         "Internals" => "internals.md",
     ]

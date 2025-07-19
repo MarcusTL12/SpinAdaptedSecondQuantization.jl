@@ -10,6 +10,13 @@ function project_biorthogonal_operator(
     ]
 end
 
+function project_biorthogonal_operator(
+    o::BosonOperator,
+    template::BosonOperator)
+
+    [o.dag == template.dag]
+end
+
 """
     project_biorthogonal(ex::Expression, template::Expression)
 
@@ -56,6 +63,12 @@ function project_biorthogonal(
             t = make_space_for_indices(copy(t), out_inds)
             for (o, o_template) in zip(t.operators, template.operators)
                 new_deltas = project_biorthogonal_operator(o, o_template)
+
+                if any(==(0), new_deltas)
+                    break
+                end
+
+                filter!(!=(1), new_deltas)
 
                 append!(t.deltas, new_deltas)
             end
