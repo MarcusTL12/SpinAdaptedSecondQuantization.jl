@@ -868,7 +868,7 @@ D_mu_ref = simplify_heavy(ans)
 
 !!! note
     Since the two terms in this expression have external indices with different
-    constraints, it can be a bit confusing to look at. since these will be
+    constraints, it can be a bit confusing to look at. Since these will be
     coded as separate blocks of the density matrix, it is usually advisable
     to extract the various blocks into their own expressions
 

@@ -1,12 +1,93 @@
 export print_julia_function
 
 """
-print_julia_function(name, ex, symbol, indices, translation,
+print_julia_function(name, ex::Expression, [symbol="X"];
                     [tensor_translation], [explicit_tensor_blocks])
 
+Returns String with a runnable julia function to evaluate the given expression
+`ex`. `name` specifies the name of the function, and the optional parameter
+`symbol` specifies the name of the accumulator variable used inside the
+function. If not specified it will use the generic name `X`.
+
+The optional keyword argument `tensor_translation` is a dictionary for replacing
+the name of certain tensors.
+
+The optional keyword argument `explicit_tensor_blocks` is a vector of names of
+tensors you want subblocks to be taken as separate inputs to the function
+rather than using `@view` to get subblocks.
+
+The returned function uses the
+[`TensorOperations.jl`](https://github.com/Jutho/TensorOperations.jl)
+package for tensor contractions.
+
+# Example
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> L = psym_tensor("L", 1, 3, 4, 5);
+
+julia> R = psym_tensor("R", 2, 3, 4, 5);
+
+julia> ex = ∑(L * R * occupied(3, 5) * virtual(1, 2, 4), 3:5)
+∑_icj(L_aicj R_bicj)
+julia> print_julia_function("density", ex) |> print
+function density(no, nv, L, R)
+    nao = no + nv
+    o = 1:no
+    v = no+1:nao
+    
+    X = zeros(nv, nv)
+    L_vovo = @view L[v,o,v,o]
+    R_vovo = @view R[v,o,v,o]
+    @tensoropt (a=>10χ,b=>10χ,c=>10χ,i=>χ,j=>χ) begin
+        X[a,b] += L_vovo[a,i,c,j]*R_vovo[b,i,c,j]
+    end
+    X
+end
+julia> print_julia_function("density", ex; \
+explicit_tensor_blocks=["L", "R"]) |> print
+function density(no, nv, L_vovo, R_vovo)
+    nao = no + nv
+    o = 1:no
+    v = no+1:nao
+    
+    X = zeros(nv, nv)
+    @tensoropt (a=>10χ,b=>10χ,c=>10χ,i=>χ,j=>χ) begin
+        X[a,b] += L_vovo[a,i,c,j]*R_vovo[b,i,c,j]
+    end
+    X
+end
+```
+
+!!! note
+    This function currently only supports expressions input and output tensors
+    are indexed by occupied, virtual or general molecular orbitals.
+
+    There is also not suppot for expressions containing Kronecker deltas, so
+    these would require a bit of pre-processing.
 """
-function print_julia_function(name, ex::Expression, symbol, indices, translation,
+function print_julia_function(name, ex::Expression, symbol="X";
     tensor_translation=Dict(), explicit_tensor_blocks=String[])
+
+    indices = get_external_indices(ex[1])
+    external_constraints =
+        Constraints([p => ex[1].constraints(p) for p in indices])
+
+    for i in 2:length(ex.terms)
+        if get_external_indices(ex[i]) != indices
+            throw("Different external indices on different terms in same\
+ expression is not supported for code generation!")
+        end
+
+        for p in indices
+            if ex[i].constraints(p) != external_constraints(p)
+                throw("Different index constraints on external indices on\
+ different terms in same expression is not supported for code generation!")
+            end
+        end
+    end
+
     function get_tensor_name(t, n)
         get(tensor_translation, (t, n), get(tensor_translation, t, t))
     end
@@ -34,7 +115,7 @@ function print_julia_function(name, ex::Expression, symbol, indices, translation
         GeneralOrbital => ":",
     ])
 
-    out_dims = [space_dim_dict[translation(p)[1]] for p in indices]
+    out_dims = [space_dim_dict[external_constraints(p)] for p in indices]
 
     func_body = IOBuffer()
 
@@ -65,10 +146,18 @@ $symbol = """)
 
     tensor_blocks = Dict()
 
+    index_groups = Dict()
+
+    for (p, s) in external_constraints
+        push!(get!(index_groups, s, Int[]), p)
+    end
+
+    translation = translate(index_groups...)
+
     index_names = String[]
     io = IOBuffer()
     for p in indices
-        print_mo_index(io, ex[1].constraints, translation, p)
+        print_mo_index(io, external_constraints, translation, p)
         push!(index_names, String(take!(io)))
     end
 
@@ -84,7 +173,7 @@ $symbol = """)
             throw("Do not yet support generation of code with kronecker deltas!")
         end
 
-        local_trans = update_index_translation(t, translation)
+        local_trans = update_index_translation(t, IndexTranslation())
 
         term_indices = get_all_indices(t)
 
