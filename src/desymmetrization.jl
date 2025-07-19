@@ -67,18 +67,18 @@ x_aibj
 + ∑_cd(g_acbd t_cidj)
 ```
 
-# Desymmetrizing:
-# ```jldoctest desymmetrize
-# julia> r, ss, ns = desymmetrize(ans * 1//1, \
-# make_permutation_mappings([(1, 2), (3, 4)]));
+Desymmetrizing:
+```jldoctest desymmetrize
+julia> r, ss, ns = desymmetrize(ans * 1//1, \
+make_permutation_mappings([(1, 2), (3, 4)]));
 
-# julia> r # Only one of the two redundant terms survives
-# ∑_c(F_ac t_bjci)
-# julia> ss # The self-symmetric term
-# ∑_cd(g_acbd t_cidj)
-# julia> ns # The non-symmetric term
-# x_aibj
-# ```
+julia> r # Only one of the two redundant terms survives
+∑_c(F_ac t_bjci)
+julia> ss # The self-symmetric term
+∑_cd(g_acbd t_cidj)
+julia> ns # The non-symmetric term
+x_aibj
+```
 
 !!! warning
     `desymmetrize` does repeated calls to [`simplify_heavy`](@ref) which can
@@ -129,7 +129,6 @@ function desymmetrize(ex_::Expression{T}, mappings) where {T<:Number}
             push!(accounted_for, i)
             union!(accounted_for, keys(other_inds))
         else
-            @show Expression([t]) other_inds
             push!(non_symmetric, t)
             push!(accounted_for, i)
         end
