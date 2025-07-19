@@ -322,6 +322,21 @@ symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]))
 Here we supplied the "template" ket `E(1, 2) * E(3, 4)` which is that we want
 to project on the biorthogonal bra of.
 
+!!! note
+    Usually one wants to evaluate projections using the *biorthonormal* bra
+    which for doubles is defined as
+
+    ``
+    \tilde{\left\langle_{ij}^{ab}\right|} =
+    \frac{1}{1 + \delta_{ai,bj}}
+    \bar{\left\langle_{ij}^{ab}\right|}
+    ``
+
+    which removes the factor of 2 on the diagonal elements where `ai = bj`.
+    This is usually done by numerically scaling the diagonal of the output by
+    0.5 as the expressions look nicer using the biorthogonal bra. Note that for
+    higher order excitations there are more "diagonals" to think about.
+
 #### Singles Equations
 
 We can use the [`project_biorthogonal`](@ref) function to project `Hbar_ket`
@@ -555,3 +570,58 @@ We can now combine the two parts of the ``\rho_{ai}`` block
 ```@repl 1
 ρ_ai = ρ_ai_singles + ρ_ai_doubles
 ```
+
+#### Doubles block
+
+We again split the sum into singles and doubles, squareup and include the
+factor of 2 on the diagonal
+
+``
+\rho_{aibj} = \sum_{\nu}{A_{aibj,\nu} c_\nu}
+=
+\sum_{ck}{A_{aibj,ck} c_{ck}} +
+\frac12 \sum_{ckdl}{A_{aibj,ckdl} \tilde c_{ckdl}}
+``
+
+Here we can reuse the right projection from above, projecting on the
+biorthogonal doubles bra instead.
+
+First the singles sum
+
+```@repl 1
+project_biorthogonal(proj_ck, E(1, 2) * E(3, 4));
+symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));
+simplify_heavy(ans);
+look_for_tensor_replacements(ans, make_exchange_transformer("t", "u"));
+look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
+ρ_aibj_singles_r, ρ_aibj_singles_ss, ρ_aibj_singles_ns =
+    desymmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));
+ρ_aibj_singles_r
+ρ_aibj_singles_ss
+ρ_aibj_singles_ns
+```
+
+Then the doubles sum
+
+
+```@repl 1
+project_biorthogonal(proj_ckdl, E(1, 2) * E(3, 4));
+symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));
+simplify_heavy(ans);
+look_for_tensor_replacements(ans, make_exchange_transformer("t", "u"));
+look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
+ρ_aibj_doubles_r, ρ_aibj_doubles_ss, ρ_aibj_doubles_ns =
+    desymmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));
+ρ_aibj_doubles_r
+ρ_aibj_doubles_ss
+ρ_aibj_doubles_ns
+```
+
+Combining singles and doubles
+
+```@repl 1
+ρ_aibj_r = ρ_aibj_singles_r + ρ_aibj_doubles_r
+ρ_aibj_ss = ρ_aibj_doubles_ss
+```
+
+which concludes the jacobian right transformation.
