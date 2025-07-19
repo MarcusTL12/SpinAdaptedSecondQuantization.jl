@@ -142,7 +142,6 @@ function printscalar(io::IO, s::Rational{T}) where {T}
     end
 end
 
-# TODO: Make this more subspace agnostic
 function update_index_translation(t::Term, translation::IndexTranslation)
     translation = copy(translation)
 
@@ -157,26 +156,24 @@ function update_index_translation(t::Term, translation::IndexTranslation)
         end
     end
 
-    if do_index_translation
-        seen_inds = Dict{Int,Set{Int}}()
+    seen_inds = Dict{Int,Set{Int}}()
 
-        for (p, (S, q)) in translation
-            if p ∈ ex_inds
-                push!(get!(seen_inds, S, Set()), q)
-            end
+    for (p, (S, q)) in translation
+        if p ∈ ex_inds
+            push!(get!(seen_inds, S, Set()), q)
         end
+    end
 
-        for p in ex_inds
-            if !haskey(translation, p)
-                S = t.constraints(p)
-                translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
-            end
-        end
-
-        for p in t.sum_indices
-            S = t.constraints(p)
+    for p in ex_inds
+        if !haskey(translation, p)
+            S = do_index_translation ? t.constraints(p) : GeneralIndex
             translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
         end
+    end
+
+    for p in t.sum_indices
+        S = do_index_translation ? t.constraints(p) : GeneralIndex
+        translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
     end
 
     translation
@@ -248,19 +245,25 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         print(io, ')')
     end
 
-    if !do_index_translation
+    constraints_to_print = if do_index_translation
+        setdiff(keys(t.constraints), get_non_constraint_indices(t))
+    else
+        collect(keys(t.constraints))
+    end
+
+    if !isempty(constraints_to_print)
         printsep()
 
         print(io, "C(")
 
         isfirst = true
 
-        for (i, s) in t.constraints
+        for i in constraints_to_print
             if !isfirst
                 print(io, ", ")
             end
             print_mo_index(io, t.constraints, translation, i)
-            print(io, "∈", getshortname(s))
+            print(io, "∈", getshortname(t.constraints(i)))
             isfirst = false
         end
 
