@@ -750,7 +750,7 @@ export act_eT_on_bra
 computes
 
 ``
-\\langle\\text{HF}| \\text{braop} e^T
+\\langle\\text{HF}| \\text{braop}\\ e^T
 ``
 
 This can be useful for evaluating certain coupled cluster expressions from

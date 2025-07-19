@@ -58,7 +58,28 @@ a normal RHF ket.
 
 Example:
 
-``E_{p q} |HF⟩ = (2 δ_{p q} C(p∈O,q∈O) + E_{p q} C(p∈V,q∈O)) |HF⟩``
+``
+E_{p q} |\\text{HF}⟩ =
+\\left(2 δ_{p q} C(p∈O,q∈O) + E_{p q} C(p∈V,q∈O)\\right) |\\text{HF}⟩
+``
+
+Which we can also do in code:
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> E(1, 2) * electron(1, 2)
+E_pq
+julia> ket = act_on_ket(ans)
+E_ai
++ 2 δ_ij
+julia> disable_external_index_translation()
+
+julia> ket
+E_₁₂ C(₁∈v, ₂∈o)
++ 2 δ_₁₂ C(₁∈o, ₂∈o)
+julia> enable_external_index_translation()
+```
 """
 function act_on_ket(::Operator)
     throw("act_on_ket(::$O) not implemented!")
