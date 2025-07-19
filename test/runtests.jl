@@ -1,7 +1,6 @@
 using Test
 
 using SpinAdaptedSecondQuantization
-SASQ.disable_color()
 
 @testset "index spaces" begin
     @test OccupiedOrbital ⊆ GeneralOrbital

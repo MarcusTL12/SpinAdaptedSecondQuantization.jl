@@ -11,9 +11,6 @@ function print_code(t::Term, symbol::String, translation)
     external_int = get_external_indices(t)
     external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
 
-    temp_color = index_color
-    disable_color()
-
     # Make einsum_str
     einsum_str = "\""
     for a in t.tensors
@@ -21,10 +18,6 @@ function print_code(t::Term, symbol::String, translation)
         einsum_str *= ","
     end
     einsum_str = einsum_str[begin:end-1] * "->" * external * "\""
-
-    if (temp_color)
-        enable_color()
-    end
 
     # Make tensor_str
     tensor_str = ""
@@ -52,9 +45,6 @@ function print_eT_code(t :: Term, symbol, translation, routine_name)
 
     external_int = get_external_indices(t)
     external = sprint(SASQ.print_mo_index, t.constraints, translation, external_int...)
-
-    temp_color = index_color
-    disable_color()
 
     # Make einsum_str
     einsum_str = ""
@@ -98,10 +88,6 @@ function print_eT_code(t :: Term, symbol, translation, routine_name)
     symbol_str = symbol_str[3:end]
 
     symbol_str = replace(symbol_str, "t_vovovo" => "t3", "t_vovo" => "t2")
-
-    if (temp_color)
-        enable_color()
-    end
 
     """print(generate_eT_code_from_einsum(
         routine_name="$routine_name",
@@ -174,9 +160,6 @@ function print_code_einsum_withextract(t::Term, symbol::String, translation, fix
         new_ext *= fix_k ? "" : "k"
     end
 
-    temp_color = index_color
-    disable_color()
-
     # Make einsum_str and find not-summed tensors
     einsum_str = "\""
     notsum_str = ""
@@ -208,10 +191,6 @@ function print_code_einsum_withextract(t::Term, symbol::String, translation, fix
 
     if print_einsum
         einsum_str = einsum_str[begin:end-1] * "->" * new_ext * "\""
-    end
-
-    if (temp_color)
-        enable_color()
     end
 
     # Make tensor_str
