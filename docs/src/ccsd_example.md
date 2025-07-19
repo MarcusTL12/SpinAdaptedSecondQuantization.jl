@@ -750,3 +750,250 @@ Combined:
 ```
 
 Which concludes the left transformation.
+
+## One-electron density matrices
+
+One frequently wants the one-electron density matrix to get properties like
+dipole, quadrupole, magnetic moments, etc. both for a state and
+transition moments. In coupled cluster theory we have asymmetric density
+matrices which we can express as
+
+``D_{pq} = \langle L| E_{pq} |R\rangle``
+
+where the left and right states are given in general by
+
+``
+\langle L|
+=
+\left(
+    L_0 \langle\text{HF}| +
+    \sum_{\mu}{L_\mu \langle\mu|}
+\right) e^{-T}
+``
+
+``
+|R\rangle
+=
+e^T \left(
+    |\text{HF}\rangle R_0
+    +
+    \sum_{\nu}{|\nu\rangle R_\nu}
+\right)
+``
+
+The left and right coefficient vectors can represent either ground excited
+states giving us the possibility to derive general expressions for ground
+and excited state as well as transition densities.
+
+Firstly we will need the similarity transformed operator for all parts
+
+```@repl 1
+bch_Epq = bch(E(1, 2) * electron(1, 2), T2, 4)
+```
+
+### Ref-Ref contributions
+
+The terms arising from the ``L_0`` and ``R_0`` (reference-reference)
+are quite straight forward to derive:
+
+``
+D_{pq}^\text{ref-ref}
+=
+L_0 \langle\text{HF}| e^{-T} E_{pq} e^T |\text{HF}\rangle R_0
+``
+
+```@repl 1
+real_tensor("L0") * real_tensor("R0") * bch_Epq;
+hf_expectation_value(ans)
+```
+
+where we see that only the HF density survives.
+
+!!! note
+    Since we are not including T1 in the cluster operator we will initially
+    miss many terms in the density coming from them. This is fine if the
+    density is contracted with integrals that are T1 transformed, or one can
+    include the T1 terms into the density by a similarity transform numerically
+    which makes the expressions a bit nicer.
+
+### ``\mu``-Ref contributions
+
+The terms arising from ``L_\mu`` and ``R_0`` are the only additional terms
+needed for the ground state density as ``R_\nu = 0`` for the ground state.
+We will omit the ``R_0`` in the derivation to reduce clutter.
+We can split the term into singles and doubles parts
+
+``
+D_{pq}^{\mu\text{-ref}}
+=
+\sum_{\mu}{L_\mu \langle\mu|} e^{-T} E_{pq} e^T |\text{HF}\rangle
+\\=
+\sum_{ai}{L_{ai} \tilde{\langle_i^a|}} e^{-T} E_{pq} e^T |\text{HF}\rangle +
+\sum_{ai \geq bj}{L_{aibj} \tilde{\langle_{ij}^{ab}|}}
+e^{-T} E_{pq} e^T |\text{HF}\rangle
+``
+
+in both cases we want the projection
+
+``e^{-T} E_{pq} e^T |\text{HF}\rangle``
+
+```@repl 1
+ref_ket = simplify_heavy(act_on_ket(bch_Epq, 2));
+```
+
+Singles:
+
+```@repl 1
+∑(project_biorthogonal(ref_ket, E(3, 4)) * real_tensor("L", 3, 4), 3:4);
+simplify(ans);
+look_for_tensor_replacements(ans, make_exchange_transformer("t", "u"))
+```
+
+For doubles we have the same cancellation as for the Jacobian left
+transformation
+
+``
+\sum_{ai \geq bj}{L_{aibj} \tilde{\langle_{ij}^{ab}|}}
+e^{-T} E_{pq} e^T |\text{HF}\rangle
+=
+\frac12 \sum_{aibj}{L_{aibj} \bar{\langle_{ij}^{ab}|}}
+e^{-T} E_{pq} e^T |\text{HF}\rangle
+``
+
+```@repl 1
+project_biorthogonal(ref_ket, E(3, 4) * E(5, 6));
+∑(ans * psym_tensor("L", 3:6...), 3:6);
+D_mu_ref = simplify_heavy(ans)
+```
+
+!!! note
+    Since the two terms in this expression have external indices with different
+    constraints, it can be a bit confusing to look at. since these will be
+    coded as separate blocks of the density matrix, it is usually advisable
+    to extract the various blocks into their own expressions
+
+    ```@repl 1
+    D_ij = D_mu_ref * occupied(1, 2)
+    D_ab = D_mu_ref * virtual(1, 2)
+    ```
+
+    Alternatively one can disable translation of external indices to see
+    the actual indices and constraints
+    ```@repl 1
+    disable_external_index_translation()
+    D_mu_ref # Here we see index ₁ and ₂ as we specified in E(1, 2)
+    enable_external_index_translation()
+    ```
+
+### Ref-``\nu`` contributions
+
+``
+D_{pq}^{\text{ref-}\nu}
+=
+L_0 \sum_{\nu}{\langle\text{HF}| e^{-T} E_{pq} e^T |\nu\rangle R_\nu}
+\\=
+L_0 \sum_{ai}{\langle\text{HF}| e^{-T} E_{pq} e^T |_i^a\rangle R_{ai}} +
+L_0 \sum_{ai \geq bj}{
+    \langle\text{HF}| e^{-T} E_{pq} e^T |_{ij}^{ab}\rangle R_{aibj}
+}
+``
+
+Singles:
+
+```@repl 1
+∑(bch_Epq * E(3, 4) * occupied(4) * virtual(3) * real_tensor("R", 3, 4), 3:4);
+singles_ket = simplify(act_on_ket(ans, 2));
+simplify_heavy(act_on_bra(singles_ket))
+```
+
+For doubles we scale the ``R_{aibj}`` by 2 on the diagonal
+
+``
+\sum_{ai \geq bj}{
+    \langle\text{HF}| e^{-T} E_{pq} e^T |_{ij}^{ab}\rangle R_{aibj}
+}
+=
+\frac12 \sum_{aibj}{
+    (1 + \delta_{ai,bj})
+    \langle\text{HF}| e^{-T} E_{pq} e^T |_{ij}^{ab}\rangle R_{aibj}
+}
+=
+\frac12 \sum_{aibj}{
+    \langle\text{HF}| e^{-T} E_{pq} e^T |_{ij}^{ab}\rangle \tilde R_{aibj}
+}
+``
+
+```@repl 1
+bch_Epq * E(3, 4) * E(5, 6) * occupied(4, 6) * virtual(3, 5);
+simplify(1//2 * ∑(ans * psym_tensor("R", 3:6...), 3:6));
+doubles_ket = simplify(act_on_ket(ans, 2));
+simplify_heavy(act_on_bra(doubles_ket))
+```
+
+### ``\mu``-``\nu`` contributions
+
+``
+D_{pq}^{\mu\text{-}\nu}
+=
+\sum_{\mu\nu}{
+    L_\mu \langle\mu| e^{-T} E_{pq} e^T |\nu\rangle R_\nu
+}
+\\=
+\sum_{aick}{
+    L_{ai} \tilde{\langle_i^a|} e^{-T} E_{pq} e^T |_k^c\rangle R_{ck}
+} \\+
+\sum_{aibjck}{
+    L_{aibj} \tilde{\langle_{ij}^{ab}|} e^{-T} E_{pq} e^T |_k^c\rangle R_{ck}
+} \\+
+\sum_{aickdl}{
+    L_{ai} \tilde{\langle_i^a|} e^{-T} E_{pq} e^T |_{kl}^{cd}\rangle R_{ckdl}
+} \\+
+\sum_{aibjckdl}{
+    L_{aibj} \tilde{\langle_{ij}^{ab}|} e^{-T} E_{pq} e^T
+    |_{kl}^{cd}\rangle R_{ckdl}
+}
+``
+
+Singles-Singles:
+
+```@repl 1
+project_biorthogonal(singles_ket, E(3, 4));
+simplify(∑(ans * real_tensor("L", 3, 4), 3:4));
+D_ss = ans
+```
+
+Doubles-Singles:
+
+```@repl 1
+project_biorthogonal(singles_ket, E(3, 4) * E(5, 6));
+simplify_heavy(∑(ans * psym_tensor("L", 3:6...), 3:6));
+look_for_tensor_replacements(ans, make_exchange_transformer("t", "u"));
+D_ds = ans
+```
+
+Singles-Doubles:
+
+```@repl 1
+project_biorthogonal(doubles_ket, E(3, 4));
+simplify(∑(ans * real_tensor("L", 3, 4), 3:4));
+look_for_tensor_replacements(ans, make_exchange_transformer("R", "Ru"));
+D_sd = ans
+```
+
+Doubles-Doubles:
+
+```@repl 1
+project_biorthogonal(doubles_ket, E(3, 4) * E(5, 6));
+simplify_heavy(∑(ans * psym_tensor("L", 3:6...), 3:6));
+D_dd = ans
+```
+
+Combining and separating into blocks:
+
+```@repl 1
+D = D_ss + D_sd + D_ds + D_dd
+D_ij = D * occupied(1, 2)
+D_ia = D * occupied(1) * virtual(2)
+D_ai = D * occupied(2) * virtual(1)
+D_ab = D * virtual(1, 2)
+```
