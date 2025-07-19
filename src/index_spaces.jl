@@ -213,10 +213,10 @@ function print_mo_index(io::IO, constraints::Constraints,
     end
 end
 
-do_index_translation::Bool = true
+translate_external::Bool = true
+translate_internal::Bool = true
 
-export disable_color, set_color,
-    enable_index_translation, disable_index_translation
+export set_color
 
 """
     set_color(s, color)
@@ -234,6 +234,8 @@ function set_color(s::Int, color)
     nothing
 end
 
+export disable_color
+
 """
     disable_color(s)
 
@@ -244,32 +246,110 @@ function disable_color(s::Int)
     nothing
 end
 
+export enable_external_index_translation
+
 """
-    enable_index_translation()
+    enable_external_index_translation()
 
-Enables the translation of summation indices over occupied and virtual to be
-printed as ijkl... and abcd... respectively instead of pqrs...
+Enables external indices to be printed with names according to their
+constraints.
 
-By default translated indices lose their subspace coloring to reduce redundant
-information (unless the index is in an even stricter subspace which requires
-coloring nevertheless).
+!!! warning
+    This can cause some confusion when different terms in the same
+    expression contains different index constraints, as this will cause
+    the same index to be printed with different names.
 
-This is enabled by default.
+    ```jldoctest
+    julia> using SpinAdaptedSecondQuantization
+
+    julia> ex = E(1, 2) * occupied(1, 2) + E(1, 2) * virtual(1, 2)
+    E_ab
+    + E_ij
+    julia> disable_external_index_translation()
+
+    julia> ex # Now it is clearer that they are the same indices
+    E_₁₂ C(₁∈v, ₂∈v)
+    + E_₁₂ C(₁∈o, ₂∈o)
+    julia> enable_external_index_translation()
+
+    julia> ex # back to default behavour
+    E_ab
+    + E_ij
+    ```
+
+Enabled by default. Disabled using [`disable_external_index_translation`](@ref).
 """
-function enable_index_translation()
-    global do_index_translation = true
+function enable_external_index_translation()
+    global translate_external = true
     nothing
 end
 
-"""
-    disables_index_translation()
+export enable_internal_index_translation
 
-Disables the translation of summation indices over occupied and virtual to be
-printed as ijkl... and abcd... respectively instead of pqrs...
-
-See [`enable_index_translation`](@ref)
 """
-function disable_index_translation()
-    global do_index_translation = false
+    enable_internal_index_translation()
+
+Enables internal indices to be printed with names according to their
+constraints.
+
+# Example
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> ex = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
+∑_pq(h_pq E_pq)
+julia> disable_internal_index_translation()
+
+julia> ex
+∑_₁₂(h_₁₂ E_₁₂) C(₁∈g, ₂∈g)
+julia> ex *= E(1, 2) * occupied(2) * virtual(1) # Indices shifted up
+∑_₃₄(h_₃₄ E_₃₄ E_ai) C(₃∈g, ₄∈g)
+julia> enable_internal_index_translation()
+
+julia> ex # Shift in indices is invisible when translated
+∑_pq(h_pq E_pq E_ai)
+```
+
+Enabled by default.
+"""
+function enable_internal_index_translation()
+    global translate_internal = true
+    nothing
+end
+
+export disable_external_index_translation
+
+"""
+    disable_external_index_translation()
+
+Disables external indices to be printed with names according to their
+constraints. This can be useful as a debugging tool when dealing with
+terms with different constraints on external indices in the same expression.
+
+See [`enable_external_index_translation`](@ref) for example.
+
+Enabled by default. Re-enable using [`enable_external_index_translation`](@ref)
+"""
+function disable_external_index_translation()
+    global translate_external = false
+    nothing
+end
+
+export disable_internal_index_translation
+
+"""
+    disable_internal_index_translation()
+
+Disables internal indices to be printed with names according to their
+constraints. This can be useful as a debugging tool if summation indices are
+getting reordered/changed in weird ways.
+
+See [`enable_internal_index_translation`](@ref) for example.
+
+Enabled by default. Re-enable using [`enable_internal_index_translation`](@ref)
+"""
+function disable_internal_index_translation()
+    global translate_internal = false
     nothing
 end

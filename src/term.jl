@@ -166,14 +166,24 @@ function update_index_translation(t::Term, translation::IndexTranslation)
 
     for p in ex_inds
         if !haskey(translation, p)
-            S = do_index_translation ? t.constraints(p) : GeneralIndex
-            translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
+            if translate_external
+                S = t.constraints(p)
+                translation[p] = (S,
+                    find_first_free!(get!(seen_inds, S, Set())))
+            else
+                translation[p] = (GeneralIndex, p)
+            end
         end
     end
 
     for p in t.sum_indices
-        S = do_index_translation ? t.constraints(p) : GeneralIndex
-        translation[p] = (S, find_first_free!(get!(seen_inds, S, Set())))
+        if translate_internal
+            S = t.constraints(p)
+            translation[p] = (S,
+                find_first_free!(get!(seen_inds, S, Set())))
+        else
+            translation[p] = (GeneralIndex, p)
+        end
     end
 
     translation
@@ -245,10 +255,13 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         print(io, ')')
     end
 
-    constraints_to_print = if do_index_translation
-        setdiff(keys(t.constraints), get_non_constraint_indices(t))
-    else
-        collect(keys(t.constraints))
+    constraints_to_print = collect(keys(t.constraints))
+    if translate_internal
+        setdiff!(constraints_to_print, t.sum_indices)
+    end
+    if translate_external
+        setdiff!(constraints_to_print,
+            setdiff!(get_non_constraint_indices(t), t.sum_indices))
     end
 
     if !isempty(constraints_to_print)
