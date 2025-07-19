@@ -4,6 +4,9 @@ export print_eT_function_generator
 print_eT_function_generator(name, ex, symbol, indices, translation,
                     [wf_type], [tensor_translation], [noinput_tensors], [outperms])
 
+This function generates a script to be run with
+[another script](https://github.com/MarcusTL12/TensorOperation-eT-code)
+for making [eT](https://etprogram.org/) compatible fortran code.
 """
 function print_eT_function_generator(name, ex::Expression, symbol, indices,
     translation, wf_type="ccs", tensor_translation=Dict(), noinput_tensors=String[],
