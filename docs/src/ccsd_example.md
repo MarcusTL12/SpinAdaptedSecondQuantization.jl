@@ -696,3 +696,57 @@ look_for_tensor_replacements(ans, make_exchange_transformer("t", "u"));
 look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
 σ_ai_doubles = ans
 ```
+
+!!! note
+    Here we omited the call to `symmetrize` after `project_biorthogonal` because
+    simplify can reorder the indices in the sum and achieve the same. This
+    misses a factor of 2 which is compensated for by omiting the `1//2` in front
+    of the sum.
+
+And combined
+
+```@repl 1
+σ_ai = σ_ai_singles + σ_ai_doubles
+```
+
+#### Doubles block
+
+The same cancellations hold as above, so the procedure is almost identical, but
+using the other ket projection.
+
+Singles:
+
+```@repl 1
+simplify(
+    ∑(project_biorthogonal(proj_aibj, E(5, 6)) * real_tensor("b", 5, 6), 5:6)
+);
+look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
+σ_aibj_singles_r, σ_aibj_singles_ss, σ_aibj_singles_ns =
+    desymmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));
+σ_aibj_singles_r
+σ_aibj_singles_ss
+σ_aibj_singles_ns
+```
+
+Doubles:
+
+```@repl 1
+project_biorthogonal(proj_aibj, E(5, 6) * E(7, 8)) * psym_tensor("b", 5:8...);
+simplify_heavy(∑(ans, 5:8)); # No need to symmetrize because of sum
+look_for_tensor_replacements(ans, make_exchange_transformer("t", "u"));
+look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
+σ_aibj_doubles_r, σ_aibj_doubles_ss, σ_aibj_doubles_ns =
+    desymmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));
+σ_aibj_doubles_r
+σ_aibj_doubles_ss
+σ_aibj_doubles_ns
+```
+
+Combined:
+
+```@repl 1
+σ_aibj_r = σ_aibj_singles_r + σ_aibj_doubles_r
+σ_aibj_ss = σ_aibj_doubles_ss
+```
+
+Which concludes the left transformation.
