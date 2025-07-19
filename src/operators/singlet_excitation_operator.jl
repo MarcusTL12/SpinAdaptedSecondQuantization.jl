@@ -41,6 +41,17 @@ end
     E(p, q)
 
 Constructs an expression containing a single excitation operator.
+
+# Example
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> E(1, 2) * electron(1, 2)
+E_pq
+julia> E(1, 2) * E(3, 4) * occupied(2, 4) * virtual(1, 3)
+E_ai E_bj
+```
 """
 E(p, q) = Expression(SingletExcitationOperator(p, q))
 
@@ -48,6 +59,15 @@ E(p, q) = Expression(SingletExcitationOperator(p, q))
     e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)
 
 Alias for the two electron singlet excitation operator.
+
+# Example:
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> e(1, 2, 3, 4) * electron(1, 2, 3, 4)
+E_pq E_rs
+- δ_qr E_ps
 ```
 """
 e(p, q, r, s) = E(p, q) * E(r, s) - δ(r, q) * E(p, s)

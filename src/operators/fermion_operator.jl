@@ -38,8 +38,38 @@ function Base.:(==)(a::FermionOperator, b::FermionOperator)
     (a.p, a.spin, a.dag) == (b.p, b.spin, b.dag)
 end
 
-# Externally visible constructor
+"""
+    fermion(p, σ)
+
+Constructs a fermion annihilation operator for orbital `p` with spin `σ`.
+
+# Example
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> fermion(1, α) * electron(1)
+a⁻_pα
+```
+"""
 fermion(p, spin) = Expression(FermionOperator(p, spin, false))
+
+"""
+    fermiondag(p, σ)
+
+Constructs a fermion creation operator for orbital `p` with spin `σ`.
+
+# Example
+
+```jldoctest
+julia> using SpinAdaptedSecondQuantization
+
+julia> fermiondag(1, α) * electron(1)
+a†_pα
+julia> fermion(1, α)' * electron(1)
+a†_pα
+```
+"""
 fermiondag(p, spin) = Expression(FermionOperator(p, spin, true))
 
 function act_on_ket(op::FermionOperator)
