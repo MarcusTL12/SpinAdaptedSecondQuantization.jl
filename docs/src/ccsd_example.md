@@ -517,13 +517,14 @@ We start by computing the projection
 ``
 
 ```@repl 1
-simplify(commutator(H, E(5, 6) * occupied(6) * virtual(5)));
+simplify(commutator(H, E(1, 2) * occupied(2) * virtual(1)));
 simplify(bch(ans, T2, 4));
-simplify(act_on_ket(ans, 2));
-proj_ck = simplify(∑(ans * real_tensor("c", 5, 6), [5, 6]));
+proj_ai = simplify(act_on_ket(ans, 2));
+proj_ck = simplify(∑(ans * real_tensor("c", 1, 2), [1, 2]));
 ```
 
 This projection will also be useful when doing the doubles block.
+We also keep the `proj_ai` for the left transformation later.
 To get the singles block out we project on a biorthogonal singles bra
 
 ```@repl 1
@@ -543,14 +544,15 @@ Next we compute the projection
 ``
 
 ```@repl 1
-simplify(commutator(H, E(5, 6) * E(7, 8) * occupied(6, 8) * virtual(5, 7)));
+simplify(commutator(H, E(1, 2) * E(3, 4) * occupied(2, 4) * virtual(1, 3)));
 simplify(bch(ans, T2, 4));
-simplify(act_on_ket(ans, 2));
-proj_ckdl = simplify(1//2 * ∑(ans * psym_tensor("c", 5:8...), 5:8));
+proj_aibj = simplify(act_on_ket(ans, 2));
+proj_ckdl = simplify(1//2 * ∑(ans * psym_tensor("c", 1:4...), 1:4));
 ```
 
-This will also be useful for the doubles block later. Now we project on the
-singles bra to get
+This will also be useful for the doubles block later and we also keep the
+proj_aibj for the left transformation.
+Now we project on the singles bra to get
 
 ```@repl 1
 ρ_ai_doubles = project_biorthogonal(proj_ckdl, E(1, 2));
@@ -625,3 +627,72 @@ Combining singles and doubles
 ```
 
 which concludes the jacobian right transformation.
+
+### Left transformation
+
+The procedure for the left transformation is very similar to the right
+transformation with some key differences. We can still split the transformed
+vector into singles and doubles blocks
+
+The transformed vector ``\rho_\mu`` can be split into singles and doubles
+block like
+
+``
+\sigma_{ai} = \sum_{\mu}{b_\mu A_{\mu,ai}}
+``
+
+``
+\sigma_{aibj} = \sum_{\mu}{b_\mu A_{\mu,aibj}}
+``
+
+#### Singles block
+
+We again further split the sum into singles and doubles parts
+
+``
+\sigma_{ai} = \sum_{\mu}{b_\mu A_{\mu,ai}}
+=
+\sum_{ck}{b_{ck} A_{ck,ai}} +
+\frac12 \sum_{ckdl}{(1 + δ_{ck,dl}) b_{ckdl} A_{ckdl,ai}}
+``
+
+though now we get a nice cancellation due to the fact that the jacobian
+is defined in terms of the *biorthonormal* bra, so we can define an adjusted
+jacobian
+
+``\tilde A_{ckdl,\mu} = \frac{1}{1 + δ_{ck,dl}} A_{ckdl,\mu}``
+
+defined in terms of the biorthogonal bra. The factors of 2 on the diagonal
+thus cancel and we are left with the much nicer expression
+
+``
+\sigma_{ai}
+=
+\sum_{ck}{b_{ck} A_{ck,ai}} +
+\frac12 \sum_{ckdl}{b_{ckdl} \tilde A_{ckdl,ai}}
+``
+
+where we do not have to scale either the input vector ``b`` or the output
+vector ``\sigma`` on the diagonals, contrary to the right transformation.
+
+We can reuse the projection from above and can directly compute the singles
+projection
+
+```@repl 1
+simplify(
+    ∑(project_biorthogonal(proj_ai, E(5, 6)) * real_tensor("b", 5, 6), 5:6)
+);
+look_for_tensor_replacements(ans, make_exchange_transformer("t", "u"));
+look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
+σ_ai_singles = ans
+```
+
+and similrarly for the doubles
+
+```@repl 1
+project_biorthogonal(proj_ai, E(5, 6) * E(7, 8)) * psym_tensor("b", 5:8...);
+simplify_heavy(∑(ans, 5:8)); # No need to symmetrize because of sum
+look_for_tensor_replacements(ans, make_exchange_transformer("t", "u"));
+look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
+σ_ai_doubles = ans
+```
