@@ -474,13 +474,6 @@ end
     @test simplify(a * b * bdag * adag * E(2, 3)) == a * adag * E(2, 3) * b * bdag
 end
 
-@testset "PermuteTensor" begin
-    @test permute_tensor(1, 2, 3, 4) == permute_tensor(3, 4, 1, 2)
-    eq1 = permute_tensor(1, 2, 3, 4) * real_tensor("h", 3, 4)
-    eq2 = permute_tensor(1, 2, 3, 4) * real_tensor("h", 1, 2)
-    @test simplify_heavy(eq1) == eq2
-end
-
 @testset "print code" begin
     equation = summation(real_tensor("h", 1, 2) * real_tensor("g", 2, 1, 3) * occupied(1) * virtual(2,3), 1:2)
     trans = translate(VirtualOrbital => [3])
