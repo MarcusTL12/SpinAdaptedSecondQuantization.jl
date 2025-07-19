@@ -188,7 +188,7 @@ end
 
 function getname(io::IO, constraints::Constraints,
     translation::IndexTranslation, i::Int)
-    do_color = index_color && haskey(colors, constraints(i))
+    do_color = haskey(colors, constraints(i))
 
     if do_color
         print(io, Base.text_colors[colors[constraints(i)]])
@@ -213,32 +213,16 @@ function print_mo_index(io::IO, constraints::Constraints,
     end
 end
 
-index_color::Bool = true
 do_index_translation::Bool = true
 
-export enable_color, disable_color, set_color,
+export disable_color, set_color,
     enable_index_translation, disable_index_translation
 
 """
-    enable_color()
+    set_color(s, color)
 
-Enables the coloring of MO-indices to indicate orbital space constraints.
-Color is enabled by default.
-The default coloring scheme is given by:
-- GeneralOrbital: :nothing
-- OccupiedOrbital: :light_green
-- VirtualOrbital: :cyan
-"""
-function enable_color()
-    global index_color = true
-    nothing
-end
-
-"""
-    set_color(S, color=default_color(S))
-
-Sets the color of a given orbital space to the specified color, or the
-default if none is given. Allowed colors are given by the
+Sets the color of a index space `s` to the specified color.
+Allowed colors are given by the
 [Base.text_colors](https://github.com/JuliaLang/julia/blob/\
 17cfb8e65ead377bf1b4598d8a9869144142c84e/base/util.jl#L5-L34)
 dict. This includes integers in the range 0-255 which the corresponding colors
@@ -251,23 +235,9 @@ function set_color(s::Int, color)
 end
 
 """
-    disable_color()
+    disable_color(s)
 
-Disables the coloring of MO-indices to indicate orbital space constraints
-globally. This will make all constraints be printed explicitly which can make
-some terms a bit long to read. Color is enabled by default.
-"""
-function disable_color()
-    global index_color = false
-    nothing
-end
-
-"""
-    disable_color(S)
-
-Disables the coloring for a specific orbital space. This can be useful
-when dealing with a medium-large number of orbital spaces, and having
-distinguishable colors is infeasible.
+Disables the coloring for index space `s`.
 """
 function disable_color(s::Int)
     delete!(colors, s)
