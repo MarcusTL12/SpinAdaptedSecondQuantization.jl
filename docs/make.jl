@@ -10,6 +10,7 @@ makedocs(
         "Home" => "index.md",
         "CCSD example" => "ccsd_example.md",
         "QED-CCSD example" => "qed_ccsd_example.md",
+        "Box 13.2 example" => "box13.2.md",
         "Reference/API" => "reference.md",
         "Internals" => "internals.md",
     ]
