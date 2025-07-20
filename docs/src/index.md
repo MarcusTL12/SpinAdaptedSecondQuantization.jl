@@ -5,7 +5,8 @@
 is a Julia package for doing symbolic second quantization mainly targeted at
 quantum chemistry methods, such as post Hartree-Fock methods.
 
-To install the package, run
+To install the package open a Julia terminal, type a `]` to open the package
+mode, then write `add SpinAdaptedSecondQuantization` to install.
 
 ```julia
 (v1.8) pkg> add SpinAdaptedSecondQuantization
@@ -15,11 +16,7 @@ Julia version 1.8 or higher is required.
 
 The package can then be loaded
 
-```julia
-using SpinAdaptedSecondQuantization
-```
-
-```@setup 1
+```@repl 1
 using SpinAdaptedSecondQuantization
 ```
 
