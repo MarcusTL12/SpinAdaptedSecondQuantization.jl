@@ -402,6 +402,18 @@ omega_aibj_ss
 omega_aibj_ns
 ```
 
+!!! note
+    Sometimes it can be nice to save an expression for later in which case
+    the built-in `Serialization` package of julia can be useful. Here we
+    save the `omega_aibj_r` expression to a file with the same name which
+    so we can load it later in the code generation example without rederiving
+    it.
+
+    ```@repl 1
+    using Serialization
+    serialize("omega_aibj_r", omega_aibj_r)
+    ```
+
 The [`desymmetrize`](@ref) function returns three expressions. The first
 `omega_aibj_r` contains the terms it found redundant permutations of elsewhere
 in the original expression. These needs to be symmetrized to obtain the correct
