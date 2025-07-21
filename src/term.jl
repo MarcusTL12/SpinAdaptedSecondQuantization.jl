@@ -166,7 +166,7 @@ function update_index_translation(t::Term, translation::IndexTranslation)
 
     for p in ex_inds
         if !haskey(translation, p)
-            if translate_external
+            if translate_external && t.constraints(p) != GeneralIndex
                 S = t.constraints(p)
                 translation[p] = (S,
                     find_first_free!(get!(seen_inds, S, Set())))
@@ -177,7 +177,7 @@ function update_index_translation(t::Term, translation::IndexTranslation)
     end
 
     for p in t.sum_indices
-        if translate_internal
+        if translate_internal && t.constraints(p) != GeneralIndex
             S = t.constraints(p)
             translation[p] = (S,
                 find_first_free!(get!(seen_inds, S, Set())))
