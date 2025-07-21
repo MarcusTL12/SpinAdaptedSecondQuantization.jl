@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Code generation example · SpinAdaptedSecondQuantization.jl</title><meta name="title" content="Code generation example · SpinAdaptedSecondQuantization.jl"/><meta property="og:title" content="Code generation example · SpinAdaptedSecondQuantization.jl"/><meta property="twitter:title" content="Code generation example · SpinAdaptedSecondQuantization.jl"/><meta name="description" content="Documentation for SpinAdaptedSecondQuantization.jl."/><meta property="og:description" content="Documentation for SpinAdaptedSecondQuantization.jl."/><meta property="twitter:description" content="Documentation for SpinAdaptedSecondQuantization.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">SpinAdaptedSecondQuantization.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../ccsd_example/">CCSD example</a></li><li><a class="tocitem" href="../qed_ccsd_example/">QED-CCSD example</a></li><li><a class="tocitem" href="../box13.2/">Box 13.2 example</a></li><li class="is-active"><a class="tocitem" href>Code generation example</a></li><li><a class="tocitem" href="../reference/">Reference/API</a></li><li><a class="tocitem" href="../internals/">Internals</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Code generation example</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Code generation example</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/MarcusTL12/SpinAdaptedSecondQuantization.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/MarcusTL12/SpinAdaptedSecondQuantization.jl/blob/main/docs/src/code_generation_example.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Generating-runnable-code-from-symbolic-expressions"><a class="docs-heading-anchor" href="#Generating-runnable-code-from-symbolic-expressions">Generating runnable code from symbolic expressions</a><a id="Generating-runnable-code-from-symbolic-expressions-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-runnable-code-from-symbolic-expressions" title="Permalink"></a></h1><p>Here we show a small example of how to translate a derived expression into runnable code. For this we have the <code>print_julia_function</code> function which translates an expression into a julia function that can be run using the <a href="https://github.com/Jutho/TensorOperations.jl"><code>TensorOperations.jl</code></a> package.</p><p>As an example we load the <code>omega_aibj_r</code> expression from the CCSD example.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using SpinAdaptedSecondQuantization</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; using Serialization</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; omega_aibj_r = deserialize(&quot;omega_aibj_r&quot;)</code><code class="nohighlight hljs ansi" style="display:block;">∑_c(F_ac t_bjci)
+- ∑_k(F_ki t_akbj)
+- ∑_ck(g_acki t_bjck)
+- ∑_ck(g_ackj t_bkci)
++ ∑_kc(g_aikc u_bjck)
+- ∑_kcld(g_kcld t_aibk u_cjdl)
+- ∑_kcld(g_kcld t_aicj u_bkdl)</code></pre><p>Then we can turn this into a function:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_julia_function(&quot;omega_doubles_r&quot;, omega_aibj_r);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; println(ans)</code><code class="nohighlight hljs ansi" style="display:block;">function omega_doubles_r(no, nv, F, t, g, u)
+    nao = no + nv
+    o = 1:no
+    v = no+1:nao
+    
+    X = zeros(nv, no, nv, no)
+    g_vvoo = @view g[v,v,o,o]
+    g_voov = @view g[v,o,o,v]
+    g_ovov = @view g[o,v,o,v]
+    t_vovo = @view t[v,o,v,o]
+    u_vovo = @view u[v,o,v,o]
+    F_vv = @view F[v,v]
+    F_oo = @view F[o,o]
+    @tensoropt (a=&gt;10χ,b=&gt;10χ,c=&gt;10χ,d=&gt;10χ,i=&gt;χ,j=&gt;χ,k=&gt;χ,l=&gt;χ) begin
+        X[a,i,b,j] += F_vv[a,c]*t_vovo[b,j,c,i]
+        X[a,i,b,j] += -F_oo[k,i]*t_vovo[a,k,b,j]
+        X[a,i,b,j] += -g_vvoo[a,c,k,i]*t_vovo[b,j,c,k]
+        X[a,i,b,j] += -g_vvoo[a,c,k,j]*t_vovo[b,k,c,i]
+        X[a,i,b,j] += g_voov[a,i,k,c]*u_vovo[b,j,c,k]
+        X[a,i,b,j] += -g_ovov[k,c,l,d]*t_vovo[a,i,b,k]*u_vovo[c,j,d,l]
+        X[a,i,b,j] += -g_ovov[k,c,l,d]*t_vovo[a,i,c,j]*u_vovo[b,k,d,l]
+    end
+    X
+end</code></pre><p>By default the generated function will take in tensors with all indices assumed to run over all molecular orbitals and make views into these to get sub-blocks where some indices run over only occupied or virtual indices. For integral tensors this can be nice if many different blocks are used, then the caller of the function does not have to think about which blocks to give to the function. However, for tensors such as the T amplitudes where only one specific block exists (the ovov...) block, it is better to only have to give this, rather than embedding it in a much larger tensor. To achieve this one can specify the optional keyword argument <code>explicit_tensor_blocks</code> which makes all sub-blocks used of these tensors be specified as individual inputs to the generated function.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_julia_function(&quot;omega_doubles_r&quot;, omega_aibj_r;
+           explicit_tensor_blocks = [&quot;t&quot;, &quot;u&quot;]);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; println(ans)</code><code class="nohighlight hljs ansi" style="display:block;">function omega_doubles_r(no, nv, F, t_vovo, g, u_vovo)
+    nao = no + nv
+    o = 1:no
+    v = no+1:nao
+    
+    X = zeros(nv, no, nv, no)
+    g_vvoo = @view g[v,v,o,o]
+    g_voov = @view g[v,o,o,v]
+    g_ovov = @view g[o,v,o,v]
+    F_vv = @view F[v,v]
+    F_oo = @view F[o,o]
+    @tensoropt (a=&gt;10χ,b=&gt;10χ,c=&gt;10χ,d=&gt;10χ,i=&gt;χ,j=&gt;χ,k=&gt;χ,l=&gt;χ) begin
+        X[a,i,b,j] += F_vv[a,c]*t_vovo[b,j,c,i]
+        X[a,i,b,j] += -F_oo[k,i]*t_vovo[a,k,b,j]
+        X[a,i,b,j] += -g_vvoo[a,c,k,i]*t_vovo[b,j,c,k]
+        X[a,i,b,j] += -g_vvoo[a,c,k,j]*t_vovo[b,k,c,i]
+        X[a,i,b,j] += g_voov[a,i,k,c]*u_vovo[b,j,c,k]
+        X[a,i,b,j] += -g_ovov[k,c,l,d]*t_vovo[a,i,b,k]*u_vovo[c,j,d,l]
+        X[a,i,b,j] += -g_ovov[k,c,l,d]*t_vovo[a,i,c,j]*u_vovo[b,k,d,l]
+    end
+    X
+end</code></pre><p>After generating the function, it can be copied into a new julia session</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using TensorOperations</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; function omega_doubles_r(no, nv, F, t_vovo, g, u_vovo)
+           nao = no + nv
+           o = 1:no
+           v = no+1:nao
+       
+           X = zeros(nv, no, nv, no)
+           g_vvoo = @view g[v,v,o,o]
+           g_voov = @view g[v,o,o,v]
+           g_ovov = @view g[o,v,o,v]
+           F_vv = @view F[v,v]
+           F_oo = @view F[o,o]
+           @tensoropt (a=&gt;10χ,b=&gt;10χ,c=&gt;10χ,d=&gt;10χ,i=&gt;χ,j=&gt;χ,k=&gt;χ,l=&gt;χ) begin
+               X[a,i,b,j] += F_vv[a,c]*t_vovo[b,j,c,i]
+               X[a,i,b,j] += -F_oo[k,i]*t_vovo[a,k,b,j]
+               X[a,i,b,j] += -g_vvoo[a,c,k,i]*t_vovo[b,j,c,k]
+               X[a,i,b,j] += -g_vvoo[a,c,k,j]*t_vovo[b,k,c,i]
+               X[a,i,b,j] += g_voov[a,i,k,c]*u_vovo[b,j,c,k]
+               X[a,i,b,j] += -g_ovov[k,c,l,d]*t_vovo[a,i,b,k]*u_vovo[c,j,d,l]
+               X[a,i,b,j] += -g_ovov[k,c,l,d]*t_vovo[a,i,c,j]*u_vovo[b,k,d,l]
+           end
+           X
+       end</code><code class="nohighlight hljs ansi" style="display:block;">omega_doubles_r (generic function with 1 method)</code></pre><p>Then to test it we can setup some test tensors.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; no = 4 # Number of occupied orbitals</code><code class="nohighlight hljs ansi" style="display:block;">4</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; nv = 10 # Number of virtual orbitals</code><code class="nohighlight hljs ansi" style="display:block;">10</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; nmo = no + nv # Number of molecular orbitals</code><code class="nohighlight hljs ansi" style="display:block;">14</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; F = randn(nmo, nmo) # Fock matrix populated by random numbers</code><code class="nohighlight hljs ansi" style="display:block;">14×14 Matrix{Float64}:
+  1.206        -0.749907   1.11031    …   1.97113     0.286513    -1.52615
+ -0.219809      0.136965   0.80048        2.07985     0.496342    -0.267583
+  0.371224     -0.750683   0.582219      -0.205854    0.217801    -0.616077
+  0.387132      0.408143  -0.657722       0.688113    0.630724     1.29248
+ -0.13092       0.70738   -0.0662575      1.24726     0.00859262  -0.378284
+ -1.35265      -0.727645   1.53184    …  -1.09917    -0.848221    -0.0717293
+  2.13581       0.435851  -1.09919        0.380454    1.40081      0.240868
+ -1.17217       1.09957    0.665619      -0.746283    0.85235     -2.40373
+ -0.815002      1.548      1.18111       -1.15938     0.286174    -0.998202
+ -0.614033     -0.260604   1.41691       -0.144307    0.0585355   -1.3003
+  2.60792       0.236482  -0.922349   …  -0.145846   -0.604941    -0.187297
+  0.774336     -0.484758   0.959266       0.122641    0.0344276   -0.991775
+ -0.000677062   1.62082   -2.3111         0.620132   -0.0924643    0.339304
+ -0.378296     -0.794401   0.315807      -0.0504745   0.65338     -1.22385</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; g = randn(nmo, nmo, nmo, nmo);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; t = randn(nv, no, nv, no);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; u = 2 * t - PermutedDimsArray(t, (1, 4, 3, 2));</code></pre><p>Then we can call the function and post-process the output by symmetrizing and scaling the diagonal</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; Ω_aibj = @time omega_doubles_r(no, nv, F, t, g, u);</code><code class="nohighlight hljs ansi" style="display:block;">  5.376336 seconds (7.66 M allocations: 375.639 MiB, 1.63% gc time, 99.99% compilation time)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; Ω_aibj += PermutedDimsArray(t, (3, 4, 1, 2)); # Symmetrize</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; for a in 1:nv, i in 1:no
+           Ω_aibj[a, i, a, i] *= 0.5 # Scale diagonal by 0.5
+       end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../box13.2/">« Box 13.2 example</a><a class="docs-footer-nextpage" href="../reference/">Reference/API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 21 July 2025 11:26">Monday 21 July 2025</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
