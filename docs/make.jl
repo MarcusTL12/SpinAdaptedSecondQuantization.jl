@@ -12,6 +12,7 @@ makedocs(
         "QED-CCSD example" => "qed_ccsd_example.md",
         "Box 13.2 example" => "box13.2.md",
         "Code generation example" => "code_generation_example.md",
+        "Adding new types" => "new_type_tutorial.md",
         "Reference/API" => "reference.md",
         "Internals" => "internals.md",
     ]
