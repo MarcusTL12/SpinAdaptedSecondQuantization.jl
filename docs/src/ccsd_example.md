@@ -763,6 +763,30 @@ Combined:
 
 Which concludes the left transformation.
 
+## ``\eta_\nu`` expression
+
+Another quantity related to the Jacobian is the ``\eta_\nu`` expression given by
+
+``
+\eta_\nu = \langle\text{HF}| e^{-T} [H, \tau_\nu] e^T |\text{HF}\rangle
+``
+
+Since we already have the projections
+
+``
+e^{-T} [H, \tau_\nu] e^T |\text{HF}\rangle
+``
+
+from the jacobian transformation, getting the expressions for ``\eta`` is simple
+by projecting those on a HF bra.
+
+```@repl 1
+η_ai = act_on_bra(proj_ai)
+act_on_bra(proj_aibj);
+look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
+η_aibj = ans
+```
+
 ## One-electron density matrices
 
 One frequently wants the one-electron density matrix to get properties like
