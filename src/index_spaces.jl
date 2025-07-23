@@ -4,6 +4,13 @@ const index_shortnames::Vector{String} = String[]
 
 const index_names::Vector{String} = String[]
 
+export new_space
+
+"""
+    new_space(id, shortname::String, names::String)
+
+Adds a new index space. See [Defining new index spaces](@ref) for example.
+"""
 function new_space(id, shortname::String, names::String)
     if haskey(index_ids, id)
         return index_ids[id]
@@ -27,6 +34,14 @@ end
 const space_sums::Dict{NTuple{2,Int},Int} = Dict()
 const space_diff::Dict{NTuple{2,Int},Int} = Dict()
 
+export add_space_sum
+
+"""
+    add_space_sum(a::Int, b::Int, c::Int)
+
+Specifies that the union of spaces `a` and `b` is space `c`.
+See [Defining new index spaces](@ref) for example.
+"""
 function add_space_sum(a::Int, b::Int, c::Int)
     a, b = a < b ? (a, b) : (b, a)
     space_sums[(a, b)] = c
@@ -38,6 +53,14 @@ end
 
 const space_intersections::Dict{NTuple{2,Int},Int} = Dict()
 
+export add_space_intersection
+
+"""
+    add_space_intersection(a::Int, b::Int, c::Int)
+
+Specifies that the intersection of spaces `a` and `b` is space `c`.
+See [Defining new index spaces](@ref) for example.
+"""
 function add_space_intersection(a::Int, b::Int, c::Int)
     a, b = a < b ? (a, b) : (b, a)
     space_intersections[(a, b)] = c

@@ -495,11 +495,15 @@ julia> simplify_heavy(ans)
 ```
 """
 function simplify_heavy(ex::Expression,
-    mapping=GeneralOrbital => (OccupiedOrbital, VirtualOrbital))
+    mappings=(GeneralOrbital => (OccupiedOrbital, VirtualOrbital),))
     done = false
     ex = simplify(ex)
     while !done
-        new_ex = split_indices(ex, mapping) |>
+        new_ex = ex
+        for mapping in mappings
+            new_ex = split_indices(new_ex, mapping)
+        end
+        new_ex = new_ex |>
                  simplify_heavy_terms |>
                  try_add_constraints
         done = new_ex == ex
