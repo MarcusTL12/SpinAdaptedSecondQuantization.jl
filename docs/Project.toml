@@ -2,3 +2,6 @@
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 SpinAdaptedSecondQuantization = "07861ef0-4e5e-45a9-88ac-f5a78d3027be"
 TensorOperations = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
+
+[sources]
+SpinAdaptedSecondQuantization = { path = ".." }

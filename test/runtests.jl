@@ -1,5 +1,5 @@
 using Test
-
+using Documenter
 using SpinAdaptedSecondQuantization
 
 @testset "index spaces" begin
@@ -486,3 +486,6 @@ end
     expected_code_eT = """print(generate_eT_code_from_einsum(\n    routine_name=\"test\",\n    prefactor= +1.00000000,\n    contraction_string=\"bia,ib->a\",\n    arrays=[g_vov, h_ov, omega],\n    symbols=[\"g_vov\", \"h_ov\", \"omega\"],\n), end='!\\n!\\n')"""
     @test code_eT == expected_code_eT
 end
+
+# Run doctests
+doctest(SpinAdaptedSecondQuantization)
