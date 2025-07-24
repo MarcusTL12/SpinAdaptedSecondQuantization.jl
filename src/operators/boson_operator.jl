@@ -59,6 +59,7 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> bosondag()
 b†
+
 julia> boson()'
 b†
 ```

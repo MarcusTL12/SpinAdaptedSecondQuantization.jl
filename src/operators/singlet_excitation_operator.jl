@@ -49,6 +49,7 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> E(1, 2) * electron(1, 2)
 E_pq
+
 julia> E(1, 2) * E(3, 4) * occupied(2, 4) * virtual(1, 3)
 E_ai E_bj
 ```

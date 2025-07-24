@@ -322,12 +322,15 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> ex = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
 ∑_pq(h_pq E_pq)
+
 julia> disable_internal_index_translation()
 
 julia> ex
 ∑_₁₂(h_₁₂ E_₁₂) C(₁∈g, ₂∈g)
+
 julia> ex *= E(1, 2) * occupied(2) * virtual(1) # Indices shifted up
 ∑_₃₄(h_₃₄ E_₃₄ E_ai) C(₃∈g, ₄∈g)
+
 julia> enable_internal_index_translation()
 
 julia> ex # Shift in indices is invisible when translated

@@ -66,6 +66,7 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> fermiondag(1, α) * electron(1)
 a†_pα
+
 julia> fermion(1, α)' * electron(1)
 a†_pα
 ```

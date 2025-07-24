@@ -834,8 +834,13 @@ function find_equal_perm(a::Term, b::Term)
     end
 end
 
-# TODO: add docs
-# TODO: add tests
+"""
+    try_add_constraints(ex::Expression)
+
+Check if pair of terms differing only in index constraints and scalar
+prefactors, and tries to combine them.
+See [`simplify`](@ref) for example.
+"""
 function try_add_constraints(a::Term, b::Term)
     if !non_constraint_non_scalar_equal(a, b)
         return (a, b), false
@@ -881,6 +886,69 @@ function try_add_constraints(a::Term, b::Term)
     (a, b), false
 end
 
+"""
+    find_illegal_operator_chains(t::Term)
+
+Looks for chains of operators that equals zero such as
+
+``E_{ai} E_{aj} E_{ak} = 0``
+
+and
+
+``
+a_pσ a_pσ = 0
+``
+
+The routine focuses on having "safe" simplifications that are easy to formulate
+and fast to check for rather than having an exhaustive check.
+
+Currently implemented simplifications include:
+- No consecutive fermion creation/annihilation operators that are equal as this
+    would try to fill/empty two electrons in/out of the same spin orbital.
+- Illegal tripplets of SingletExcitationOperator:
+    - Looks for three "true" excitations, where the index constraints of
+        `p` and `q` in `E_pq` are disjoint, as this means that an electron is
+        actually moved and not put back by the same operator.
+    - It then looks for either the first index to be equal for all three
+        operators, or the last index of all three operators.
+
+See [`simplify`](@ref) for example of use.
+"""
+function find_illegal_operator_chains(t::Term{T}) where {T<:Number}
+    # First and simplest check: no repeated fermionic operators
+    for i in 1:length(t.operators)-1
+        a = t.operators[i]
+        b = t.operators[i + 1]
+
+        if a isa FermionOperator && b isa FermionOperator && a == b
+            return zero(Term{T})
+        end
+    end
+
+    # Second check: no illegal triplets
+    for i in 1:length(t.operators)-2
+        a = t.operators[i]
+        b = t.operators[i + 1]
+        c = t.operators[i + 2]
+
+        # All must be SingletExcitationOperator
+        a isa SingletExcitationOperator || continue
+        b isa SingletExcitationOperator || continue
+        c isa SingletExcitationOperator || continue
+
+        # All must be "true" excitations
+        isdisjoint(t.constraints(a.p), t.constraints(a.q)) || continue
+        isdisjoint(t.constraints(b.p), t.constraints(b.q)) || continue
+        isdisjoint(t.constraints(c.p), t.constraints(c.q)) || continue
+
+        if a.p == b.p == c.p || a.q == b.q == c.q
+            return zero(Term{T})
+        end
+    end
+
+    t
+end
+
 function permute_all_sum_indices(t::Term)
     min_t = t
     permuted_inds = copy(t.sum_indices)
@@ -899,8 +967,6 @@ end
 # This function is just a composition of other simplification functions
 # in the recomended order to obtain a deterministic simplification of
 # the term.
-# TODO: This requires extensive testing of determinism and correctness.
-# The specific steps and the order of them might need to be adjusted.
 function simplify(t::Term)
     if t.max_simplified
         t
@@ -910,7 +976,8 @@ function simplify(t::Term)
         simplify_summation_deltas |>
         lower_summation_indices |>
         sort_summation_indices |>
-        sort_operators
+        sort_operators |>
+        find_illegal_operator_chains
     end
 end
 
@@ -937,6 +1004,7 @@ function simplify_heavy(t::Term)
         lower_summation_indices |>
         permute_all_sum_indices |>
         sort_operators |>
+        find_illegal_operator_chains |>
         set_max_simplified
     end
 end

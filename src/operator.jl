@@ -70,14 +70,17 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> E(1, 2) * electron(1, 2)
 E_pq
+
 julia> ket = act_on_ket(ans)
 E_ai
 + 2 δ_ij
+
 julia> disable_external_index_translation()
 
 julia> ket
 E_₁₂ C(₁∈v, ₂∈o)
 + 2 δ_₁₂ C(₁∈o, ₂∈o)
+
 julia> enable_external_index_translation()
 ```
 """

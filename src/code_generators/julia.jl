@@ -31,6 +31,7 @@ julia> R = psym_tensor("R", 2, 3, 4, 5);
 
 julia> ex = ∑(L * R * occupied(3, 5) * virtual(1, 2, 4), 3:5)
 ∑_icj(L_aicj R_bicj)
+
 julia> print_julia_function("density", ex) |> print
 function density(no, nv, L, R)
     nao = no + nv
@@ -45,6 +46,7 @@ function density(no, nv, L, R)
     end
     X
 end
+
 julia> print_julia_function("density", ex; \
 explicit_tensor_blocks=["L", "R"]) |> print
 function density(no, nv, L_vovo, R_vovo)

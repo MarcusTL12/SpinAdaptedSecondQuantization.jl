@@ -41,6 +41,7 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> E(1, 2) * E(3, 4) * electron(1:4...)
 E_pq E_rs
+
 julia> ket = simplify(act_on_ket(ans))
 E_ai E_bj
 + 2 δ_ij E_ak
@@ -49,6 +50,7 @@ E_ai E_bj
 + 2 δ_jk E_ai
 + 4 δ_ij δ_kl
 + 2 δ_ij δ_ab
+
 julia> disable_external_index_translation()
 
 julia> ket
@@ -59,6 +61,7 @@ E_₁₂ E_₃₄ C(₁∈v, ₂∈o, ₃∈v, ₄∈o)
 + 2 δ_₃₄ E_₁₂ C(₁∈v, ₂∈o, ₃∈o, ₄∈o)
 + 4 δ_₁₂ δ_₃₄ C(₁∈o, ₂∈o, ₃∈o, ₄∈o)
 + 2 δ_₁₄ δ_₂₃ C(₁∈o, ₂∈v, ₃∈v, ₄∈o)
+
 julia> enable_external_index_translation()
 ```
 """

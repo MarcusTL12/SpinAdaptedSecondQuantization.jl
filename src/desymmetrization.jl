@@ -52,14 +52,17 @@ julia> using SpinAdaptedSecondQuantization
 julia> ∑(real_tensor("F", 1, 5) * psym_tensor("t", 3, 4, 5, 2) * \
 occupied(2, 4) * virtual(1, 3, 5), [5])
 ∑_c(F_ac t_bjci)
+
 julia> symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]))
 ∑_c(F_ac t_bjci)
 + ∑_c(F_bc t_aicj)
+
 julia> ans + ∑(psym_tensor("g", 1, 5, 3, 6) * psym_tensor("t", 5, 2, 6, 4) * \
 occupied(2, 4) * virtual(1, 3, 5, 6), 5:6)
 ∑_c(F_ac t_bjci)
 + ∑_c(F_bc t_aicj)
 + ∑_cd(g_acbd t_cidj)
+
 julia> ans + real_tensor("x", 1, 2, 3, 4) * occupied(2, 4) * virtual(1, 3)
 x_aibj
 + ∑_c(F_ac t_bjci)
@@ -74,8 +77,10 @@ make_permutation_mappings([(1, 2), (3, 4)]));
 
 julia> r # Only one of the two redundant terms survives
 ∑_c(F_ac t_bjci)
+
 julia> ss # The self-symmetric term
 ∑_cd(g_acbd t_cidj)
+
 julia> ns # The non-symmetric term
 x_aibj
 ```
@@ -159,6 +164,7 @@ DocTestSetup = :(using SpinAdaptedSecondQuantization)
 julia> x = real_tensor("t", 1, 2, 3, 4, 5, 6) *
            occupied(2, 4, 6) * virtual(1, 3, 5)
 t_aibjck
+
 julia> symmetrize(x, make_permutation_mappings([(1, 2), (3, 4), (5, 6)]))
 t_aibjck
 + t_aickbj

@@ -49,6 +49,7 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> τ(1, 2) * electron(1, 2)
 T_pq
+
 julia> convert_to_elementary_operators(ans)
 a†_pα a⁻_qα
 - a†_pβ a⁻_qβ

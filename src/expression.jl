@@ -271,6 +271,7 @@ The most important are:
     - Bubble sort operators swaping neighbouring operators if:
         - They commute
         - The swap would lower the terms lexiographic ordering.
+    - Look for chains of operators that are zero.
 - Look for pairs of terms differing only in index constraints and scalar
     prefactors, and tries to combine them.
 
@@ -282,6 +283,7 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> ∑(real_tensor("h", 1, 2) * electron(1, 2) * δ(1, 2), [2])
 ∑_q(δ_pq h_pq)
+
 julia> simplify(ans)
 h_pp
 ```
@@ -291,15 +293,18 @@ Combining terms differing only by index constraints and scalars:
 julia> real_tensor("h", 1, 2) * (occupied(1, 2) + occupied(1) * virtual(2))
 h_ia
 + h_ij
+
 julia> simplify(ans)
 h_ip
 ```
 ```jldoctest simplify
 julia> ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), [1, 2])
 ∑_pq(h_pq E_pq)
+
 julia> ans - ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1) * occupied(2), [1, 2])
 ∑_pq(h_pq E_pq)
 - ∑_pi(h_pi E_pi)
+
 julia> simplify(ans)
 ∑_pa(h_pa E_pa)
 ```
@@ -308,22 +313,45 @@ Sorting commuting operators:
 ```jldoctest simplify
 julia> E(3, 4) * E(1, 2) * electron(1:4...)
 E_rs E_pq
+
 julia> simplify(ans) # not able to swap as commutator is not zero
 E_rs E_pq
+
 julia> ans * occupied(2, 4) * virtual(1, 3)
 E_bj E_ai
+
 julia> simplify(ans) # now able to swap
 E_ai E_bj
 ```
 ```jldoctest simplify
 julia> E(3, 4) * E(5, 6) * E(1, 2) * electron(5, 6) * occupied(2, 4) * virtual(1, 3)
 E_bj E_pq E_ai
+
 julia> simplify(ans) # Can not swap first and last because of non commuting between
 E_bj E_pq E_ai
+
 julia> E(5, 6) * E(3, 4) * E(1, 2) * electron(5, 6) * occupied(2, 4) * virtual(1, 3)
 E_pq E_bj E_ai
+
 julia> simplify(ans) # Can swap adjacent last two, but not first
 E_pq E_ai E_bj
+
+```
+
+Illegal operator chains:
+```jldoctest simplify
+julia> fermion(1, α) * fermion(1, α) * electron(1)
+a⁻_pα a⁻_pα
+
+julia> simplify(ans)
+0
+
+julia> E(1, 2) * E(1, 3) * E(1, 4) * occupied(2, 3, 4) * virtual(1)
+E_ai E_aj E_ak
+
+julia> simplify(ans)
+0
+
 ```
 """
 function simplify(ex::Expression)
@@ -337,6 +365,13 @@ function simplify_terms(ex::Expression)
     Expression([simplify(t) for t in ex.terms])
 end
 
+"""
+    try_add_constraints(ex::Expression)
+
+Look for pairs of terms differing only in index constraints and scalar
+prefactors, and tries to combine them.
+See [`simplify`](@ref) for example.
+"""
 function try_add_constraints(ex::Expression)
     block_begin = 1
     while block_begin <= length(ex.terms)
@@ -455,10 +490,12 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> h = ∑(rsym_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
 ∑_pq(h_pq E_pq)
+
 julia> g = 1//2 * \
 ∑(rsym_tensor("g", 1:4...) * e(1:4...) * electron(1:4...), 1:4)
 1/2 ∑_pqrs(g_pqrs E_pq E_rs)
 - 1/2 ∑_pqrs(δ_qr g_pqrs E_ps)
+
 julia> H = simplify(h + g + real_tensor("h_nuc"));
 
 julia> E_HF = simplify(hf_expectation_value(H)) # Not nice
@@ -467,6 +504,7 @@ h_nuc
 + 2 ∑_ij(g_iijj)
 - ∑_pi(g_pipi)
 + ∑_ia(g_iaia)
+
 julia> simplify_heavy(E_HF) # Much nicer!
 h_nuc
 + 2 ∑_i(h_ii)
@@ -478,17 +516,21 @@ Simplification by combining terms differing by index constraints
 ```jldoctest simplify_heavy
 julia> ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), [1, 2])
 ∑_pq(h_pq E_pq)
+
 julia> ans - ∑(real_tensor("h", 1, 2) * E(1, 2) * occupied(1, 2), [1, 2])
 ∑_pq(h_pq E_pq)
 - ∑_ij(h_ij E_ij)
+
 julia> ans - ∑(real_tensor("h", 1, 2) * E(1, 2) * virtual(1, 2), [1, 2])
 ∑_pq(h_pq E_pq)
 - ∑_ab(h_ab E_ab)
 - ∑_ij(h_ij E_ij)
+
 julia> simplify(ans)
 ∑_pq(h_pq E_pq)
 - ∑_ab(h_ab E_ab)
 - ∑_ij(h_ij E_ij)
+
 julia> simplify_heavy(ans)
 ∑_ai(h_ai E_ai)
 + ∑_ia(h_ia E_ia)
@@ -818,12 +860,16 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> Eai(a, i) = E(a, i) * occupied(i) * virtual(a)
 Eai (generic function with 1 method)
+
 julia> T2 = 1//2 * ∑(psym_tensor("t", 1:4...) * Eai(1, 2) * Eai(3, 4), 1:4)
 1/2 ∑_aibj(t_aibj E_ai E_bj)
+
 julia> adjoint(T2)
 1/2 ∑_aibj(t_aibj E_jb E_ia)
+
 julia> T2'
 1/2 ∑_aibj(t_aibj E_jb E_ia)
+
 julia> simplify(ans)
 1/2 ∑_iajb(t_aibj E_ia E_jb)
 ```
@@ -847,8 +893,10 @@ julia> using SpinAdaptedSecondQuantization
 
 julia> h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
 ∑_pq(h_pq E_pq)
+
 julia> h^2
 ∑_pqrs(h_pq h_rs E_pq E_rs)
+
 julia> h^3
 ∑_pqrstu(h_pq h_rs h_tu E_pq E_rs E_tu)
 ```

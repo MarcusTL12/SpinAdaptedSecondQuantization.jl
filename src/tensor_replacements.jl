@@ -137,6 +137,7 @@ h_nuc
 + 2 ∑_i(h_ii)
 + 2 ∑_ij(g_iijj)
 - ∑_ij(g_ijji)
+
 julia> look_for_tensor_replacements(E_HF, make_exchange_transformer("g", "L"))
 h_nuc
 + 2 ∑_i(h_ii)
