@@ -4,7 +4,7 @@
 [![][docs-img]][docs-url]
 
 [docs-img]: https://img.shields.io/badge/docs-blue.svg
-[docs-url]: https://marcustl12.github.io/SpinAdaptedSecondQuantization.jl/dev/
+[docs-url]: https://marcustl12.github.io/SpinAdaptedSecondQuantization.jl/
 
 Julia package to do symbolic spin adapted second quantization.
 
