@@ -1,7 +1,7 @@
 export print_eT_function_generator
 
 """
-print_eT_function_generator(name, ex, symbol, indices, translation,
+    print_eT_function_generator(name, ex, symbol, indices, translation,
                     [wf_type], [tensor_translation], [noinput_tensors], [outperms])
 
 This function generates a script to be run with
