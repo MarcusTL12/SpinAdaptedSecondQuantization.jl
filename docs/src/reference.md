@@ -1,4 +1,4 @@
-# Reference/API
+# Public API
 
 Auto generated docs for all exported functions and types.
 
