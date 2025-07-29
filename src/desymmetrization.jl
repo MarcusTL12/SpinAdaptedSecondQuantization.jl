@@ -100,42 +100,59 @@ function desymmetrize(ex_::Expression{T}, mappings) where {T<:Number}
     self_symmetric = Term{new_T}[]
     symmetrize = Term{new_T}[]
 
-    for (i, t) in enumerate(ex.terms)
-        if i ∈ accounted_for
-            continue
-        end
-
-        is_self_symmetric = true
-        has_redundant_terms = false
-
-        other_inds = Dict{Int,Int}()
-        for mapping in mappings
-            other_term = simplify_heavy(exchange_indices(t, mapping))
-            if other_term == t
-                other_inds[i] = get(other_inds, i, 0) + 1
+    block_begin = 1
+    while block_begin <= length(ex.terms)
+        block_ident = ex[block_begin]
+        block_end = block_begin
+        for i in block_begin+1:length(ex.terms)
+            if possibly_equal(block_ident, ex[i])
+                block_end = i
             else
-                is_self_symmetric = false
-                for (j, t2) in enumerate(ex.terms)
-                    if other_term == t2
-                        has_redundant_terms = true
-                        other_inds[j] = get(other_inds, j, 0) + 1
-                        break
-                    end
-                end
+                break
             end
         end
 
-        push!(accounted_for, i)
+        for i in block_begin:block_end
+            t = ex[i]
+            if i ∈ accounted_for
+                continue
+            end
 
-        if is_self_symmetric
-            push!(self_symmetric, t)
-        elseif has_redundant_terms
-            @assert allequal(values(other_inds))
-            push!(symmetrize, t * (1 // first(values(other_inds))))
-            union!(accounted_for, keys(other_inds))
-        else
-            push!(non_symmetric, t)
+            is_self_symmetric = true
+            has_redundant_terms = false
+
+            other_inds = Dict{Int,Int}()
+            for mapping in mappings
+                other_term = simplify_heavy(exchange_indices(t, mapping))
+                if other_term == t
+                    other_inds[i] = get(other_inds, i, 0) + 1
+                else
+                    is_self_symmetric = false
+                    for j in block_begin:block_end
+                        t2 = ex[j]
+                        if other_term == t2
+                            has_redundant_terms = true
+                            other_inds[j] = get(other_inds, j, 0) + 1
+                            break
+                        end
+                    end
+                end
+            end
+
+            push!(accounted_for, i)
+
+            if is_self_symmetric
+                push!(self_symmetric, t)
+            elseif has_redundant_terms
+                @assert allequal(values(other_inds))
+                push!(symmetrize, t * (1 // first(values(other_inds))))
+                union!(accounted_for, keys(other_inds))
+            else
+                push!(non_symmetric, t)
+            end
         end
+
+        block_begin = block_end + 1
     end
 
     non_symmetric = Expression(non_symmetric)
