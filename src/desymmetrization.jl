@@ -90,15 +90,17 @@ x_aibj
     be slow if terms have many (>=8) summation indices.
 """
 function desymmetrize(ex_::Expression{T}, mappings) where {T<:Number}
-    accounted_for = Set{Int}()
+    nth = Threads.nthreads()
 
     new_T = promote_type(T, Rational{Int})
 
     ex = promote_scalar(new_T, ex_)
 
-    non_symmetric = Term{new_T}[]
-    self_symmetric = Term{new_T}[]
-    symmetrize = Term{new_T}[]
+    non_symmetric = [Term{new_T}[] for _ in 1:nth]
+    self_symmetric = [Term{new_T}[] for _ in 1:nth]
+    symmetrize = [Term{new_T}[] for _ in 1:nth]
+
+    blocks = NTuple{2,Int}[]
 
     block_begin = 1
     while block_begin <= length(ex.terms)
@@ -112,47 +114,55 @@ function desymmetrize(ex_::Expression{T}, mappings) where {T<:Number}
             end
         end
 
-        for i in block_begin:block_end
-            t = ex[i]
-            if i ∈ accounted_for
-                continue
-            end
+        push!(blocks, (block_begin, block_end))
 
-            is_self_symmetric = true
-            has_redundant_terms = false
+        block_begin = block_end + 1
+    end
 
-            other_inds = Dict{Int,Int}()
-            for mapping in mappings
-                other_term = simplify_heavy(exchange_indices(t, mapping))
-                if other_term == t
-                    other_inds[i] = get(other_inds, i, 0) + 1
-                else
-                    is_self_symmetric = false
-                    for j in block_begin:block_end
-                        t2 = ex[j]
-                        if other_term == t2
-                            has_redundant_terms = true
-                            other_inds[j] = get(other_inds, j, 0) + 1
-                            break
+    Threads.@threads for id in 1:nth
+        for block_id in id:nth:length(blocks)
+            (from, to) = blocks[block_id]
+            accounted_for = Set{Int}()
+            for i in from:to
+                t = ex[i]
+                if i ∈ accounted_for
+                    continue
+                end
+
+                is_self_symmetric = true
+                has_redundant_terms = false
+
+                other_inds = Dict{Int,Int}()
+                for mapping in mappings
+                    other_term = simplify_heavy(exchange_indices(t, mapping))
+                    if other_term == t
+                        other_inds[i] = get(other_inds, i, 0) + 1
+                    else
+                        is_self_symmetric = false
+                        for j in from:to
+                            t2 = ex[j]
+                            if other_term == t2
+                                has_redundant_terms = true
+                                other_inds[j] = get(other_inds, j, 0) + 1
+                                break
+                            end
                         end
                     end
                 end
-            end
 
-            push!(accounted_for, i)
+                push!(accounted_for, i)
 
-            if is_self_symmetric
-                push!(self_symmetric, t)
-            elseif has_redundant_terms
-                @assert allequal(values(other_inds))
-                push!(symmetrize, t * (1 // first(values(other_inds))))
-                union!(accounted_for, keys(other_inds))
-            else
-                push!(non_symmetric, t)
+                if is_self_symmetric
+                    push!(self_symmetric[id], t)
+                elseif has_redundant_terms
+                    @assert allequal(values(other_inds))
+                    push!(symmetrize[id], t * (1 // first(values(other_inds))))
+                    union!(accounted_for, keys(other_inds))
+                else
+                    push!(non_symmetric[id], t)
+                end
             end
         end
-
-        block_begin = block_end + 1
     end
 
     non_symmetric = Expression(non_symmetric)

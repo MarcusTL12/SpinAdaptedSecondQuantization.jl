@@ -68,6 +68,15 @@ function Expression(terms::AbstractVector{Term})
     Expression(new_terms)
 end
 
+function Expression(terms::Vector{Vector{Term{T}}}) where {T}
+    all_terms, rest = Iterators.peel(terms)
+    for other_terms in rest
+        append!(all_terms, other_terms)
+    end
+
+    Expression(all_terms)
+end
+
 function Base.show(io::IO, ex::Expression)
     show(io, (ex, IndexTranslation()))
 end
