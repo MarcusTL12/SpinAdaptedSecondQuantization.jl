@@ -107,7 +107,7 @@ function desymmetrize(ex_::Expression{T}, mappings) where {T<:Number}
         block_ident = ex[block_begin]
         block_end = block_begin
         for i in block_begin+1:length(ex.terms)
-            if possibly_equal(block_ident, ex[i])
+            if possibly_equal_nonscalar(block_ident, ex[i])
                 block_end = i
             else
                 break
