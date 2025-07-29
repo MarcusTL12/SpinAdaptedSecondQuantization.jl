@@ -125,17 +125,16 @@ function desymmetrize(ex_::Expression{T}, mappings) where {T<:Number}
             end
         end
 
+        push!(accounted_for, i)
+
         if is_self_symmetric
             push!(self_symmetric, t)
-            push!(accounted_for, i)
         elseif has_redundant_terms
             @assert allequal(values(other_inds))
             push!(symmetrize, t * (1 // first(values(other_inds))))
-            push!(accounted_for, i)
             union!(accounted_for, keys(other_inds))
         else
             push!(non_symmetric, t)
-            push!(accounted_for, i)
         end
     end
 
