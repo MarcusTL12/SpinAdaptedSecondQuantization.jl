@@ -91,9 +91,9 @@
            make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_ai_singles</code><code class="nohighlight hljs ansi" style="display:block;">∑_b(F_ab c_bi)
 - ∑_j(F_ji c_aj)
 + ∑_jb(L_aijb c_bj)
-+ ∑_jbkc(L_jbkc c_bj u_aick)
 - ∑_jbkc(c_aj g_jbkc u_bick)
-- ∑_bjkc(c_bi g_jbkc u_ajck)</code></pre><p>where we get a very consise expression for the singles-singles transformation. Next we compute the projection</p><p><span>$\frac12 \sum_{ckdl}{e^{-T} [H, E_{ck} E_{dl}] e^T |\text{HF}\rangle c_{ckdl}}$</span></p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify(commutator(H, E(1, 2) * E(3, 4) * occupied(2, 4) * virtual(1, 3)));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify(bch(ans, T2, 4));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; proj_aibj = simplify(act_on_ket(ans, 2));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; proj_ckdl = simplify(1//2 * ∑(ans * psym_tensor(&quot;c&quot;, 1:4...), 1:4));</code></pre><p>This will also be useful for the doubles block later and we also keep the proj_aibj for the left transformation. Now we project on the singles bra to get</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_ai_doubles = project_biorthogonal(proj_ckdl, E(1, 2));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_ai_doubles = look_for_tensor_replacements(ρ_ai_doubles,
+- ∑_bjkc(c_bi g_jbkc u_ajck)
++ ∑_jbkc(L_jbkc c_bj u_aick)</code></pre><p>where we get a very consise expression for the singles-singles transformation. Next we compute the projection</p><p><span>$\frac12 \sum_{ckdl}{e^{-T} [H, E_{ck} E_{dl}] e^T |\text{HF}\rangle c_{ckdl}}$</span></p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify(commutator(H, E(1, 2) * E(3, 4) * occupied(2, 4) * virtual(1, 3)));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify(bch(ans, T2, 4));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; proj_aibj = simplify(act_on_ket(ans, 2));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; proj_ckdl = simplify(1//2 * ∑(ans * psym_tensor(&quot;c&quot;, 1:4...), 1:4));</code></pre><p>This will also be useful for the doubles block later and we also keep the proj_aibj for the left transformation. Now we project on the singles bra to get</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_ai_doubles = project_biorthogonal(proj_ckdl, E(1, 2));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_ai_doubles = look_for_tensor_replacements(ρ_ai_doubles,
            make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_ai_doubles = look_for_tensor_replacements(ρ_ai_doubles,
            make_exchange_transformer(&quot;c&quot;, &quot;cu&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_ai_doubles</code><code class="nohighlight hljs ansi" style="display:block;">∑_jb(F_jb cu_aibj)
 + ∑_bjc(L_abjc c_bicj)
@@ -103,15 +103,13 @@
 + ∑_jb(L_aijb c_bj)
 + ∑_bjc(L_abjc c_bicj)
 - ∑_jkb(L_jikb c_ajbk)
-+ ∑_jbkc(L_jbkc c_bj u_aick)
 - ∑_jbkc(c_aj g_jbkc u_bick)
-- ∑_bjkc(c_bi g_jbkc u_ajck)</code></pre><h4 id="Doubles-block"><a class="docs-heading-anchor" href="#Doubles-block">Doubles block</a><a id="Doubles-block-1"></a><a class="docs-heading-anchor-permalink" href="#Doubles-block" title="Permalink"></a></h4><p>We again split the sum into singles and doubles, squareup and include the factor of 2 on the diagonal</p><p><span>$\rho_{aibj} = \sum_{\nu}{A_{aibj,\nu} c_\nu} = \sum_{ck}{A_{aibj,ck} c_{ck}} + \frac12 \sum_{ckdl}{A_{aibj,ckdl} \tilde c_{ckdl}}$</span></p><p>Here we can reuse the right projection from above, projecting on the biorthogonal doubles bra instead.</p><p>First the singles sum</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; project_biorthogonal(proj_ck, E(1, 2) * E(3, 4));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify_heavy(ans);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;t&quot;, &quot;u&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_singles_r, ρ_aibj_singles_ss, ρ_aibj_singles_ns =
+- ∑_bjkc(c_bi g_jbkc u_ajck)
++ ∑_jbkc(L_jbkc c_bj u_aick)</code></pre><h4 id="Doubles-block"><a class="docs-heading-anchor" href="#Doubles-block">Doubles block</a><a id="Doubles-block-1"></a><a class="docs-heading-anchor-permalink" href="#Doubles-block" title="Permalink"></a></h4><p>We again split the sum into singles and doubles, squareup and include the factor of 2 on the diagonal</p><p><span>$\rho_{aibj} = \sum_{\nu}{A_{aibj,\nu} c_\nu} = \sum_{ck}{A_{aibj,ck} c_{ck}} + \frac12 \sum_{ckdl}{A_{aibj,ckdl} \tilde c_{ckdl}}$</span></p><p>Here we can reuse the right projection from above, projecting on the biorthogonal doubles bra instead.</p><p>First the singles sum</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; project_biorthogonal(proj_ck, E(1, 2) * E(3, 4));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify_heavy(ans);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;t&quot;, &quot;u&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_singles_r, ρ_aibj_singles_ss, ρ_aibj_singles_ns =
            desymmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_singles_r</code><code class="nohighlight hljs ansi" style="display:block;">- ∑_k(c_ak g_bjki)
 + ∑_c(c_ci g_acbj)
 - ∑_kc(F_kc c_ak t_bjci)
 - ∑_kc(F_kc c_ci t_akbj)
-+ ∑_ckd(L_ackd c_dk t_bjci)
-- ∑_klc(L_kilc c_cl t_akbj)
 - ∑_kcd(c_ak g_bckd t_cjdi)
 + ∑_kcl(c_ak g_kcli t_bjcl)
 + ∑_kcl(c_ak g_kclj t_blci)
@@ -119,7 +117,9 @@
 - ∑_cdk(c_ci g_bdkc t_akdj)
 + ∑_ckl(c_ci g_kjlc t_albk)
 - ∑_klc(c_ak g_kilc u_bjcl)
-+ ∑_ckd(c_ci g_ackd u_bjdk)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_singles_ss</code><code class="nohighlight hljs ansi" style="display:block;">0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_singles_ns</code><code class="nohighlight hljs ansi" style="display:block;">0</code></pre><p>Then the doubles sum</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; project_biorthogonal(proj_ckdl, E(1, 2) * E(3, 4));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify_heavy(ans);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;t&quot;, &quot;u&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_doubles_r, ρ_aibj_doubles_ss, ρ_aibj_doubles_ns =
++ ∑_ckd(c_ci g_ackd u_bjdk)
++ ∑_ckd(L_ackd c_dk t_bjci)
+- ∑_klc(L_kilc c_cl t_akbj)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_singles_ss</code><code class="nohighlight hljs ansi" style="display:block;">0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_singles_ns</code><code class="nohighlight hljs ansi" style="display:block;">0</code></pre><p>Then the doubles sum</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; project_biorthogonal(proj_ckdl, E(1, 2) * E(3, 4));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; symmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify_heavy(ans);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;t&quot;, &quot;u&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_doubles_r, ρ_aibj_doubles_ss, ρ_aibj_doubles_ns =
            desymmetrize(ans, make_permutation_mappings([(1, 2), (3, 4)]));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; ρ_aibj_doubles_r</code><code class="nohighlight hljs ansi" style="display:block;">∑_c(F_ac c_bjci)
 - ∑_k(F_ki c_akbj)
 + ∑_kc(L_aikc c_bjck)
@@ -144,8 +144,6 @@
 - ∑_kc(c_akcj g_bcki)
 - ∑_kc(F_kc c_ak t_bjci)
 - ∑_kc(F_kc c_ci t_akbj)
-+ ∑_ckd(L_ackd c_dk t_bjci)
-- ∑_klc(L_kilc c_cl t_akbj)
 - ∑_kcd(c_ak g_bckd t_cjdi)
 + ∑_kcl(c_ak g_kcli t_bjcl)
 + ∑_kcl(c_ak g_kclj t_blci)
@@ -154,6 +152,8 @@
 + ∑_ckl(c_ci g_kjlc t_albk)
 - ∑_klc(c_ak g_kilc u_bjcl)
 + ∑_ckd(c_ci g_ackd u_bjdk)
++ ∑_ckd(L_ackd c_dk t_bjci)
+- ∑_klc(L_kilc c_cl t_akbj)
 - ∑_kcld(L_kcld c_akdl t_bjci)
 - ∑_kcld(L_kcld c_cidl t_akbj)
 + ∑_kcld(L_kcld c_aick u_bjdl)
@@ -169,9 +169,9 @@
        );</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;t&quot;, &quot;u&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; σ_ai_singles = ans</code><code class="nohighlight hljs ansi" style="display:block;">- ∑_j(F_ij b_aj)
 + ∑_b(F_ba b_bi)
 + ∑_bj(L_iabj b_bj)
-+ ∑_jbck(L_iajb b_ck u_bjck)
 - ∑_jbkc(b_aj g_ibkc u_bjck)
-- ∑_bjkc(b_bi g_jakc u_bjck)</code></pre><p>and similrarly for the doubles</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; project_biorthogonal(proj_ai, E(5, 6) * E(7, 8)) * psym_tensor(&quot;b&quot;, 5:8...);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify_heavy(∑(ans, 5:8)); # No need to symmetrize because of sum</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;t&quot;, &quot;u&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; σ_ai_doubles = ans</code><code class="nohighlight hljs ansi" style="display:block;">- ∑_jbk(b_ajbk g_ijbk)
+- ∑_bjkc(b_bi g_jakc u_bjck)
++ ∑_jbck(L_iajb b_ck u_bjck)</code></pre><p>and similrarly for the doubles</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; project_biorthogonal(proj_ai, E(5, 6) * E(7, 8)) * psym_tensor(&quot;b&quot;, 5:8...);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; simplify_heavy(∑(ans, 5:8)); # No need to symmetrize because of sum</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;t&quot;, &quot;u&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; look_for_tensor_replacements(ans, make_exchange_transformer(&quot;g&quot;, &quot;L&quot;));</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; σ_ai_doubles = ans</code><code class="nohighlight hljs ansi" style="display:block;">- ∑_jbk(b_ajbk g_ijbk)
 + ∑_bcj(b_bicj g_bacj)
 - ∑_bjck(F_ib b_ajck t_bjck)
 - ∑_jbck(F_ja b_bick t_bjck)
@@ -191,9 +191,9 @@
 + ∑_bcj(b_bicj g_bacj)
 - ∑_bjck(F_ib b_ajck t_bjck)
 - ∑_jbck(F_ja b_bick t_bjck)
-+ ∑_jbck(L_iajb b_ck u_bjck)
 - ∑_jbkc(b_aj g_ibkc u_bjck)
 - ∑_bjkc(b_bi g_jakc u_bjck)
++ ∑_jbck(L_iajb b_ck u_bjck)
 + ∑_bcjdk(L_iabc b_bjdk t_cjdk)
 - ∑_jkbcl(L_iajk b_bkcl t_bjcl)
 - ∑_jbkcd(b_ajbk g_icbd t_cjdk)
@@ -283,4 +283,4 @@
 - ∑_bjck(L_bjck R_aj t_bick)
 - ∑_bjck(L_bjck R_bi t_ajck)
 + ∑_bjck(L_bjck R_bj u_aick)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; D_ai = D * occupied(2) * virtual(1)</code><code class="nohighlight hljs ansi" style="display:block;">∑_bj(L_aibj R_bj)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; D_ab = D * virtual(1, 2)</code><code class="nohighlight hljs ansi" style="display:block;">∑_i(L_ai R_bi)
-+ ∑_icj(L_aicj R_bicj)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Getting Started</a><a class="docs-footer-nextpage" href="../qed_ccsd_example/">Quantum Electrodynamics CCSD Example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 29 July 2025 21:56">Tuesday 29 July 2025</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
++ ∑_icj(L_aicj R_bicj)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Getting Started</a><a class="docs-footer-nextpage" href="../qed_ccsd_example/">Quantum Electrodynamics CCSD Example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 29 July 2025 22:20">Tuesday 29 July 2025</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
