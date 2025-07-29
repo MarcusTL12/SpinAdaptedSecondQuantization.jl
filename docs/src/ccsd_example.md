@@ -36,8 +36,8 @@ H = h + g
 
 We omit the nuclear repulsion term and we do not assume any symmetry in our
 integrals apart from the particle exchange symmetry in the two electron
-integrals. We do this since we can then use the T1 transformed integrals
-allowing us to ignore the T1 operator when deriving equations.
+integrals. We are assuming to work with T1 transformed integrals, which
+allow us to ignore the T1 operator when deriving the equations.
 
 We can derive the HF energy expression for the Hamiltonian in terms of the
 Fock matrix as
@@ -48,15 +48,15 @@ E_HF = simplify_heavy(hf_expectation_value(H))
 
 ## Cluster Operator
 
-The cluster operator we define then as only the T2 operator as the T1 amplitudes
-are included in the T1 transformed integrals.
+The cluster operator we define then as only the T2 operator, since the effect of the T1 amplitudes
+is included in the T1 transformed integrals.
 
 ```@repl 1
 T2 = 1//2 * ∑(psym_tensor("t", 1:4...) * E(1, 2) * E(3, 4) *
 occupied(2, 4) * virtual(1, 3), 1:4)
 ```
 
-## Similrarity transformed Hamiltonian
+## Similarity transformed Hamiltonian
 
 A central operator in coupled cluster theory is the similarity transformed
 Hamiltonian operator
@@ -70,7 +70,7 @@ e^{-B} A e^B
 =
 A + [A, B] +
 \frac12 [[A, B], B] +
-\frac{1}{3!} [[[A], B], B] +
+\frac{1}{3!} [[[A, B], B], B] +
 ...
 ``
 
@@ -89,7 +89,7 @@ Hamiltonian with no fear of missing any terms. We supply the function
 !!! note
     We also supply the functon `bch(A, [B1, B2, ...], n)` which
     is equivalent to `bch(A, B1 + B2 + ..., n)` when all of `B1, B2, ...`
-    comute among each other, but is much faster as it avoids computing
+    commute among each other, but is much faster as it avoids computing
     equivalent terms such as ``[[A, B_1], B_2]`` and ``[[A, B_2], B_1]``.
     This can be especially useful for higher order coupled cluster methods such
     as CCSDT and beyond, as well as exotic methods such as QED-CC and NEO-CC.
@@ -135,7 +135,7 @@ speed up the projection and further operations by a bit.
 
 ### Energy
 
-To obtain the energy expression we project the Hbar_ket on HF from the left.
+To obtain the energy expression we project the `Hbar_ket` on HF from the left.
 This can be nicely done using the `act_on_bra(ex, [max_ops])` function
 
 ```@repl 1
@@ -149,7 +149,7 @@ correlation energy as
 E_corr = E0 - E_HF
 ```
 
-Here we see a very common pattern; the 2 * coulomb - 1 * exchange pattern where
+Here we see a very common pattern: the 2 * coulomb - 1 * exchange pattern where
 we have terms that differ by a prefactor of ``-\frac12`` and an exchange of
 index 2 and 4 of a 4 index tensor, such as the two electron integrals or the
 T2 amplitudes. We usually define separate tensor names for these patterns 
@@ -166,7 +166,7 @@ u_{aibj} = 2 t_{aibj} - t_{ajbi}
 ``
 
 We provide a pair of functions to look for this pattern in expressions.
-firstly and mainly [`look_for_tensor_replacements`](@ref) function
+Firstly and mainly [`look_for_tensor_replacements`](@ref) function
 which is the actual engine that takes an expression and a tensor transformation
 function and looks for terms that are equal up to this transformation.
 We provide the utility function [`make_exchange_transformer`](@ref)
@@ -183,7 +183,7 @@ look_for_tensor_replacements(E_corr, make_exchange_transformer("t", "u"))
 
 #### Biorthogonal Bra
 
-For the singles equations we want to compute quantity
+For the singles equations we want to compute the quantity
 
 ``
 \Omega_i^a
@@ -214,7 +214,7 @@ hf_expectation_value(bra * ket)
 ```
 
 However for higher excitations the biorthogonal bra states can not be as easily
-expressed explicitly. For doubly excited determinants we want a biorthornormal
+expressed explicitly. For doubly excited determinants we want a biorthogonal
 bra state ``\bar{\left\langle_{ij}^{ab}\right|}`` such that
 
 ``
@@ -260,8 +260,8 @@ hf_expectation_value(bra * ket)
 ```
 
 !!! note
-    For higher order excited determinants such as triples, quadruples, etc. it is,
-    however, not possible to explicitly express a biorthogonal state that has
+    For higher order excited determinants such as triples, quadruples, etc. it is
+    not possible to explicitly express a biorthogonal state that has
     the desired properties. This is related to the fact that the expression is zero
 
     ``P^{abc} E_{ai} E_{bj} E_{ck} = 0``
@@ -299,16 +299,16 @@ hf_expectation_value(bra * ket)
     ``
 
     We can then see that if one finds amplitudes such that the ``\Omega``
-    found by using the biorthogonal states they will also make the
+    found by using the biorthogonal states is zero, they will also make the
     ``\tilde \Omega`` be zero, which is the condition we want to solve for.
     This is nice as we can safely "pretend" there exists a biorthogonal basis
     which produces much simpler expressions and are therefore more efficient to
     derive and numerically compute.
 
 Since we do not want to (and often can not, see note above)
-make an explicit expression for a biorthogonal bra we provide the function
+make an explicit expression for a biorthogonal bra, we provide the function
 [`project_biorthogonal`](@ref) which lets us insert Kronecker deltas according
-to the definition of the biorthogonality in addition to the
+to the definition of the biorthogonality, and the
 [`symmetrize`](@ref) function to expand the permutations required by the
 biorthogonality. We can reproduce the same behaviour as for the biorthogonal
 doubles from above as
@@ -354,7 +354,7 @@ omega_ai = look_for_tensor_replacements(omega_ai,
     make_exchange_transformer("t", "u"))
 ```
 
-Which produces a nice simplified expression for the singes part of the CCSD
+Which produces a nice simplified expression for the singles part of the CCSD
 equations.
 
 #### Doubles Equations
@@ -369,7 +369,7 @@ Here we want to derive the expression for the doubles ``\Omega``
 
 Just like for the singles equations we project on a biorthogonal bra, though
 now using a doubly excited ket as the template, and we need to symmetrize
-to include the pertmutations caused by the particle symmetry of the biorthogonal
+to include the permutations caused by the particle symmetry of the biorthogonal
 bra.
 
 ```@repl 1
@@ -415,7 +415,7 @@ omega_aibj_ns
     ```
 
 The [`desymmetrize`](@ref) function returns three expressions. The first
-`omega_aibj_r` contains the terms it found redundant permutations of elsewhere
+`omega_aibj_r` contains the terms for which redundant permutations exist elsewhere
 in the original expression. These needs to be symmetrized to obtain the correct
 expression. The second term `omega_aibj_ss` contains the "self-symmetric" terms.
 These are the terms which themselves carry the symmetry requested and can be
@@ -439,7 +439,7 @@ omega_aibj_ns
 where we see that the non-symmetric part is indeed zero, but we have lost the
 ability to remove all prefactors. Counting total terms we can see that both
 strategies give 15 terms in total, so the cost should not be much different, but
-it can be nice to keep in mind. In any case to evaluate the full doubles omega
+it can be nice to keep in mind. In any case, to evaluate the full doubles omega
 one needs to symmetrize the redundant expression, and add the direct evaluation
 of the self-symmetric and apparent non-symmetric expression which we can write
 as
@@ -463,7 +463,7 @@ A_{\mu\nu} = \langle\mu| e^{-T} [H, \tau_{\nu}] e^T |\text{HF}\rangle
 
 though one is rarely interested in the full matrix, but rather to compute
 eigenvalues and solve linear systems. The matrix is usually huge and very
-structures (though not very sparse), so it is way more efficient to code a
+structured (though not very sparse), so it is way more efficient to code a
 direct linear transformation. The Jacobian is not symmetric so one needs to
 derive both the right and left transformations given by
 
@@ -548,7 +548,7 @@ To get the singles block out we project on a biorthogonal singles bra
 ρ_ai_singles
 ```
 
-where we get a very consise expression for the singles-singles transformation.
+where we get a very concise expression for the singles-singles transformation.
 Next we compute the projection
 
 ``
@@ -647,7 +647,7 @@ transformation with some key differences. We can still split the transformed
 vector into singles and doubles blocks
 
 The transformed vector ``\rho_\mu`` can be split into singles and doubles
-block like
+blocks like
 
 ``
 \sigma_{ai} = \sum_{\mu}{b_\mu A_{\mu,ai}}
@@ -699,7 +699,7 @@ look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
 σ_ai_singles = ans
 ```
 
-and similrarly for the doubles
+and similarly for the doubles
 
 ```@repl 1
 project_biorthogonal(proj_ai, E(5, 6) * E(7, 8)) * psym_tensor("b", 5:8...);
@@ -710,9 +710,9 @@ look_for_tensor_replacements(ans, make_exchange_transformer("g", "L"));
 ```
 
 !!! note
-    Here we omited the call to `symmetrize` after `project_biorthogonal` because
-    simplify can reorder the indices in the sum and achieve the same. This
-    misses a factor of 2 which is compensated for by omiting the `1//2` in front
+    Here we omitted the call to `symmetrize` after `project_biorthogonal` because
+    simplify can reorder the indices in the sum and achieve the same effect. This
+    misses a factor of 2 which is compensated for by omitting the `1//2` in front
     of the sum.
 
 And combined
@@ -777,8 +777,8 @@ Since we already have the projections
 e^{-T} [H, \tau_\nu] e^T |\text{HF}\rangle
 ``
 
-from the jacobian transformation, getting the expressions for ``\eta`` is simple
-by projecting those on a HF bra.
+from the jacobian transformation, the expressions for ``\eta`` are simply
+obtained by projecting those on a HF bra.
 
 ```@repl 1
 η_ai = act_on_bra(proj_ai)
@@ -817,9 +817,9 @@ e^T \left(
 \right)
 ``
 
-The left and right coefficient vectors can represent either ground excited
+The left and right coefficient vectors can represent either ground or excited
 states giving us the possibility to derive general expressions for ground
-and excited state as well as transition densities.
+and excited states, as well as transition densities.
 
 Firstly we will need the similarity transformed operator for all parts
 
@@ -830,7 +830,7 @@ bch_Epq = bch(E(1, 2) * electron(1, 2), T2, 4)
 ### Ref-Ref contributions
 
 The terms arising from the ``L_0`` and ``R_0`` (reference-reference)
-are quite straight forward to derive:
+are quite straightforward to derive:
 
 ``
 D_{pq}^\text{ref-ref}
@@ -849,7 +849,7 @@ where we see that only the HF density survives.
     Since we are not including T1 in the cluster operator we will initially
     miss many terms in the density coming from them. This is fine if the
     density is contracted with integrals that are T1 transformed, or one can
-    include the T1 terms into the density by a similarity transform numerically
+    include the T1 terms into the density by a numerical similarity transformation,
     which makes the expressions a bit nicer.
 
 ### ``\mu``-Ref contributions
