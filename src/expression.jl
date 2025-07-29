@@ -361,8 +361,22 @@ function simplify(ex::Expression)
     simplify_terms
 end
 
-function simplify_terms(ex::Expression)
-    Expression([simplify(t) for t in ex.terms])
+function simplify_terms(ex::Expression{T}) where {T<:Number}
+    nth = Threads.nthreads()
+
+    terms = [Term{T}[] for _ in 1:nth]
+
+    Threads.@threads for id in 1:nth
+        for i in id:nth:length(ex.terms)
+            push!(terms[id], simplify(ex.terms[i]))
+        end
+    end
+
+    for i in 2:nth
+        append!(terms[1], terms[i])
+    end
+
+    Expression(terms[1])
 end
 
 """
