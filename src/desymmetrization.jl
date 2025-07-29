@@ -183,7 +183,7 @@ function symmetrize(ex::Expression{T}, mappings) where {T<:Number}
         for i in id:nth:length(ex.terms)
             for mapping in mappings
                 other_term = exchange_indices(ex[i], mapping)
-                push!(terms, other_term)
+                push!(terms[id], other_term)
             end
         end
     end
