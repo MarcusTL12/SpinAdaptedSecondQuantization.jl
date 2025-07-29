@@ -381,11 +381,7 @@ function simplify_terms(ex::Expression{T}) where {T<:Number}
         end
     end
 
-    for i in 2:nth
-        append!(terms[1], terms[i])
-    end
-
-    Expression(terms[1])
+    Expression(terms)
 end
 
 """
@@ -640,11 +636,7 @@ function commutator(a::Expression{A}, b::Expression{B}) where
         end
     end
 
-    for i in 2:nth
-        append!(terms[1], terms[i])
-    end
-
-    Expression(terms[1])
+    Expression(terms)
 end
 
 export anticommutator
@@ -676,11 +668,7 @@ function anticommutator(a::Expression{A}, b::Expression{B}) where
         end
     end
 
-    for i in 2:nth
-        append!(terms[1], terms[i])
-    end
-
-    Expression(terms[1])
+    Expression(terms)
 end
 
 """
