@@ -175,14 +175,23 @@ t_aibjck
 ```
 """
 function symmetrize(ex::Expression{T}, mappings) where {T<:Number}
-    terms = Term{T}[]
+    nth = Threads.nthreads()
 
-    for t in ex.terms
-        for mapping in mappings
-            other_term = exchange_indices(t, mapping)
-            push!(terms, other_term)
+    terms = [Term{T}[] for _ in 1:nth]
+
+    Threads.@threads for id in 1:nth
+        for i in id:nth:length(ex.terms)
+            for mapping in mappings
+                other_term = exchange_indices(ex[i], mapping)
+                push!(terms, other_term)
+            end
         end
     end
 
-    Expression(terms)
+    all_terms, rest = Iterators.peel(terms)
+    for other_terms in rest
+        append!(all_terms, other_terms)
+    end
+
+    Expression(all_terms)
 end
