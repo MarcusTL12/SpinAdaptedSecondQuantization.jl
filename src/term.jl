@@ -326,69 +326,42 @@ function Base.isless(a::Constraints, b::Constraints)
     length(a) < length(b)
 end
 
-function sorting_operator_types(a::Vector{Operator}, b::Vector{Operator})
-    if length(a) < length(b)
-        return (0, 1)
-    elseif length(a) > length(b)
-        return (1, 0)
-    end
+# Exactly how to sort terms is up for debate, but it should be consistent
+function Base.isless(a::Term, b::Term)
+    length(a.deltas) < length(b.deltas) && return true
+    length(a.deltas) > length(b.deltas) && return false
+    length(a.operators) < length(b.operators) && return true
+    length(a.operators) > length(b.operators) && return false
 
-    for (o1, o2) in zip(a, b)
+    for (o1, o2) in zip(a.operators, b.operators)
         if typeof(o1) < typeof(o2)
-            return (0, 1)
+            return true
         elseif typeof(o1) > typeof(o2)
-            return (1, 0)
+            return false
         end
     end
 
-    (0, 0)
-end
+    length(a.tensors) < length(b.tensors) && return true
+    length(a.tensors) > length(b.tensors) && return false
 
-function sorting_tensors(a::Vector{Tensor}, b::Vector{Tensor})
-    if length(a) < length(b)
-        return (0, 1)
-    elseif length(a) > length(b)
-        return (1, 0)
-    end
-
-    for (t1, t2) in zip(a, b)
+    for (t1, t2) in zip(a.tensors, b.tensors)
         if get_symbol(t1) < get_symbol(t2)
-            return (0, 1)
+            return true
         elseif get_symbol(t1) > get_symbol(t2)
-            return (1, 0)
+            return false
         end
 
         if length(get_indices(t1)) < length(get_indices(t2))
-            return (0, 1)
+            return true
         elseif length(get_indices(t1)) > length(get_indices(t2))
-            return (1, 0)
+            return false
         end
     end
 
-    (0, 0)
-end
-
-# Exactly how to sort terms is up for debate, but it should be consistent
-function Base.isless(a::Term, b::Term)
-    operatortypes_a, operatortypes_b =
-        sorting_operator_types(a.operators, b.operators)
-
-    tensorstrings_a, tensorstrings_b = sorting_tensors(a.tensors, b.tensors)
-
-    (
-        length(a.deltas),
-        operatortypes_a,
-        length(a.sum_indices),
-        tensorstrings_a,
-        a.deltas, a.operators, a.sum_indices, a.tensors,
+    (a.deltas, a.operators, a.sum_indices, a.tensors,
         a.constraints,
         -abs(a.scalar), -sign(a.scalar),
-    ) < (
-        length(b.deltas),
-        operatortypes_b,
-        length(b.sum_indices),
-        tensorstrings_b,
-        b.deltas, b.operators, b.sum_indices, b.tensors,
+    ) < (b.deltas, b.operators, b.sum_indices, b.tensors,
         b.constraints,
         -abs(b.scalar), -sign(b.scalar),
     )
