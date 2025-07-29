@@ -345,15 +345,15 @@ function Base.isless(a::Term, b::Term)
     length(a.tensors) > length(b.tensors) && return false
 
     for (t1, t2) in zip(a.tensors, b.tensors)
-        if get_symbol(t1) < get_symbol(t2)
-            return true
-        elseif get_symbol(t1) > get_symbol(t2)
-            return false
-        end
-
         if length(get_indices(t1)) < length(get_indices(t2))
             return true
         elseif length(get_indices(t1)) > length(get_indices(t2))
+            return false
+        end
+
+        if get_symbol(t1) < get_symbol(t2)
+            return true
+        elseif get_symbol(t1) > get_symbol(t2)
             return false
         end
     end
