@@ -82,21 +82,13 @@ function act_on_ket(ex::Expression{T}, max_ops=Inf) where {T}
     Expression(all_terms)
 end
 
-function act_on_ket_unthreaded(ex::Expression{T}, max_ops=Inf) where {T}
-    nth = Threads.nthreads()
-    terms = [Term{T}[] for _ in 1:nth]
-    for id in 1:nth
-        for i in id:nth:length(ex.terms)
-            append!(terms[id], act_on_ket(ex[i], max_ops).terms)
-        end
+function act_on_ket_unthreaded(ex::Expression{T}, max_ops) where {T}
+    terms = Term{T}[]
+    for i in 1:length(ex.terms)
+        append!(terms, act_on_ket(ex[i], max_ops).terms)
     end
 
-    all_terms, rest = Iterators.peel(terms)
-    for other_terms in rest
-        append!(all_terms, other_terms)
-    end
-
-    Expression(all_terms)
+    Expression(terms)
 end
 
 function act_on_ket(t::Term{A}, max_ops) where {A<:Number}
