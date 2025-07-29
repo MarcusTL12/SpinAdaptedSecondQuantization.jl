@@ -18,6 +18,7 @@ makedocs(
             "new_type_tutorial.md",
             "new_indices_tutorial.md",
         ],
+        "Coupled Cluster Benchmark" => "cc_bench.md",
         "Reference/API" => [
             "reference.md",
             "internals.md",
