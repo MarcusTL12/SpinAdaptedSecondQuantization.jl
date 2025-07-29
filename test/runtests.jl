@@ -64,11 +64,11 @@ end
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ic(δ_abc g_icii h_ac E_ab)"
+          "3/5 ∑_ic(δ_abc h_ac g_icii E_ab)"
 
     t = SASQ.lower_delta_indices(t)
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ic(δ_abc g_iaii h_aa E_aa)"
+          "3/5 ∑_ic(δ_abc h_aa g_iaii E_aa)"
 
     t = SASQ.Term(
         3 // 5,
@@ -84,7 +84,7 @@ end
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ib(δ_ab g_ibip h_ab E_ap)"
+          "3/5 ∑_ib(δ_ab h_ab g_ibip E_ap)"
 end
 
 @testset "term exchange_indices" begin
@@ -108,21 +108,21 @@ end
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/7 δ_pqr g_iaiq h_pa E_pq"
+          "3/7 δ_pqr h_pa g_iaiq E_pq"
 
     t = SASQ.lower_delta_indices(t)
 
     @test string(SASQ.Expression([t])) ==
-          "3/7 δ_pqr g_iaip h_pa E_pp"
+          "3/7 δ_pqr h_pa g_iaip E_pp"
 
     t2 = SASQ.exchange_indices(t, [p => q])
 
     @test string(SASQ.Expression([t2])) ==
-          "3/7 δ_pq g_iaip h_pa E_pp"
+          "3/7 δ_pq h_pa g_iaip E_pp"
 
     t3 = SASQ.exchange_indices(t2, [q => r])
 
-    @test string(SASQ.Expression([t3])) == "3/7 g_iaip h_pa E_pp"
+    @test string(SASQ.Expression([t3])) == "3/7 h_pa g_iaip E_pp"
 end
 
 @testset "term summation delta" begin
@@ -479,11 +479,11 @@ end
     trans = translate(VirtualOrbital => [3])
 
     code = print_code(equation.terms[1], "omega", trans)
-    expected_code = """omega_a +=  +1.00000000 * np.einsum("bia,ib->a", g_vov, h_ov, optimize="optimal");"""
+    expected_code = "omega_a +=  +1.00000000 * np.einsum(\"ib,bia->a\", h_ov, g_vov, optimize=\"optimal\");"
     @test code == expected_code
 
     code_eT = print_eT_code(equation.terms[1], "omega", trans, "test")
-    expected_code_eT = """print(generate_eT_code_from_einsum(\n    routine_name=\"test\",\n    prefactor= +1.00000000,\n    contraction_string=\"bia,ib->a\",\n    arrays=[g_vov, h_ov, omega],\n    symbols=[\"g_vov\", \"h_ov\", \"omega\"],\n), end='!\\n!\\n')"""
+    expected_code_eT = "print(generate_eT_code_from_einsum(\n    routine_name=\"test\",\n    prefactor= +1.00000000,\n    contraction_string=\"ib,bia->a\",\n    arrays=[h_ov, g_vov, omega],\n    symbols=[\"h_ov\", \"g_vov\", \"omega\"],\n), end='!\\n!\\n')"
     @test code_eT == expected_code_eT
 end
 
