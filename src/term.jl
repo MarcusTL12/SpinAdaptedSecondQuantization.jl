@@ -331,8 +331,8 @@ function Base.isless(a::Term, b::Term)
     operatortypes_a = [typeof(e) for e in a.operators]
     operatortypes_b = [typeof(e) for e in b.operators]
 
-    tensorstrings_a = [get_symbol(t) for t in a.tensors]
-    tensorstrings_b = [get_symbol(t) for t in b.tensors]
+    tensorstrings_a = [(get_symbol(t), length(get_indices(t))) for t in a.tensors]
+    tensorstrings_b = [(get_symbol(t), length(get_indices(t))) for t in b.tensors]
 
     (
         length(a.deltas),
