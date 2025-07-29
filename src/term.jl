@@ -326,27 +326,68 @@ function Base.isless(a::Constraints, b::Constraints)
     length(a) < length(b)
 end
 
+function sorting_operator_types(a::Vector{Operator}, b::Vector{Operator})
+    if length(a) < length(b)
+        return (0, 1)
+    elseif length(a) > length(b)
+        return (1, 0)
+    end
+
+    for (o1, o2) in zip(a, b)
+        if typeof(o1) < typeof(o2)
+            return (0, 1)
+        elseif typeof(o1) > typeof(o2)
+            return (1, 0)
+        end
+    end
+
+    (0, 0)
+end
+
+function sorting_tensors(a::Vector{Tensor}, b::Vector{Tensor})
+    if length(a) < length(b)
+        return (0, 1)
+    elseif length(a) > length(b)
+        return (1, 0)
+    end
+
+    for (t1, t2) in zip(a, b)
+        if get_symbol(t1) < get_symbol(t2)
+            return (0, 1)
+        elseif get_symbol(t1) > get_symbol(t2)
+            return (1, 0)
+        end
+
+        if length(get_indices(t1)) < length(get_indices(t2))
+            return (0, 1)
+        elseif length(get_indices(t1)) > length(get_indices(t2))
+            return (1, 0)
+        end
+    end
+
+    (0, 0)
+end
+
 # Exactly how to sort terms is up for debate, but it should be consistent
 function Base.isless(a::Term, b::Term)
-    operatortypes_a = [typeof(e) for e in a.operators]
-    operatortypes_b = [typeof(e) for e in b.operators]
+    operatortypes_a, operatortypes_b =
+        sorting_operator_types(a.operators, b.operators)
 
-    tensorstrings_a = [(get_symbol(t), length(get_indices(t))) for t in a.tensors]
-    tensorstrings_b = [(get_symbol(t), length(get_indices(t))) for t in b.tensors]
+    tensorstrings_a, tensorstrings_b = sorting_tensors(a.tensors, b.tensors)
 
     (
         length(a.deltas),
-        length(a.operators), operatortypes_a,
+        operatortypes_a,
         length(a.sum_indices),
-        length(a.tensors), tensorstrings_a,
+        tensorstrings_a,
         a.deltas, a.operators, a.sum_indices, a.tensors,
         a.constraints,
         -abs(a.scalar), -sign(a.scalar),
     ) < (
         length(b.deltas),
-        length(b.operators), operatortypes_b,
+        operatortypes_b,
         length(b.sum_indices),
-        length(b.tensors), tensorstrings_b,
+        tensorstrings_b,
         b.deltas, b.operators, b.sum_indices, b.tensors,
         b.constraints,
         -abs(b.scalar), -sign(b.scalar),
@@ -918,7 +959,7 @@ function find_illegal_operator_chains(t::Term{T}) where {T<:Number}
     # First and simplest check: no repeated fermionic operators
     for i in 1:length(t.operators)-1
         a = t.operators[i]
-        b = t.operators[i + 1]
+        b = t.operators[i+1]
 
         if a isa FermionOperator && b isa FermionOperator && a == b
             return zero(Term{T})
@@ -928,8 +969,8 @@ function find_illegal_operator_chains(t::Term{T}) where {T<:Number}
     # Second check: no illegal triplets
     for i in 1:length(t.operators)-2
         a = t.operators[i]
-        b = t.operators[i + 1]
-        c = t.operators[i + 2]
+        b = t.operators[i+1]
+        c = t.operators[i+2]
 
         # All must be SingletExcitationOperator
         a isa SingletExcitationOperator || continue
