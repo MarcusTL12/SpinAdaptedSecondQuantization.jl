@@ -74,12 +74,7 @@ function act_on_ket(ex::Expression{T}, max_ops=Inf) where {T}
         end
     end
 
-    all_terms, rest = Iterators.peel(terms)
-    for other_terms in rest
-        append!(all_terms, other_terms)
-    end
-
-    Expression(all_terms)
+    Expression(terms)
 end
 
 function act_on_ket_unthreaded(ex::Expression{T}, max_ops) where {T}

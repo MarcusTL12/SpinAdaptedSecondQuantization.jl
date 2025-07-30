@@ -68,6 +68,15 @@ function Expression(terms::AbstractVector{Term})
     Expression(new_terms)
 end
 
+function Expression(terms::Vector{Vector{Term{T}}}) where {T}
+    all_terms, rest = Iterators.peel(terms)
+    for other_terms in rest
+        append!(all_terms, other_terms)
+    end
+
+    Expression(all_terms)
+end
+
 function Base.show(io::IO, ex::Expression)
     show(io, (ex, IndexTranslation()))
 end
@@ -372,11 +381,7 @@ function simplify_terms(ex::Expression{T}) where {T<:Number}
         end
     end
 
-    for i in 2:nth
-        append!(terms[1], terms[i])
-    end
-
-    Expression(terms[1])
+    Expression(terms)
 end
 
 """
@@ -631,11 +636,7 @@ function commutator(a::Expression{A}, b::Expression{B}) where
         end
     end
 
-    for i in 2:nth
-        append!(terms[1], terms[i])
-    end
-
-    Expression(terms[1])
+    Expression(terms)
 end
 
 export anticommutator
@@ -667,11 +668,7 @@ function anticommutator(a::Expression{A}, b::Expression{B}) where
         end
     end
 
-    for i in 2:nth
-        append!(terms[1], terms[i])
-    end
-
-    Expression(terms[1])
+    Expression(terms)
 end
 
 """

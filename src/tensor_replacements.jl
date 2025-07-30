@@ -160,9 +160,10 @@ function look_for_tensor_replacements(ex::Expression, transformer)
 
             for (replacement, other_replacement) in
                 zip(replacements, other_replacements)
+                simple_replacement = replacement
                 for j in eachindex(ex.terms)
                     if i != j && possibly_equal(ex[j], replacement)
-                        simple_replacement = simplify_heavy(replacement)
+                        simple_replacement = simplify_heavy(simple_replacement)
                         if ex[j] == simple_replacement
                             push!(new_things_th[th_id],
                                 (i, j) => simplify_heavy(other_replacement))
