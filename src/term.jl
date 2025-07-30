@@ -835,9 +835,9 @@ function find_equal_perm(a::Term, b::Term)
 end
 
 """
-    try_add_constraints(ex::Expression)
+    try_add_constraints(a::Term, b::Term)
 
-Check if pair of terms differing only in index constraints and scalar
+Checks if the pair of terms are differing only in index constraints and scalar
 prefactors, and tries to combine them.
 See [`simplify`](@ref) for example.
 """
@@ -896,7 +896,7 @@ Looks for chains of operators that equals zero such as
 and
 
 ``
-a_pσ a_pσ = 0
+a_{pσ} a_{pσ} = 0
 ``
 
 The routine focuses on having "safe" simplifications that are easy to formulate

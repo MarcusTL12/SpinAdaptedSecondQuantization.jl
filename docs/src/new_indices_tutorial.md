@@ -70,7 +70,7 @@ simplify_heavy(hf_expectation_value(g))
 ## Multilevel indices
 
 Say we want to divide our electronic indices into an active and an inactive
-space. Then we can define the following spaces.
+space. Then we can define the following spaces
 
 ```@repl 1
 ActiveOrbital = new_space(:ActiveOrbital, "a", "pqrstuv")
@@ -87,7 +87,7 @@ set_color(ActiveOrbital, :cyan)
 set_color(InactiveOrbital, :red)
 ```
 
-now if we use the indices we see that they get possible to tell apart
+now if we use the indices we see that they are no longer identical
 
 ```@repl 1
 ∑(real_tensor("g", 1, 2, 3, 4) *
@@ -120,7 +120,7 @@ ans + ∑(real_tensor("h", 1, 2) * E(1, 2) *
 simplify(ans)
 ```
 
-Now we also want to subdivide the `OccupiedOrbital` and `OccupiedOrbital`
+Now we also want to subdivide the `VirtualOrbital` and `OccupiedOrbital`
 index spaces into active and inactive subspaces, so we define these spaces
 
 ```@repl 1
@@ -149,7 +149,7 @@ add_space_sum(ActiveOccupiedOrbital, ActiveVirtualOrbital, ActiveOrbital)
 add_space_sum(InactiveOccupiedOrbital, InactiveVirtualOrbital, InactiveOrbital)
 ```
 
-Now in addition to this we now have a new relation we want to specify, namely
+In addition to this we now have a new relation we want to specify, namely
 the following
 
 ```
@@ -167,7 +167,7 @@ add_space_intersection(InactiveOrbital, OccupiedOrbital, InactiveOccupiedOrbital
 add_space_intersection(InactiveOrbital, VirtualOrbital, InactiveVirtualOrbital)
 ```
 
-This is what allows the following simplification to happend
+This is what allows the following simplification to happen
 
 ```@repl 1
 t = real_tensor("h", 1, 2) * constrain(1 => ActiveOrbital, 2 => InactiveOrbital)
@@ -233,7 +233,7 @@ E_active = simplify_heavy(hf_expectation_value(H_active))
 E_inactive = simplify_heavy(hf_expectation_value(H_inactive))
 ```
 
-Then finally we can define an interaction energy by subtracting these off the
+Then finally we can define an interaction energy by subtracting these from the
 full energy
 
 ```@repl 1
@@ -291,7 +291,7 @@ look_for_tensor_replacements(ans,
 E0 = ans
 ```
 
-singles:
+Singles:
 
 ```@repl 1
 project_biorthogonal(Hbar_ket, E(1, 2));

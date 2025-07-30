@@ -1,7 +1,7 @@
 export print_julia_function
 
 """
-print_julia_function(name, ex::Expression, [symbol="X"];
+    print_julia_function(name, ex::Expression, [symbol="X"];
                     [tensor_translation], [explicit_tensor_blocks])
 
 Returns String with a runnable julia function to evaluate the given expression
@@ -66,7 +66,7 @@ end
     This function currently only supports expressions input and output tensors
     are indexed by occupied, virtual or general molecular orbitals.
 
-    There is also not suppot for expressions containing Kronecker deltas, so
+    There is also no support for expressions containing Kronecker deltas, so
     these would require a bit of pre-processing.
 """
 function print_julia_function(name, ex::Expression, symbol="X";

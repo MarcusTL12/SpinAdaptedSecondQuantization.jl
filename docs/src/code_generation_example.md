@@ -28,9 +28,9 @@ sub-blocks where some indices run over only occupied or virtual indices. For
 integral tensors this can be nice if many different blocks are used, then
 the caller of the function does not have to think about which blocks to give
 to the function. However, for tensors such as the T amplitudes where only one
-specific block exists (the ovov...) block, it is better to only have to give
-this, rather than embedding it in a much larger tensor. To achieve this one
-can specify the optional keyword argument `explicit_tensor_blocks` which
+specific block exists (the ovov...) block, it is better to limit the tensor to
+only these indices, rather than embedding it in a much larger tensor. To achieve 
+this one can specify the optional keyword argument `explicit_tensor_blocks` which
 makes all sub-blocks used of these tensors be specified as individual
 inputs to the generated function.
 

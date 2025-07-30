@@ -12,7 +12,7 @@ on the new types. Here is a short tutorial for how to implement your own type.
     When overloading functions internal to the package, however, the function
     names need to be prepended by `SpinAdaptedSecondQuantization.` to work.
     Since the package name is rather long we export the acronym `SASQ` for
-    convencience. See [`Internals`](@ref).
+    convenience. See [`Internals`](@ref).
 
 ## Implementing your own tensor type
 
@@ -37,7 +37,7 @@ Next we must implement the following set of functions:
 - `reorder_indices(t, permutation)` should return tensor after reordering
     indices according to the given permutation
 
-Optionally we can impement the functions, but they have reasonable default
+Optionally we can implement the functions, but they have reasonable default
 implementations
 - `Base.show(io::IO, t)`, if one wants to print the tensor in a custom way.
 - `get_permutations(t)`, needed for [`print_eT_function_generator`](@ref)
@@ -164,7 +164,7 @@ Then there are functions that are implemented for each pair of operator types.
 These only needs to be implemented for the pairs you plan on using in the
 same expressions. Here we will only be implementing these for the normal
 `SingletExcitationOperator`.
-- `Base.isless` To define the lexiographic ordering of different operator types
+- `Base.isless` To define the lexicographic ordering of different operator types
 - `reductive_commutator` To define commutation relations
 
 The first function is simple as we only need to decide on an order of the
