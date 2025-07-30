@@ -4,7 +4,7 @@ The benchmarking script below can be used as a test of performance
 for deriving coupled cluster ground state equations for arbitrary order.
 
 Here are the timings of this being run for a few truncation orders running with
-24 threads on a `Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz` cpu
+48 threads on a dual `Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz` cpu system
 
 | Derivation Step | CCS     | CCSD   | CCSDT | CCSDTQ | CCSDTQP | CCSDTQP6 |
 | --------------- | ------- | ------ | ----- | ------ | ------- | -------- |
