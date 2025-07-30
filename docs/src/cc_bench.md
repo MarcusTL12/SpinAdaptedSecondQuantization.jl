@@ -6,14 +6,14 @@ for deriving coupled cluster ground state equations for arbitrary order.
 Here are the timings of this being run for a few truncation orders running with
 24 threads on a `Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz` cpu
 
-| Derivation Step | CCS    | CCSD   | CCSDT | CCSDTQ | CCSDTQP | CCSDTQP6 |
-| --------------- | ------ | ------ | ----- | ------ | ------- | -------- |
-| bch             | 43 µs  | 61 ms  | 1.0 s | 7.1 s  | 0.0 s   | 0.0 s    |
-| simplify        | 0.1 ms | 44 ms  | 0.5 s | 4.9 s  | 0.0 s   | 0.0 s    |
-| act_on_ket      | 0.5 ms | 42 ms  | 1.4 s | 13.1 s | 0.0 s   | 0.0 s    |
-| simplify        | 0.3 ms | 38 ms  | 0.6 s | 5.7 s  | 0.0 s   | 0.0 s    |
-| finalize        | 0.1 ms | 36 ms  | 0.4 s | 3.4 s  | 0.0 s   | 0.0 s    |
-| total           | 1.1 ms | 0.22 s | 3.9 s | 34.2 s | 0.0 s   | 0.0 s    |
+| Derivation Step | CCS     | CCSD   | CCSDT | CCSDTQ | CCSDTQP | CCSDTQP6 |
+| --------------- | ------- | ------ | ----- | ------ | ------- | -------- |
+| bch             | 17.1 µs | 58 ms  | 1.0 s |  8.3 s | 49.4 s  |  210 s   |
+| simplify        | 0.2 ms  | 39 ms  | 0.6 s |  5.5 s | 28.7 s  |  127 s   |
+| act_on_ket      | 0.3 ms  | 27 ms  | 1.3 s | 10.4 s | 74.2 s  |  423 s   |
+| simplify        | 0.3 ms  | 28 ms  | 0.5 s |  5.0 s | 29.5 s  |  130 s   |
+| finalize        | 0.3 ms  | 25 ms  | 0.1 s |  0.7 s |  7.7 s  |  113 s   |
+| total           | 1.1 ms  | 0.2 s  | 3.5 s | 30.1 s |  190 s  | 1002 s   |
 
 ```julia
 using SpinAdaptedSecondQuantization
