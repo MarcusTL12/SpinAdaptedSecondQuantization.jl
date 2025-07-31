@@ -27,10 +27,10 @@ A_1 A_2 ... \\tilde A_n |\\text{HF}\\rangle
 ``
 
 where the ``[A, B]_\\Gamma`` notation is the [`reductive_commutator`](@ref)
-which chooses whether to compute a commutatior or anticommutator depending on
-the input to reduce the number of operator in the output.
+which chooses whether to compute a commutator or anticommutator depending on
+the input to reduce the number of operators in the output.
 
-The optional parameter `max_ops` specifies the maximum number of operator to
+The optional parameter `max_ops` specifies the maximum number of operators to
 keep in any terms. If only a few excitations are needed, specifying this can
 greatly speed up the projection.
 

@@ -40,7 +40,7 @@ For convenience these are represented as integers,
 but they are purely symbolic. When constrained to a certain index space
 they will be printed with names according
 to the semi-standard names for general molecular orbital (MO) indices
-`pqrstuv`, `abcdefg` and `ijklmno`.
+`pqrstuv`, `abcdefg` for virtual and `ijklmno` for occupied.
 
 By default indices are unconstrained and will be printed as subscript indices
 `₁₂...`
@@ -67,7 +67,7 @@ E(1, 2) * E(3, 4) * virtual(1, 3) * occupied(2, 4)
 
 ### Operators
 
-A small variety of operator types is supplied by defualt listed in the following
+A small variety of operator types is supplied by default listed in the following
 table.
 
 | Operator Type             | constructor(s)                  |
@@ -94,7 +94,7 @@ bosondag() * boson()
 The simplest tensor type is the `RealTensor` which has a name and an array of
 indices.
 
-Example:
+Examples:
 
 ```@repl 1
 real_tensor("h", 1, 2) * electron(1, 2)
@@ -110,10 +110,10 @@ indices. Supported tensor types are listed below
 | ParticleSymmetricTensor | psym_tensor(name, p, ...) | g₁₂₃₄ <-> g₃₄₁₂                   |
 | RealSymmetricTensor     | rsym_tensor(name, p, ...) | g₁₂₃₄ <-> g₂₁₃₄ <-> g₄₃₂₁ <-> ... |
 
-`rsym_tensor` i typically used when assuming full real orbtial symmetry of
-integrals such as 2-fold symmetry of h_pq and 8-fold symmetry of g_pqrs.
-the `psym_tensor` is useful when doing coupled cluster theory, where symmetries
-within index pairs does not exist because the integrals are T1 transformed.
+`rsym_tensor` is typically used when full real orbital symmetry of
+integrals is required, such as 2-fold symmetry of h_pq and 8-fold symmetry of g_pqrs.
+`psym_tensor` is useful when doing coupled cluster theory, where symmetries
+within index pairs do not exist because the integrals are T1 transformed.
 
 Examples of symmetric tensors:
 
@@ -124,7 +124,7 @@ psym_tensor("g", 4, 3, 1, 2) * electron(1, 2, 3, 4)
 
 ### Kronecker Deltas
 
-Kronecker deltas constrain indices to be equal or else the term would be zero.
+Kronecker deltas are used to constrain indices to be equal, otherwise the term would be zero.
 They can have two or more indices each.
 
 Example:

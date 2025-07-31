@@ -270,16 +270,16 @@ export simplify
 Applies various simplification strategies to the given expression.
 The most important are:
 - Remove Kronecker deltas when indices are summed over.
-- Perform various operations to try to lower the lexiographic ordering of the
+- Perform various operations to try to lower the lexicographic ordering of the
     each term including:
     - Lowering indices showing up in a Kronecker delta to the lowest of the
         indices in said delta.
     - Lowering summation indices to lowest available indices.
-    - Reorder summation indices to lower the lexiographic ordering of the order
+    - Reorder summation indices to lower the lexicographic ordering of the order
         they show up within the term.
-    - Bubble sort operators swaping neighbouring operators if:
+    - Bubble sort operators swapping neighbouring operators if:
         - They commute
-        - The swap would lower the terms lexiographic ordering.
+        - The swap would lower the terms lexicographic ordering.
     - Look for chains of operators that are zero.
 - Look for pairs of terms differing only in index constraints and scalar
     prefactors, and tries to combine them.
@@ -387,7 +387,7 @@ end
 """
     try_add_constraints(ex::Expression)
 
-Look for pairs of terms differing only in index constraints and scalar
+Looks for pairs of terms differing only in index constraints and scalar
 prefactors, and tries to combine them.
 See [`simplify`](@ref) for example.
 """
@@ -612,7 +612,7 @@ export commutator
 """
     commutator(a::Expression, b::Expression)
 
-Compute commutator between `a` and `b`. This is computed termwise using the
+Computes commutator between `a` and `b`. This is computed termwise using the
 [`reductive_commutator`](@ref) function, then adding/subtracting the swapped
 result if the reductive commutator for a given pair of terms turned out to be
 an anti-commutator.
@@ -644,10 +644,10 @@ export anticommutator
 """
     anticommutator(a::Expression, b::Expression)
 
-Compute commutator between `a` and `b`. This is computed termwise using the
+Computes anticommutator between `a` and `b`. This is computed termwise using the
 [`reductive_commutator`](@ref) function, then adding/subtracting the swapped
 result if the reductive commutator for a given pair of terms turned out to be
-an commutator.
+a commutator.
 """
 function anticommutator(a::Expression{A}, b::Expression{B}) where
 {A<:Number,B<:Number}
@@ -698,7 +698,7 @@ end
 """
     commutator(A, Bs)
 
-Compute nested commutator with all expressions in iteratable Bs.
+Computes nested commutator with all expressions in iteratable Bs.
 
 ``
 [...[[[A], B_1], B_2], ...]
@@ -875,7 +875,7 @@ export convert_to_elementary_operators
 """
     convert_to_elementary_operators(ex::Expression)
 
-converts all operators to their representation using "elementary"
+Converts all operators to their representation using "elementary"
 annihilation and creation operators if implemented for all operator types in
 `ex`.
 """

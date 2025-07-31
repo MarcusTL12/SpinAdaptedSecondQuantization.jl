@@ -35,9 +35,9 @@ given by the `mappings`. See [`symmetrize`](@ref) and
 Returns three expressions:
 1. The first expression contains the terms where redundant copies were found
     which are equal under the given symmetry. These needs to be symmetrized
-    to obtain the original expression, usally after numerically evaluating
+    to obtain the original expression, usually after numerically evaluating
     the non-redundant terms.
-2. The second expression constins the "self-symmetric" terms, which on their own
+2. The second expression contains the "self-symmetric" terms, which on their own
     are invariant under the given symmetries and do not need to be symmetrized.
 3. The last expression contains any left over "non-symmetric" terms. This is
     expected to be zero when desymmetrizing an expression with a known symmetry
@@ -176,7 +176,7 @@ end
     symmetrize(ex::Expression, mappings)
 
 Function to expand the expression `ex` including all permutations of indices
-given by `mappings`. This is common to use to expand all permuations among
+given by `mappings`. This is common to use to expand all permutations among
 neighbouring pairs of indices, such as to compute
 ``P_{ijk}^{abc} \\Omega_{ijk}^{abc}``. For this specific purpose we provide the
 convenience function [`make_permutation_mappings`](@ref) which produces all

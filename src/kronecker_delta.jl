@@ -41,7 +41,7 @@ end
 """
     delta(indices...)
 
-Construct an expression consisting of a single Kronecker delta of the given
+Constructs an expression consisting of a single Kronecker delta of the given
 indices.
 """
 delta(indices...) = Expression(KroneckerDelta(indices...))
