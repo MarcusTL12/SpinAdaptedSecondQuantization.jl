@@ -6,14 +6,14 @@ for deriving coupled cluster ground state equations for arbitrary order.
 Here are the timings of this being run for a few truncation orders running with
 48 threads on a dual `Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz` cpu system
 
-| Derivation Step | CCS     | CCSD   | CCSDT | CCSDTQ | CCSDTQP | CCSDTQP6 |
-| --------------- | ------- | ------ | ----- | ------ | ------- | -------- |
-| bch             | 17.1 µs | 58 ms  | 1.0 s |  8.3 s | 49.4 s  |  210 s   |
-| simplify        | 0.2 ms  | 39 ms  | 0.6 s |  5.5 s | 28.7 s  |  127 s   |
-| act_on_ket      | 0.3 ms  | 27 ms  | 1.3 s | 10.4 s | 74.2 s  |  423 s   |
-| simplify        | 0.3 ms  | 28 ms  | 0.5 s |  5.0 s | 29.5 s  |  130 s   |
-| finalize        | 0.3 ms  | 25 ms  | 0.1 s |  0.7 s |  7.7 s  |  113 s   |
-| total           | 1.1 ms  | 0.2 s  | 3.5 s | 30.1 s |  190 s  | 1002 s   |
+| Derivation Step | CCS    | CCSD   | CCSDT | CCSDTQ | CCSDTQP | CCSDTQP6 | CCSDTQP67 |
+| --------------- | ------ | ------ | ----- | ------ | ------- | -------- | --------- |
+| bch             | 18 µs  | 62 ms  | 1.4 s | 11.9 s | 71.5 s  |  279 s   |   837 s   |
+| simplify        | 0.2 ms | 49 ms  | 0.8 s |  7.1 s | 42.0 s  |  186 s   |   543 s   |
+| act_on_ket      | 0.3 ms | 21 ms  | 1.0 s | 10.7 s | 61.7 s  |  358 s   |  2355 s   |
+| simplify        | 0.2 ms |  6 ms  | 42 ms |  0.2 s |  0.6 s  |  1.7 s   |   3.9 s   |
+| finalize        | 0.3 ms | 23 ms  | 0.1 s |  0.6 s |  8.4 s  |  115 s   |  2286 s   |
+| total           | 1.1 ms | 0.2 s  | 3.4 s | 30.5 s |  184 s  |  940 s   |  6025 s   |
 
 ```julia
 using SpinAdaptedSecondQuantization
@@ -102,7 +102,7 @@ function run_benchmarks(valN::Val{N}) where {N}
     tot_median_time += median(b).time
 
     println("\nActing Hbar on |HF⟩")
-    b = @benchmark global Hbar_ket = act_on_ket($Hbar_simplified)
+    b = @benchmark global Hbar_ket = act_on_ket($Hbar_simplified, $N)
     display(b)
     tot_min_time += minimum(b).time
     tot_median_time += median(b).time
