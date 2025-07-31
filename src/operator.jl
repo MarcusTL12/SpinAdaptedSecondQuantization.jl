@@ -113,6 +113,10 @@ function Base.isless(::Type{A}, ::Type{B}) where {A<:Operator,B<:Operator}
     !(B < A)
 end
 
+function Base.isless(::Type{A}, ::Type{A}) where {A<:Operator}
+    false
+end
+
 """
     Base.:==(::Operator, ::Operator)
 

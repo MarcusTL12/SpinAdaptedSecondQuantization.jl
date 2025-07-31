@@ -60,15 +60,15 @@ end
         ],
         [SASQ.SingletExcitationOperator(p, q)],
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital,
-                        p => GeneralOrbital, q => GeneralOrbital)
+            p => GeneralOrbital, q => GeneralOrbital)
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ic(δ_abc g_icii h_ac E_ab)"
+          "3/5 ∑_ic(δ_abc h_ac g_icii E_ab)"
 
     t = SASQ.lower_delta_indices(t)
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ic(δ_abc g_iaii h_aa E_aa)"
+          "3/5 ∑_ic(δ_abc h_aa g_iaii E_aa)"
 
     t = SASQ.Term(
         3 // 5,
@@ -80,11 +80,11 @@ end
         ],
         [SASQ.SingletExcitationOperator(p, q)],
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital,
-                        p => GeneralOrbital, q => GeneralOrbital)
+            p => GeneralOrbital, q => GeneralOrbital)
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/5 ∑_ib(δ_ab g_ibip h_ab E_ap)"
+          "3/5 ∑_ib(δ_ab h_ab g_ibip E_ap)"
 end
 
 @testset "term exchange_indices" begin
@@ -108,21 +108,21 @@ end
     )
 
     @test string(SASQ.Expression([t])) ==
-          "3/7 δ_pqr g_iaiq h_pa E_pq"
+          "3/7 δ_pqr h_pa g_iaiq E_pq"
 
     t = SASQ.lower_delta_indices(t)
 
     @test string(SASQ.Expression([t])) ==
-          "3/7 δ_pqr g_iaip h_pa E_pp"
+          "3/7 δ_pqr h_pa g_iaip E_pp"
 
     t2 = SASQ.exchange_indices(t, [p => q])
 
     @test string(SASQ.Expression([t2])) ==
-          "3/7 δ_pq g_iaip h_pa E_pp"
+          "3/7 δ_pq h_pa g_iaip E_pp"
 
     t3 = SASQ.exchange_indices(t2, [q => r])
 
-    @test string(SASQ.Expression([t3])) == "3/7 g_iaip h_pa E_pp"
+    @test string(SASQ.Expression([t3])) == "3/7 h_pa g_iaip E_pp"
 end
 
 @testset "term summation delta" begin
@@ -140,7 +140,7 @@ end
             SASQ.SingletExcitationOperator(p, q)
         ],
         SASQ.Constraints(i => OccupiedOrbital, a => VirtualOrbital,
-                        p => GeneralOrbital, q => GeneralOrbital)
+            p => GeneralOrbital, q => GeneralOrbital)
     )
 
     t = SASQ.lower_delta_indices(t)
@@ -283,11 +283,11 @@ end
     a = 9
     b = 10
 
-    Eai = E(a, i) * occupied(i) * virtual(a)
-    Eia = E(i, a) * occupied(i) * virtual(a)
+    Eai_ = E(a, i) * occupied(i) * virtual(a)
+    Eia_ = E(i, a) * occupied(i) * virtual(a)
 
     @test commutator(E(p, q), E(r, s)) == E(p, s) * δ(q, r) - E(r, q) * δ(p, s)
-    @test commutator(Eia, Eai) == (E(i, i) - E(a, a)) * occupied(i) * virtual(a)
+    @test commutator(Eia_, Eai_) == (E(i, i) - E(a, a)) * occupied(i) * virtual(a)
     @test commutator(E(a, i), E(a, i)) == SASQ.Expression(0)
 
     h = ∑(real_tensor("h", p, q) * E(p, q), [p, q])
@@ -329,7 +329,7 @@ end
 @testset "hf energy" begin
     h = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
     g = 1 // 2 * ∑(real_tensor("g", 1:4...) * e(1:4...) * electron(1:4...),
-    1:4) |> simplify
+        1:4) |> simplify
 
     H = simplify(h + g)
 
@@ -409,7 +409,7 @@ end
         1:2
     )
     g = 1 // 2 * ∑(psym_tensor("g", 1:4...) * e(1:4...) *
-        electron(1:4...), 1:4) |> simplify
+                   electron(1:4...), 1:4) |> simplify
 
     HF = simplify(hF + g)
 
@@ -475,16 +475,53 @@ end
 end
 
 @testset "print code" begin
-    equation = summation(real_tensor("h", 1, 2) * real_tensor("g", 2, 1, 3) * occupied(1) * virtual(2,3), 1:2)
+    equation = summation(real_tensor("h", 1, 2) * real_tensor("g", 2, 1, 3) * occupied(1) * virtual(2, 3), 1:2)
     trans = translate(VirtualOrbital => [3])
 
     code = print_code(equation.terms[1], "omega", trans)
-    expected_code = """omega_a +=  +1.00000000 * np.einsum("bia,ib->a", g_vov, h_ov, optimize="optimal");"""
+    expected_code = "omega_a +=  +1.00000000 * np.einsum(\"ib,bia->a\", h_ov, g_vov, optimize=\"optimal\");"
     @test code == expected_code
 
     code_eT = print_eT_code(equation.terms[1], "omega", trans, "test")
-    expected_code_eT = """print(generate_eT_code_from_einsum(\n    routine_name=\"test\",\n    prefactor= +1.00000000,\n    contraction_string=\"bia,ib->a\",\n    arrays=[g_vov, h_ov, omega],\n    symbols=[\"g_vov\", \"h_ov\", \"omega\"],\n), end='!\\n!\\n')"""
+    expected_code_eT = "print(generate_eT_code_from_einsum(\n    routine_name=\"test\",\n    prefactor= +1.00000000,\n    contraction_string=\"ib,bia->a\",\n    arrays=[h_ov, g_vov, omega],\n    symbols=[\"h_ov\", \"g_vov\", \"omega\"],\n), end='!\\n!\\n')"
     @test code_eT == expected_code_eT
+end
+
+@testset "count ccsdt terms" begin
+    # This caught an error when optimizing desymmetrize.
+
+    h = ∑((
+              real_tensor("F", 1, 2) +
+              ∑((-2 * psym_tensor("g", 1, 2, 3, 3) +
+                 psym_tensor("g", 1, 3, 3, 2)) * occupied(3), [3])
+          ) * E(1, 2) * electron(1, 2), 1:2)
+
+    g = 1 // 2 * simplify(
+        ∑(psym_tensor("g", 1:4...) * e(1:4...) * electron(1:4...), 1:4)
+    )
+
+    H = h + g
+
+    Eai(a, i) = E(a, i) * virtual(a) * occupied(i)
+
+    T2 = ∑(psym_tensor("t", 1, 2, 3, 4) * Eai(1, 2) * Eai(3, 4), 1:4)
+    T3 = ∑(psym_tensor("t", 1:6...) * Eai(1, 2) * Eai(3, 4) * Eai(5, 6), 1:6)
+
+    Hbar = bch(H, [T2, T3], 4) |> simplify
+    Hbar_ket = act_on_ket(Hbar, 3) |> simplify
+
+    omega = project_biorthogonal(Hbar_ket, E(1, 2) * E(3, 4) * E(5, 6))
+
+    perm_maps = make_permutation_mappings([(1, 2), (3, 4), (5, 6)])
+
+    omega = symmetrize(omega, perm_maps) |> simplify_heavy
+
+    omega = look_for_tensor_replacements(omega, make_exchange_transformer("t", "u"))
+    omega = look_for_tensor_replacements(omega, make_exchange_transformer("g", "L"))
+
+    omega, _, _ = desymmetrize(omega, perm_maps)
+
+    @test length(omega.terms) == 30
 end
 
 # Run doctests

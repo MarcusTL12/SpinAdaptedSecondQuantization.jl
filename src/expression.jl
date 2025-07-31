@@ -68,6 +68,15 @@ function Expression(terms::AbstractVector{Term})
     Expression(new_terms)
 end
 
+function Expression(terms::Vector{Vector{Term{T}}}) where {T}
+    all_terms, rest = Iterators.peel(terms)
+    for other_terms in rest
+        append!(all_terms, other_terms)
+    end
+
+    Expression(all_terms)
+end
+
 function Base.show(io::IO, ex::Expression)
     show(io, (ex, IndexTranslation()))
 end
@@ -361,8 +370,18 @@ function simplify(ex::Expression)
     simplify_terms
 end
 
-function simplify_terms(ex::Expression)
-    Expression([simplify(t) for t in ex.terms])
+function simplify_terms(ex::Expression{T}) where {T<:Number}
+    nth = Threads.nthreads()
+
+    terms = [Term{T}[] for _ in 1:nth]
+
+    Threads.@threads for id in 1:nth
+        for i in id:nth:length(ex.terms)
+            push!(terms[id], simplify(ex.terms[i]))
+        end
+    end
+
+    Expression(terms)
 end
 
 """
@@ -600,10 +619,21 @@ an anti-commutator.
 """
 function commutator(a::Expression{A}, b::Expression{B}) where
 {A<:Number,B<:Number}
-    terms = Term{promote_type(A, B)}[]
+    nth = Threads.nthreads()
 
-    for t1 in a.terms, t2 in b.terms
-        append!(terms, commutator(t1, t2).terms)
+    terms = [Term{promote_type(A, B)}[] for _ in 1:nth]
+
+    na = length(a.terms)
+    nb = length(b.terms)
+
+    n = na * nb
+
+    Threads.@threads for id in 1:nth
+        for i in id:nth:n
+            ib, ia = divrem(i - 1, na) .+ 1
+
+            append!(terms[id], commutator(a.terms[ia], b.terms[ib]).terms)
+        end
     end
 
     Expression(terms)
@@ -621,10 +651,21 @@ a commutator.
 """
 function anticommutator(a::Expression{A}, b::Expression{B}) where
 {A<:Number,B<:Number}
-    terms = Term{promote_type(A, B)}[]
+    nth = Threads.nthreads()
 
-    for t1 in a.terms, t2 in b.terms
-        append!(terms, anticommutator(t1, t2).terms)
+    terms = [Term{promote_type(A, B)}[] for _ in 1:nth]
+
+    na = length(a.terms)
+    nb = length(b.terms)
+
+    n = na * nb
+
+    Threads.@threads for id in 1:nth
+        for i in id:nth:n
+            ib, ia = divrem(i - 1, na) .+ 1
+
+            append!(terms[id], anticommutator(a.terms[ia], b.terms[ib]).terms)
+        end
     end
 
     Expression(terms)
