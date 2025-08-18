@@ -251,10 +251,6 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
         print(io, (op, t.constraints, translation))
     end
 
-    if !isempty(t.sum_indices)
-        print(io, ')')
-    end
-
     constraints_to_print = collect(keys(t.constraints))
     if translate_internal
         setdiff!(constraints_to_print, t.sum_indices)
@@ -280,6 +276,10 @@ function Base.show(io::IO, (t, translation)::Tuple{Term,IndexTranslation})
             isfirst = false
         end
 
+        print(io, ')')
+    end
+
+    if !isempty(t.sum_indices)
         print(io, ')')
     end
 end
