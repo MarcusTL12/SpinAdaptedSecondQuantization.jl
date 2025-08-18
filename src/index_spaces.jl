@@ -326,10 +326,10 @@ julia> ex = ∑(real_tensor("h", 1, 2) * E(1, 2) * electron(1, 2), 1:2)
 julia> disable_internal_index_translation()
 
 julia> ex
-∑_₁₂(h_₁₂ E_₁₂) C(₁∈g, ₂∈g)
+∑_₁₂(h_₁₂ E_₁₂ C(₁∈g, ₂∈g))
 
 julia> ex *= E(1, 2) * occupied(2) * virtual(1) # Indices shifted up
-∑_₃₄(h_₃₄ E_₃₄ E_ai) C(₃∈g, ₄∈g)
+∑_₃₄(h_₃₄ E_₃₄ E_ai C(₃∈g, ₄∈g))
 
 julia> enable_internal_index_translation()
 
