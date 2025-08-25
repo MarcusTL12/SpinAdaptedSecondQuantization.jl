@@ -13,3 +13,16 @@
 Julia package to do symbolic spin adapted second quantization.
 
 Package documentation can be found at [here][docs-url]
+
+## How to cite:
+
+```
+@online{lexander_spinadaptedsecondquantizationjl_2025,
+    title = {SpinAdaptedSecondQuantization.jl 1.0 - A Simple and Pedagogical Approach to Symbolic Quantum Chemistry},
+    url = {https://arxiv.org/abs/2508.16342v1},
+    author = {Lexander, Marcus T. and Haugland, Tor S. and Rossi, Federico and Koch, Henrik},
+    date = {2025-08-22},
+    journal = {arxiv},
+    year = {2025},
+}
+```
